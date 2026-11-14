@@ -119,20 +119,11 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .shot { position: fixed; left: 0; z-index: 20; pointer-events: none; width: 170px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, rgba(242, 196, 109, 0), #fff5da); box-shadow: 0 0 10px 2px rgba(255, 236, 180, 0.7); transform-origin: right center; animation: shoot 1.3s cubic-bezier(0.3, 0.1, 0.6, 1) forwards; }
 @keyframes shoot { 0% { transform: translate(-10vw, 0) rotate(24deg); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(95vw, 44vh) rotate(24deg); opacity: 0; } }
 
-/* Almas Sternenfeld */
-.field { position: relative; height: 270px; border-radius: 14px; background: rgba(11, 14, 32, 0.6); border: 1px solid var(--line); overflow: hidden; touch-action: manipulation; }
-.starbtn { position: absolute; width: 72px; height: 72px; padding: 0; border: 0; background: transparent; cursor: pointer; animation: bob 3.4s ease-in-out infinite; transition: opacity 0.3s; }
-.starbtn svg { width: 100%; height: 100%; display: block; }
-.starbtn.pop { animation: pop 0.4s ease-out forwards; }
-@keyframes bob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-9px) rotate(4deg); } }
-@keyframes pop { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.2); opacity: 0; } }
-
 /* Warp: Karten werden durchsichtiger, Inhalt bleibt lesbar */
 body.warping .card { background: rgba(21, 26, 58, 0.5); }
 
 @media (prefers-reduced-motion: reduce) {
-  .warp, .starbtn { animation: none; }
-  .starbtn.pop { animation: none; opacity: 0; }
+  .warp { animation: none; }
 }
 </style>
 </head>
@@ -187,6 +178,12 @@ body.warping .card { background: rgba(21, 26, 58, 0.5); }
     <p class="astro" id="astro"></p>
   </section>
 
+  <section class="card" aria-labelledby="fh">
+    <h2 id="fh">Eure Sternbilder</h2>
+    <svg id="figs" viewBox="0 0 400 200" role="img" aria-label="Die Sternbilder Wassermann und Löwe, vereinfacht gezeichnet" style="width:100%;height:auto;display:block"></svg>
+    <p class="astro">Löwe und Wassermann liegen am Tierkreis genau gegenüber. Die Astrologie nennt das Gegenpole, die sich anziehen. Löwe ist das Zeichen von Masüsel und der kleinen Löwin, Wassermann das von Mafifee.</p>
+  </section>
+
   <section class="card" id="arrive" aria-labelledby="ah" hidden>
     <h2 id="ah">Auf dem Weg</h2>
     <div style="display:flex;flex-direction:column;gap:12px">
@@ -201,13 +198,6 @@ body.warping .card { background: rgba(21, 26, 58, 0.5); }
     <label class="preview" id="previewBox"><input type="checkbox" id="previewAll"> Vorschau: alle Türchen öffnen (nur für dich als Besitzer)</label>
     <div class="doors" id="doors"></div>
     <div class="panel" id="panel" hidden></div>
-  </section>
-
-  <section class="card" aria-labelledby="alh">
-    <h2 id="alh">Almas Sternenfeld</h2>
-    <p class="muted" style="margin-bottom:12px">Für Alma: Sterne antippen und fangen.</p>
-    <div class="field" id="field" role="group" aria-label="Sternenfeld zum Antippen"></div>
-    <p class="muted" id="caught" style="margin-top:10px" aria-live="polite">Noch kein Stern gefangen.</p>
   </section>
 
   <footer>Masüsel und Mafifee unter demselben Mond.</footer>
@@ -269,19 +259,19 @@ const ASTRO = {
 const ASTRO_DEFAULT = 'Die Leoniden sind noch bis zum 30. November aktiv. Vielleicht fällt heute Nacht eine Sternschnuppe für euch.';
 
 const DOORS = [
-  { n: 0, kind: 'Heute', title: 'Nacht eins von zwölf', text: 'Heute ist die erste von zwölf Nächten. Noch zwölf Mal schlafen, dann ist es soweit für Masüsel, Mafifee und Alma. Der Mond steht heute als schmale, zunehmende Sichel am Himmel und wächst mit euch auf den Vollmond zu. Wirf einen Blick nach oben, er ist für euch beide derselbe.', ask: 'Schick eine Sternschnuppe los und schreib dazu, was du dir wünschst.', star: true },
+  { n: 0, kind: 'Heute', title: 'Nacht eins von zwölf', text: 'Heute ist die erste von zwölf Nächten. Noch zwölf Mal schlafen, dann ist es soweit für Masüsel und Mafifee. Der Mond steht heute als schmale, zunehmende Sichel am Himmel und wächst mit euch auf den Vollmond zu. Wirf einen Blick nach oben, er ist für euch beide derselbe.', ask: 'Schick eine Sternschnuppe los und schreib dazu, was du dir wünschst.', star: true },
   { n: 1, kind: 'Himmel', title: 'Der Mond wächst', text: 'Der Mond ist heute eine junge, zunehmende Sichel. Jede Nacht wird er ein Stück voller, und jede Nacht seid ihr einander ein Stück näher.', ask: 'Was machst du als Erstes, wenn du ankommst?' },
   { n: 2, kind: 'Spaß', title: 'Schneckenpost', text: 'Seit dem 6. November nähert ihr euch mit etwa {v} km/h. Das ist viel langsamer als ein Spaziergang und etwa {x} Mal schneller als eine Weinbergschnecke. Respekt.', ask: 'Welches Tier wärst du für diese 500 Kilometer?' },
   { n: 3, kind: 'Wunsch', title: 'Sternschnuppennacht', text: 'Heute Nacht erreichen die Leoniden ihr Maximum, am besten zu sehen nach Mitternacht. Wer eine Sternschnuppe sieht, darf sich etwas wünschen. Wer keine sieht, darf es trotzdem.', ask: 'Schreib deinen Wunsch auf.' },
   { n: 4, kind: 'Frage', title: 'Drei Dinge', text: 'Kleine Aufgabe für heute, ganz ohne Druck.', ask: 'Drei Dinge, die ich an dir mag.' },
-  { n: 5, kind: 'Spaß', title: 'Das Gepäck', text: 'In 500 Kilometern Entfernung packt es sich leichter, wenn man weiß, was wirklich nötig ist.', ask: 'Was darf auf keinen Fall im Gepäck fehlen? Und was muss für Alma mit?' },
+  { n: 5, kind: 'Spaß', title: 'Das Gepäck', text: 'In 500 Kilometern Entfernung packt es sich leichter, wenn man weiß, was wirklich nötig ist.', ask: 'Was darf auf keinen Fall im Gepäck fehlen?' },
   { n: 6, kind: 'Himmel', title: 'Gleicher Himmel', text: 'Der Mond zieht heute am Saturn vorbei. Wenn es aufklart, schau am Abend nach oben. Über Penzing und über Simmern liegt derselbe Himmel.', ask: 'Was siehst du, wenn du hochschaust?' },
   { n: 7, kind: 'Orakel', title: 'Das Sehnsuchtsorakel', text: 'Zieh eine Karte. Die Sterne sind nicht immer präzise, aber immer freundlich.', oracle: true },
   { n: 8, kind: 'Himmel', title: 'Aufbruch', text: 'Heute wechselt die Sonne vom Skorpion in den Schützen. Das Zeichen für Reiselust, Weite und das Gefühl, dass es bald losgeht.', ask: 'Wofür bist du gerade bereit aufzubrechen?' },
   { n: 9, kind: 'Frage', title: 'Dein Lied', text: 'Noch drei Nächte. Der Mond ist fast voll und wird ein bisschen ungeduldig.', ask: 'Welches Lied soll am Tag der Ankunft laufen?' },
   { n: 10, kind: 'Himmel', title: 'Supermond', text: 'Heute um 15:53 Uhr ist Vollmond, und er ist ein Supermond, nur 360.768 Kilometer von der Erde entfernt. Er geht am Abend auf. Ihr könnt ihn zur gleichen Zeit anschauen, jeder an seinem Ort.', ask: 'Welchen Satz gibst du dem Mond mit?' },
-  { n: 11, kind: 'Frage', title: 'Die letzte Nacht davor', text: 'Uranus steht heute der Sonne gegenüber. Mit bloßem Auge ist er kaum zu sehen. Ihr braucht ihn nicht, ihr habt bald einander.', ask: 'Wie aufgeregt bist du, von 1 bis 10?' },
-  { n: 12, kind: 'Ankunft', title: 'Heute ist es soweit', text: 'In der Nacht wechselte Mars vom Löwen in die Jungfrau. Aus Mut wird Sorgfalt, aus Warten wird Ankommen. Um 14:10 Uhr ist es soweit.', ask: 'Was sagst du als Allererstes? Und was sagt Alma?' }
+  { n: 11, kind: 'Frage', title: 'Die letzte Nacht davor', text: 'Uranus steht heute der Sonne gegenüber. In der Astrologie ist er der Planet des Wassermanns, also Mafifees Planet. Mit bloßem Auge ist er kaum zu sehen. Ihr braucht ihn nicht, ihr habt bald einander.', ask: 'Wie aufgeregt bist du, von 1 bis 10?' },
+  { n: 12, kind: 'Ankunft', title: 'Heute ist es soweit', text: 'In der Nacht verließ Mars den Löwen, Masüsels Zeichen, und zog in die Jungfrau. Jupiter bleibt im Löwen. Aus Mut wird Sorgfalt, aus Warten wird Ankommen. Um 14:10 Uhr ist es soweit.', ask: 'Was sagst du als Allererstes?' }
 ];
 const ORACLE = [
   'Die Sterne sagen: Plane Zeit für Umarmungen ein. Viel Zeit.',
@@ -294,9 +284,7 @@ const ORACLE = [
   'Der Schütze rät: Aufbruch ist der halbe Weg.',
   'Die Karten sind sich einig: Es gibt Kuchen. Irgendwo.',
   'Die Zukunft sagt: viel Schweigen, das sich gut anfühlt.',
-  'Almas Orakel: Heute wird gehüpft, bis die Pfützen Angst bekommen.',
-  'Alma fragt: Gibt es ein Eis? Die Sterne sind ausnahmsweise dafür.',
-  'Prophezeiung: Ein Kuscheltier wird dringend gebraucht. Mehrfach.'
+  'Löwe und Wassermann sind Gegenpole am Tierkreis. Die Sterne nennen das: perfekt.'
 ];
 
 const $ = id => document.getElementById(id);
@@ -308,6 +296,25 @@ function fmtSpeed(v) {
   return nf.format(Math.round(v));
 }
 const two = n => String(n).padStart(2, '0');
+
+/* ---- Sternbilder (vereinfacht) ---- */
+const FIG_LEO = { pts: [[24, 76], [26, 62], [24, 48], [18, 36], [14, 26], [20, 18], [58, 62], [66, 48], [58, 32], [90, 42]],
+  lines: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [0, 6], [6, 7], [7, 8], [8, 2], [8, 9], [9, 7]] };
+const FIG_AQR = { pts: [[22, 40], [38, 30], [52, 36], [60, 44], [68, 36], [60, 28], [72, 56], [80, 68], [88, 80]],
+  lines: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 2], [3, 6], [6, 7], [7, 8]] };
+function renderFigs() {
+  const svg = $('figs'); const NS = 'http://www.w3.org/2000/svg';
+  const frag = document.createDocumentFragment();
+  function add(tag, attrs, text) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text) e.textContent = text; frag.appendChild(e); }
+  function fig(f, ox, oy, k, color) {
+    f.lines.forEach(l => { const a = f.pts[l[0]], b = f.pts[l[1]]; add('line', { x1: ox + a[0] * k, y1: oy + a[1] * k, x2: ox + b[0] * k, y2: oy + b[1] * k, stroke: color, 'stroke-width': 1.4, 'stroke-opacity': 0.55 }); });
+    f.pts.forEach((p, i) => add('circle', { cx: ox + p[0] * k, cy: oy + p[1] * k, r: i === 0 ? 4 : 2.8, fill: '#fff5da' }));
+  }
+  fig(FIG_AQR, 14, 10, 1.7, '#9ad8ff'); fig(FIG_LEO, 222, 10, 1.7, '#f2c46d');
+  add('text', { x: 100, y: 190, 'text-anchor': 'middle', fill: '#a3a9d3', 'font-size': 14, 'font-family': 'Karla, sans-serif' }, 'Mafifee, Wassermann');
+  add('text', { x: 300, y: 190, 'text-anchor': 'middle', fill: '#a3a9d3', 'font-size': 14, 'font-family': 'Karla, sans-serif' }, 'Masüsel, Löwe');
+  svg.replaceChildren(frag);
+}
 
 /* ---- Himmel ---- */
 function moonSVG(p) {
@@ -386,6 +393,13 @@ function drawCalm() {
   g.addColorStop(0, 'rgba(40,48,110,0.55)'); g.addColorStop(1, 'rgba(11,14,32,0)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   calm.forEach(s => { ctx.fillStyle = 'rgba(236,233,247,' + s.a + ')'; ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r, 0, 6.2832); ctx.fill(); });
+  const k = Math.max(0.9, Math.min(W, H) * 0.0055);
+  bgFig(FIG_LEO, W * 0.5, H * 0.05, k, '242,196,109'); bgFig(FIG_AQR, W * 0.03, H * 0.5, k, '154,216,255');
+}
+function bgFig(f, ox, oy, k, rgb) {
+  ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(' + rgb + ',0.32)';
+  f.lines.forEach(l => { const a = f.pts[l[0]], b = f.pts[l[1]]; ctx.beginPath(); ctx.moveTo(ox + a[0] * k, oy + a[1] * k); ctx.lineTo(ox + b[0] * k, oy + b[1] * k); ctx.stroke(); });
+  f.pts.forEach((p, i) => { ctx.fillStyle = 'rgba(255,245,218,' + (i === 0 ? 0.9 : 0.65) + ')'; ctx.beginPath(); ctx.arc(ox + p[0] * k, oy + p[1] * k, i === 0 ? 2.6 : 1.8, 0, 6.2832); ctx.fill(); });
 }
 function sizeSky() {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -587,29 +601,8 @@ function shoot() {
   document.body.appendChild(s);
 }
 
-/* ---- Almas Sternenfeld ---- */
-(function starField() {
-  const field = $('field'), counter = $('caught');
-  const colors = ['#f2c46d', '#f08fa9', '#9ad8ff', '#f2c46d', '#f08fa9'];
-  const pts = '32,4 39.5,23.5 60.5,24.5 44,37.5 49.5,58 32,46.5 14.5,58 20,37.5 3.5,24.5 24.5,23.5';
-  let caught = 0;
-  function place(b) { b.style.left = (3 + Math.random() * 72) + '%'; b.style.top = (3 + Math.random() * 62) + '%'; b.style.animationDelay = (-Math.random() * 3) + 's'; }
-  colors.forEach(c => {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'starbtn'; b.setAttribute('aria-label', 'Stern fangen');
-    b.innerHTML = '<svg viewBox="0 0 64 64" aria-hidden="true"><polygon points="' + pts + '" fill="' + c + '" stroke="#fff5da" stroke-width="2" stroke-linejoin="round"/></svg>';
-    place(b);
-    b.addEventListener('click', () => {
-      if (b.classList.contains('pop')) return;
-      b.style.animationDelay = '0s'; b.classList.add('pop'); caught++;
-      counter.textContent = caught === 1 ? 'Ein Stern gefangen.' : caught + ' Sterne gefangen.';
-      if (caught % 5 === 0) shoot();
-      setTimeout(() => { place(b); b.classList.remove('pop'); }, reduce ? 200 : 450);
-    });
-    field.appendChild(b);
-  });
-})();
-
 /* ---- Start ---- */
+renderFigs();
 sizeSky();
 renderAll(true);
 setInterval(renderAll, 1000);
