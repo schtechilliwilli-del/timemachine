@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Penzing nach Simmern</title>
+<title>Bayern nach Westerwald</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Gloock&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
@@ -135,10 +135,10 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 @keyframes shoot { 0% { transform: translate(-10vw, 0) rotate(24deg); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(95vw, 44vh) rotate(24deg); opacity: 0; } }
 
 /* Fangbare Sternschnuppe */
-.cstar { position: fixed; left: 0; top: 0; z-index: 25; width: 130px; height: 48px; padding: 0; border: 0; background: transparent; cursor: pointer; transform-origin: right center; -webkit-tap-highlight-color: transparent; }
-.cstar .tail { position: absolute; left: 0; right: 8px; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 3px; background: linear-gradient(90deg, rgba(242, 196, 109, 0), #fff5da); }
-.cstar .head { position: absolute; right: 0; top: 50%; width: 14px; height: 14px; margin-top: -7px; border-radius: 50%; background: #fff5da; box-shadow: 0 0 14px 5px rgba(255, 236, 180, 0.85); animation: starpulse 0.9s ease-in-out infinite alternate; }
-@keyframes starpulse { to { transform: scale(1.25); } }
+.cstar { position: fixed; left: 0; top: 0; z-index: 25; width: 110px; height: 40px; padding: 0; border: 0; background: transparent; cursor: pointer; transform-origin: right center; -webkit-tap-highlight-color: transparent; }
+.cstar .tail { position: absolute; left: 0; right: 8px; top: 50%; height: 1.5px; margin-top: -0.75px; border-radius: 3px; background: linear-gradient(90deg, rgba(242, 196, 109, 0), #fff5da); }
+.cstar .head { position: absolute; right: -3px; top: 50%; width: 16px; height: 16px; margin-top: -8px; filter: drop-shadow(0 0 4px rgba(255, 236, 180, 0.95)); animation: starspin 1.2s linear infinite; }
+@keyframes starspin { to { transform: rotate(360deg); } }
 .pop { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(5, 7, 18, 0.72); }
 .pop[hidden] { display: none; }
 .popbox { width: 100%; max-width: 420px; background: #151a3a; border: 1px solid var(--gold); border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 0 40px rgba(242, 196, 109, 0.25); }
@@ -172,7 +172,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
 <main>
   <header>
     <p class="eyebrow">Wiedersehen am 26.11.2026 um 14:10 Uhr</p>
-    <h1>Penzing <span aria-hidden="true">&rarr;</span><span class="sr" style="position:absolute;left:-9999px"> nach </span> Simmern</h1>
+    <h1>Bayern <span aria-hidden="true">&rarr;</span><span class="sr" style="position:absolute;left:-9999px"> nach </span> Westerwald</h1>
     <p class="lede">Masüsel und Mafifee: 500 Kilometer, ein Mond und dreizehn Türchen, bis zur Glückseligkeit und noch viel weiter. Diese Seite gehört nur uns beiden.</p>
   </header>
 
@@ -718,14 +718,14 @@ function spawnStar() {
   catchBusy = true;
   const vw = window.innerWidth, vh = window.innerHeight;
   const s = document.createElement('button'); s.type = 'button'; s.className = 'cstar'; s.setAttribute('aria-label', 'Sternschnuppe fangen');
-  s.innerHTML = '<span class="tail"></span><span class="head"></span>';
+  s.innerHTML = '<span class="tail"></span><svg class="head" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l3 7.5 8 .6-6.1 5.2 2 7.9L12 17.6 5.1 22.2l2-7.9L1 9.1l8-.6z" fill="#fff5da"/></svg>';
   const ang = 16 + Math.random() * 12, y0 = vh * (0.06 + Math.random() * 0.3);
   const dy = Math.tan(ang * Math.PI / 180) * (vw + 190);
   s.style.top = y0 + 'px'; s.style.opacity = '0';
   document.body.appendChild(s);
-  const dur = reduce ? 16000 : 10000 + Math.random() * 3000;
+  const dur = reduce ? 9000 : 4800 + Math.random() * 1600;
   const anim = s.animate([
-    { transform: 'translate(-130px,0) rotate(' + ang + 'deg)', opacity: 0, offset: 0 },
+    { transform: 'translate(-110px,0) rotate(' + ang + 'deg)', opacity: 0, offset: 0 },
     { opacity: 1, offset: 0.08 },
     { opacity: 1, offset: 0.88 },
     { transform: 'translate(' + (vw + 60) + 'px,' + dy + 'px) rotate(' + ang + 'deg)', opacity: 0, offset: 1 }
