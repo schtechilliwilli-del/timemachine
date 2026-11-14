@@ -210,7 +210,6 @@ body.warping .card { background: rgba(21, 26, 58, 0.5); }
       <div class="hcol l"><h3>Masüsel</h3><span class="sign">Löwe</span><p id="hL"></p></div>
     </div>
     <div class="hboth"><h3>Für euch beide</h3><p id="hB"></p></div>
-    <p class="muted small">Spielerisch von mir geschrieben und an die Himmelsereignisse des Tages angelehnt, kein echtes Horoskop.</p>
   </section>
 
   <section class="card" id="arrive" aria-labelledby="ah" hidden>
@@ -650,6 +649,7 @@ function renderHoro() {
   $('hW').textContent = h.w; $('hL').textContent = h.l; $('hB').textContent = h.b;
   $('hDate').textContent = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(Date.UTC(2026, 10, 14 + i, 12)));
   $('hPrev').disabled = i <= 0; $('hNext').disabled = i >= maxI;
+  $('hPrev').hidden = $('hNext').hidden = maxI === 0;
 }
 $('hPrev').addEventListener('click', () => { const now = Date.now(); const cur = state.hday == null ? todayIdx(now) : state.hday; state.hday = Math.max(0, cur - 1); renderHoro(); });
 $('hNext').addEventListener('click', () => { const now = Date.now(); const cur = state.hday == null ? todayIdx(now) : state.hday; state.hday = cur + 1; renderHoro(); });
