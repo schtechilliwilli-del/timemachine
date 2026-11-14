@@ -275,7 +275,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <textarea id="wishOwn" maxlength="300" placeholder="Oder wünsch dir etwas ganz Eigenes ..." aria-label="Eigener Wunsch"></textarea>
     <div class="popbtns">
       <button class="btn solid" id="wishGo" type="button">Wünschen und ins Tagebuch</button>
-      <button class="btn" id="wishAgain" type="button">Anderer Vorschlag</button>
+      <button class="btn" id="wishAgain" type="button">Anderer Wunsch</button>
       <button class="btn" id="wishClose" type="button">Schließen</button>
     </div>
   </div>
@@ -472,23 +472,37 @@ function drawCalm(t) {
   const g = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, H * 0.7);
   g.addColorStop(0, 'rgba(40,48,110,0.55)'); g.addColorStop(1, 'rgba(11,14,32,0)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  calm.forEach(s => { const a = s.a * (0.68 + 0.32 * Math.sin(t * s.sp + s.ph)); ctx.fillStyle = 'rgba(236,233,247,' + a.toFixed(3) + ')'; ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r, 0, 6.2832); ctx.fill(); });
-  const k = Math.max(1.4, Math.min(W * 0.0049, H * 0.0065));
-  bgFig(FIG_AQR, W * 0.02 + Math.sin(t / 4200) * 5, H * 0.3 + Math.cos(t / 5300) * 4, k, '154,216,255', t, 0);
-  bgFig(FIG_LEO, W * 0.98 - 92 * k + Math.sin(t / 4700 + 2) * 5, H * 0.17 + Math.cos(t / 5900 + 1) * 4, k, '242,196,109', t, 3);
+  calm.forEach(s => { const a = s.a * (0.35 + 0.65 * Math.abs(Math.sin(t * s.sp + s.ph))); ctx.fillStyle = 'rgba(236,233,247,' + a.toFixed(3) + ')'; ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r, 0, 6.2832); ctx.fill(); });
+  const k = Math.max(1.5, Math.min(W * 0.0054, H * 0.0072));
+  bgFig(FIG_AQR, W * 0.02 + Math.sin(t / 2600) * 9, H * 0.3 + Math.cos(t / 3300) * 8, k, '154,216,255', t, 0);
+  bgFig(FIG_LEO, W * 0.98 - 92 * k + Math.sin(t / 2900 + 2) * 9, H * 0.17 + Math.cos(t / 3700 + 1) * 8, k, '242,196,109', t, 3);
 }
 function bgFig(f, ox, oy, k, rgb, t, off) {
   t = t || 0; off = off || 0;
-  ctx.lineWidth = 1.2; ctx.strokeStyle = 'rgba(' + rgb + ',' + (0.5 + 0.12 * Math.sin(t / 1800 + off)).toFixed(3) + ')';
+  ctx.save();
+  ctx.lineWidth = 1.7; ctx.lineCap = 'round';
+  ctx.strokeStyle = 'rgba(' + rgb + ',' + (0.62 + 0.2 * Math.sin(t / 1100 + off)).toFixed(3) + ')';
+  ctx.shadowColor = 'rgba(' + rgb + ',0.9)'; ctx.shadowBlur = 8;
   f.lines.forEach(l => { const a = f.pts[l[0]], b = f.pts[l[1]]; ctx.beginPath(); ctx.moveTo(ox + a[0] * k, oy + a[1] * k); ctx.lineTo(ox + b[0] * k, oy + b[1] * k); ctx.stroke(); });
-  f.pts.forEach((p, i) => { const tw = 1 + 0.25 * Math.sin(t / 650 + i * 1.7 + off); ctx.fillStyle = 'rgba(255,245,218,' + (i === 0 ? 0.95 : 0.8) + ')'; ctx.beginPath(); ctx.arc(ox + p[0] * k, oy + p[1] * k, (i === 0 ? 2.8 : 2) * tw, 0, 6.2832); ctx.fill(); });
+  f.pts.forEach((p, i) => {
+    const tw = 1 + 0.45 * Math.sin(t / 420 + i * 1.7 + off), x = ox + p[0] * k, y = oy + p[1] * k, r = (i === 0 ? 4 : 3) * tw;
+    ctx.shadowBlur = 14; ctx.shadowColor = 'rgba(' + rgb + ',1)';
+    ctx.fillStyle = 'rgba(255,248,226,1)'; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+    ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(255,248,226,' + (0.35 * tw).toFixed(3) + ')'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x - r * 2.6, y); ctx.lineTo(x + r * 2.6, y); ctx.moveTo(x, y - r * 2.6); ctx.lineTo(x, y + r * 2.6); ctx.stroke();
+  });
+  // Ein Lichtpunkt wandert an den Linien entlang
+  const n = f.lines.length, u = (t / 1300 + off) % n, li = Math.floor(u), fr = u - li, l = f.lines[li];
+  const a = f.pts[l[0]], b = f.pts[l[1]], px = ox + (a[0] + (b[0] - a[0]) * fr) * k, py = oy + (a[1] + (b[1] - a[1]) * fr) * k;
+  ctx.shadowBlur = 18; ctx.shadowColor = 'rgba(' + rgb + ',1)'; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(px, py, 3.2, 0, 6.2832); ctx.fill();
+  ctx.restore();
 }
 function sizeSky() {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   W = window.innerWidth; H = window.innerHeight;
   cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const R = rng(42); calm = [];
-  for (let i = 0; i < 150; i++) calm.push({ x: R(), y: R(), r: 0.4 + R() * 1.1, a: 0.3 + R() * 0.7, sp: 0.0008 + R() * 0.0022, ph: R() * 6.28 });
+  for (let i = 0; i < 150; i++) calm.push({ x: R(), y: R(), r: 0.5 + R() * 1.3, a: 0.35 + R() * 0.65, sp: 0.0015 + R() * 0.004, ph: R() * 6.28 });
   if (!warping) drawCalm();
 }
 window.addEventListener('resize', sizeSky);
@@ -713,23 +727,34 @@ $('hNext').addEventListener('click', () => { const now = Date.now(); const cur =
 
 /* ---- Fangbare Sternschnuppe ---- */
 let catchBusy = false;
-function shoot() { spawnStar(); }
+function shoot() { if (wishesToday() >= 2) { showToast('Heute hattest du schon zwei Wünsche. Morgen zieht wieder eine für dich.'); return; } spawnStar(); }
+function wishesToday() {
+  const mine = Object.assign({}, (state.notes[state.uid] || {}).diary || {}, state.myDiary, state.localDiary);
+  const today = berlinDay(Date.now()); let n = 0;
+  for (const k in mine) { const e = mine[k]; if (e && e.star && berlinDay(e.t) === today) n++; }
+  return n;
+}
 function spawnStar() {
   if (catchBusy || warping || document.hidden) return;
+  if (wishesToday() >= 2) return;
   catchBusy = true;
   const vw = window.innerWidth, vh = window.innerHeight;
   const s = document.createElement('button'); s.type = 'button'; s.className = 'cstar'; s.setAttribute('aria-label', 'Sternschnuppe fangen');
   s.innerHTML = '<span class="tail"></span><svg class="head" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l3 7.5 8 .6-6.1 5.2 2 7.9L12 17.6 5.1 22.2l2-7.9L1 9.1l8-.6z" fill="#fff5da"/></svg>';
-  const ang = 16 + Math.random() * 12, y0 = vh * (0.06 + Math.random() * 0.3);
-  const dy = Math.tan(ang * Math.PI / 180) * (vw + 190);
-  s.style.top = y0 + 'px'; s.style.opacity = '0';
+  const right = Math.random() < 0.5; let sx, sy, a;
+  if (Math.random() < 0.35) { sx = vw * (0.1 + Math.random() * 0.8); sy = -20; a = 55 + Math.random() * 20; }
+  else { sx = right ? vw + 20 : -20; sy = vh * (0.03 + Math.random() * 0.5); a = 14 + Math.random() * 22; }
+  const rad = a * Math.PI / 180, dx = (right ? -1 : 1) * Math.cos(rad), dy = Math.sin(rad), L = Math.max(vw, vh) * 1.5;
+  const rot = right ? 180 - a : a;
+  const tr = (x, y) => 'translate(' + (x - 110) + 'px,' + (y - 20) + 'px) rotate(' + rot + 'deg)';
+  s.style.opacity = '0';
   document.body.appendChild(s);
-  const dur = reduce ? 9000 : 4800 + Math.random() * 1600;
+  const dur = reduce ? 6000 : 2900 + Math.random() * 1000;
   const anim = s.animate([
-    { transform: 'translate(-110px,0) rotate(' + ang + 'deg)', opacity: 0, offset: 0 },
-    { opacity: 1, offset: 0.08 },
-    { opacity: 1, offset: 0.88 },
-    { transform: 'translate(' + (vw + 60) + 'px,' + dy + 'px) rotate(' + ang + 'deg)', opacity: 0, offset: 1 }
+    { transform: tr(sx, sy), opacity: 0, offset: 0 },
+    { opacity: 1, offset: 0.1 },
+    { opacity: 1, offset: 0.85 },
+    { transform: tr(sx + dx * L, sy + dy * L), opacity: 0, offset: 1 }
   ], { duration: dur, easing: 'linear' });
   anim.onfinish = () => { s.remove(); catchBusy = false; };
   s.addEventListener('click', () => { anim.onfinish = null; anim.cancel(); s.remove(); catchBusy = false; openWish(); });
@@ -754,7 +779,7 @@ const WISHES = [
 let wishIdx = -1;
 function otherName() { return (state.db && state.uid) ? (state.owner ? 'Mafifee' : 'Masüsel') : null; }
 function pickWish() { let i; do { i = Math.floor(Math.random() * WISHES.length); } while (i === wishIdx); wishIdx = i; const o = otherName(); $('wishTxt').textContent = (o ? 'Du wünschst dir von ' + o + ': ' : 'Du wünschst dir: ') + WISHES[i] + '.'; }
-function openWish() { $('wishOwn').value = ''; pickWish(); $('wishPop').hidden = false; $('wishGo').focus(); }
+function openWish() { if (wishesToday() >= 2) { showToast('Heute hattest du schon zwei Wünsche. Morgen zieht wieder eine für dich.'); return; } $('wishOwn').value = ''; pickWish(); $('wishPop').hidden = false; $('wishGo').focus(); }
 function closeWish() { $('wishPop').hidden = true; }
 $('wishAgain').addEventListener('click', pickWish);
 $('wishClose').addEventListener('click', closeWish);
