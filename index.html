@@ -130,22 +130,6 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .small { font-size: 13px; margin-top: 10px; }
 .basis { display: block; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11.5px; line-height: 1.4; color: var(--muted); overflow-wrap: anywhere; }
 
-/* Vorfreude */
-.love { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; margin-bottom: 18px; }
-.heart-btn { appearance: none; border: 0; cursor: pointer; width: 100%; min-height: 64px; border-radius: 18px; background: linear-gradient(135deg, #f6a3b8, #e36c8e); color: #2b0f19; font-family: var(--display); font-size: 22px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-.heart-btn:active { transform: scale(0.98); }
-.heart-btn svg { width: 28px; height: 28px; }
-.tapnum { font-size: clamp(40px, 12vw, 56px); color: var(--rose); line-height: 1.1; margin-top: 10px; }
-.scale { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--line); padding-top: 16px; }
-.scale input[type="range"] { width: 100%; height: 36px; accent-color: #f2c46d; }
-.bars { display: flex; flex-direction: column; gap: 8px; }
-.bar { display: grid; grid-template-columns: 96px 1fr 28px; gap: 8px; align-items: center; font-size: 14px; }
-.bar .track { height: 10px; border-radius: 6px; background: rgba(11, 14, 32, 0.7); border: 1px solid var(--line); overflow: hidden; }
-.bar .fill { display: block; height: 100%; background: var(--gold); }
-.floaty { position: fixed; z-index: 30; pointer-events: none; color: var(--rose); width: 26px; height: 26px; animation: floaty 1.7s ease-out forwards; }
-.floaty svg { width: 100%; height: 100%; }
-@keyframes floaty { 0% { transform: translateY(0) scale(0.6); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-150px) scale(1.3); opacity: 0; } }
-
 /* Sternschnuppe */
 .shot { position: fixed; left: 0; z-index: 20; pointer-events: none; width: 170px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, rgba(242, 196, 109, 0), #fff5da); box-shadow: 0 0 10px 2px rgba(255, 236, 180, 0.7); transform-origin: right center; animation: shoot 1.3s cubic-bezier(0.3, 0.1, 0.6, 1) forwards; }
 @keyframes shoot { 0% { transform: translate(-10vw, 0) rotate(24deg); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(95vw, 44vh) rotate(24deg); opacity: 0; } }
@@ -200,24 +184,6 @@ body.warping .card { background: rgba(21, 26, 58, 0.5); }
     <p class="warp-note" id="warpNote" aria-live="polite"></p>
   </section>
 
-  <section class="card" aria-labelledby="vh">
-    <h2 id="vh">Vorfreude</h2>
-    <div class="love">
-      <button class="heart-btn" id="heartBtn" type="button"><span id="heartIcon" aria-hidden="true"></span>Ich denke an dich</button>
-      <p class="tapnum num" id="tapTotal">0</p>
-      <p class="muted">Mal haben wir aneinander gedacht</p>
-      <p class="muted num" id="tapSplit" style="font-size:13px"></p>
-      <p class="muted" id="tapMsg" aria-live="polite"></p>
-    </div>
-    <div class="scale">
-      <h3>Vorfreude heute</h3>
-      <label for="vorIn" class="muted">Von 0 (geht so) bis 10 (ich platze): wie groß ist sie gerade?</label>
-      <input type="range" id="vorIn" min="0" max="10" step="1" value="5">
-      <p class="num" id="vorVal" style="color:var(--gold)">Noch nicht gesetzt</p>
-      <div class="bars" id="vorBars"></div>
-    </div>
-  </section>
-
   <section class="card" aria-labelledby="mh">
     <h2 id="mh">Der Himmel heute</h2>
     <div class="sky-row">
@@ -227,14 +193,10 @@ body.warping .card { background: rgba(21, 26, 58, 0.5); }
     <p class="astro" id="astro"></p>
   </section>
 
-  <section class="card" aria-labelledby="fh">
-    <h2 id="fh">Unsere Sternbilder</h2>
-    <svg id="figs" viewBox="0 0 400 200" role="img" aria-label="Die Sternbilder Wassermann und Löwe, vereinfacht gezeichnet" style="width:100%;height:auto;display:block"></svg>
-    <p class="astro">Löwe und Wassermann liegen am Tierkreis genau gegenüber. Die Astrologie nennt das Gegenpole, die sich anziehen. Masüsel ist Löwe, die kleine Löwin auch, Mafifee ist Wassermann.</p>
-  </section>
-
   <section class="card" aria-labelledby="hh">
     <h2 id="hh">Unser Horoskop</h2>
+    <svg id="figs" viewBox="0 0 400 200" role="img" aria-label="Die Sternbilder Wassermann und Löwe, vereinfacht gezeichnet" style="width:100%;height:auto;display:block"></svg>
+    <p class="astro">Löwe und Wassermann liegen am Tierkreis genau gegenüber. Die Astrologie nennt das Gegenpole, die sich anziehen.</p>
     <div class="horonav">
       <button class="btn" id="hPrev" type="button">Zurück</button>
       <span class="when" id="hDate"></span>
@@ -440,7 +402,7 @@ function renderAll(force) {
   const key = berlinDay(now) + '|' + state.preview;
   if (force === true || key !== lastKey) {
     lastKey = key; state.hday = null;
-    renderSky(now); renderHoro(); renderVor();
+    renderSky(now); renderHoro();
     renderDoors();
     renderArriveVisibility();
   }
@@ -522,7 +484,7 @@ function endWarp() {
 $('warp').addEventListener('click', startWarp);
 
 /* ---- Tuerchen und gemeinsame Daten ---- */
-const state = { myTaps: null, localTaps: 0, tapTimer: null, seen: false, connectDone: false, vorLocal: null, vorDrag: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
+const state = { hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
 let writeChain = Promise.resolve();
 function writeOwn(patch) {
   if (!state.db || !state.uid) return Promise.resolve();
@@ -690,70 +652,6 @@ function renderHoro() {
 $('hPrev').addEventListener('click', () => { const now = Date.now(); const cur = state.hday == null ? todayIdx(now) : state.hday; state.hday = Math.max(0, cur - 1); renderHoro(); });
 $('hNext').addEventListener('click', () => { const now = Date.now(); const cur = state.hday == null ? todayIdx(now) : state.hday; state.hday = cur + 1; renderHoro(); });
 
-/* ---- Herz und Vorfreude ---- */
-const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
-$('heartIcon').innerHTML = HEART;
-function floatHearts(n) {
-  if (reduce) return;
-  const r = $('heartBtn').getBoundingClientRect();
-  for (let i = 0; i < n; i++) {
-    const h = document.createElement('div'); h.className = 'floaty'; h.innerHTML = HEART;
-    h.style.left = (r.left + r.width * (0.15 + Math.random() * 0.7)) + 'px';
-    h.style.top = (r.top + 8) + 'px';
-    h.style.animationDelay = (i * 0.18) + 's';
-    h.addEventListener('animationend', () => h.remove());
-    document.body.appendChild(h);
-  }
-}
-function renderTaps() {
-  let total = 0; const parts = [];
-  for (const id in state.notes) {
-    const v = state.notes[id]; let t = Number((v && v.taps) || 0);
-    if (id === state.uid && state.myTaps != null) t = Math.max(t, state.myTaps);
-    total += t; if (t) parts.push(nameOf(id, v) + ' ' + nf.format(t));
-  }
-  if (state.uid && state.myTaps != null && !state.notes[state.uid]) { total += state.myTaps; parts.push(nameOf(state.uid, null) + ' ' + nf.format(state.myTaps)); }
-  total += state.localTaps;
-  $('tapTotal').textContent = nf.format(total);
-  $('tapSplit').textContent = parts.join(' · ');
-  const note = $('tapMsg');
-  if (!state.msgUntil || Date.now() > state.msgUntil) note.textContent = (state.connectDone && !state.db) ? 'Gemeinsam zählt das Herz nur in der Version in Claude.' : '';
-}
-function canShare() { return state.db && state.uid && state.canWrite !== false; }
-$('heartBtn').addEventListener('click', () => {
-  floatHearts(1);
-  if (canShare()) {
-    if (state.myTaps == null) state.myTaps = Number((myNote().taps) || 0);
-    state.myTaps++;
-    clearTimeout(state.tapTimer);
-    state.tapTimer = setTimeout(() => writeOwn({ taps: state.myTaps }), 700);
-  } else state.localTaps++;
-  renderTaps();
-});
-function vorKey() { return 'v' + berlinDay(Date.now()).replace(/-/g, ''); }
-function renderVor() {
-  const key = vorKey(); const rows = [];
-  for (const id in state.notes) { const v = state.notes[id]; const x = v && v.vor && v.vor[key]; if (typeof x === 'number') rows.push({ name: nameOf(id, v), x, mine: id === state.uid }); }
-  if (state.vorLocal != null && !rows.some(r => r.mine)) rows.push({ name: 'Du', x: state.vorLocal, mine: true });
-  const mine = rows.find(r => r.mine);
-  if (!state.vorDrag) { if (mine) $('vorIn').value = mine.x; $('vorVal').textContent = mine ? mine.x + ' von 10' : 'Noch nicht gesetzt'; }
-  const frag = document.createDocumentFragment();
-  rows.forEach(r => {
-    const d = document.createElement('div'); d.className = 'bar';
-    const n = document.createElement('span'); n.textContent = r.name;
-    const t = document.createElement('span'); t.className = 'track'; const f = document.createElement('span'); f.className = 'fill'; f.style.width = (r.x * 10) + '%'; t.appendChild(f);
-    const x = document.createElement('span'); x.className = 'num'; x.textContent = r.x;
-    d.append(n, t, x); frag.appendChild(d);
-  });
-  $('vorBars').replaceChildren(frag);
-}
-$('vorIn').addEventListener('input', () => { state.vorDrag = true; $('vorVal').textContent = $('vorIn').value + ' von 10'; });
-$('vorIn').addEventListener('change', () => {
-  state.vorDrag = false; const n = Number($('vorIn').value);
-  if (canShare()) writeOwn({ vor: { [vorKey()]: n } }); else state.vorLocal = n;
-  renderVor();
-});
-
 /* ---- Sternschnuppe ---- */
 function shoot() {
   if (reduce) return;
@@ -765,8 +663,6 @@ function shoot() {
 
 /* ---- Start ---- */
 renderFigs();
-renderTaps();
-renderVor();
 sizeSky();
 renderAll(true);
 setInterval(renderAll, 1000);
@@ -788,16 +684,10 @@ document.addEventListener('visibilitychange', () => renderAll(true));
     db.collection('notes').onSnapshot(snap => {
       clearTimeout(timer); state.dbSlow = false;
       const m = {}; snap.docs.forEach(d => { m[d.id] = d.data(); });
-      let who = null;
-      for (const id in m) { if (id !== state.uid && state.seen && Number((m[id] && m[id].taps) || 0) > Number((state.notes[id] && state.notes[id].taps) || 0)) who = nameOf(id, m[id]); }
-      if (state.uid && m[state.uid] && Number(m[state.uid].taps || 0) > Number(state.myTaps || 0)) state.myTaps = Number(m[state.uid].taps);
-      state.notes = m; state.seen = true;
-      if (who) { $('tapMsg').textContent = who + ' denkt gerade an dich.'; state.msgUntil = Date.now() + 7000; floatHearts(3); setTimeout(renderTaps, 7100); }
-      renderDoors(); renderPanel(); renderArriveVisibility(); renderTaps(); renderVor();
+      state.notes = m; renderDoors(); renderPanel(); renderArriveVisibility();
     }, () => { clearTimeout(timer); state.db = null; renderPanel(); });
     renderPanel();
   } catch (e) { /* Seite funktioniert auch ohne gemeinsame Daten */ }
-  finally { state.connectDone = true; renderTaps(); }
 })();
 </script>
 </body>
