@@ -647,16 +647,18 @@ function renderPanel() {
   if (!state.db) {
     f.append(el('p', 'muted', 'Die gemeinsamen Antworten sind gerade nicht erreichbar. Das Türchen kannst du trotzdem lesen.'));
   } else {
-    const entries = Object.entries(state.notes).filter(([, v]) => v && v['d' + d.n] && v['d' + d.n].text);
+    const canEdit = !!(state.uid && state.canWrite !== false);
+    const notMe = id => !(canEdit && id === state.uid);
+    const entries = Object.entries(state.notes).filter(([id, v]) => notMe(id) && v && v['d' + d.n] && v['d' + d.n].text);
     const list = el('div', 'replies');
     entries.forEach(([id, v]) => {
       const r = el('div', 'reply'); const w = el('div', 'who', nameOf(id, v));
       if (v['d' + d.n].heart) { const h = el('span', 'h', ' ♥'); w.append(h); }
       r.append(w, el('p', '', v['d' + d.n].text)); list.append(r);
     });
-    const heartOnlyOthers = Object.entries(state.notes).filter(([id, v]) => v && v['d' + d.n] && v['d' + d.n].heart && !(v['d' + d.n].text));
+    const heartOnlyOthers = Object.entries(state.notes).filter(([id, v]) => notMe(id) && v && v['d' + d.n] && v['d' + d.n].heart && !(v['d' + d.n].text));
     heartOnlyOthers.forEach(([id, v]) => { const r = el('div', 'reply'); r.append(el('div', 'who', nameOf(id, v) + ' hat ein Herz dagelassen ♥')); list.append(r); });
-    if (!entries.length && !heartOnlyOthers.length) list.append(el('p', 'muted', 'Noch keine Antworten. Mach den Anfang.'));
+    if (!entries.length && !heartOnlyOthers.length) list.append(el('p', 'muted', canEdit ? 'Noch keine Antwort vom anderen.' : 'Noch keine Antworten. Mach den Anfang.'));
     f.append(list);
 
     if (state.uid && state.canWrite !== false) {
@@ -676,7 +678,9 @@ function renderPanel() {
       const hb = el('button', 'btn heart' + (mine.heart ? ' on' : ''), mine.heart ? 'Herz zurücknehmen' : 'Herz schicken'); hb.type = 'button';
       hb.setAttribute('aria-pressed', mine.heart ? 'true' : 'false');
       hb.addEventListener('click', () => writeOwn({ ['d' + d.n]: { heart: !mine.heart } }));
-      row.append(save, hb); f.append(ta, row);
+      row.append(save, hb);
+      if (mine.text) f.append(el('p', 'muted small', 'Deine Antwort, du kannst sie jederzeit ändern:'));
+      f.append(ta, row);
     } else if (state.canWrite === false) {
       f.append(el('p', 'muted', 'Zum Antworten braucht diese Seite eine Einladung als Bearbeiter. Frag, ob du eingeladen wirst.'));
     } else if (!state.uid) {
