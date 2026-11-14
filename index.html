@@ -112,11 +112,27 @@ textarea { min-height: 84px; resize: vertical; }
 .preview.show { display: flex; }
 footer { text-align: center; color: var(--gold); font-family: var(--display); font-size: clamp(24px, 7vw, 30px); line-height: 1.25; text-wrap: balance; padding: 28px 8px 0; border-top: 1px solid var(--line); }
 
+.door.wide { grid-column: 1 / -1; flex-direction: row; gap: 14px; min-height: 64px; }
+.door.wide .n { font-size: 24px; }
+
+/* Sternschnuppe */
+.shot { position: fixed; left: 0; z-index: 20; pointer-events: none; width: 170px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, rgba(242, 196, 109, 0), #fff5da); box-shadow: 0 0 10px 2px rgba(255, 236, 180, 0.7); transform-origin: right center; animation: shoot 1.3s cubic-bezier(0.3, 0.1, 0.6, 1) forwards; }
+@keyframes shoot { 0% { transform: translate(-10vw, 0) rotate(24deg); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(95vw, 44vh) rotate(24deg); opacity: 0; } }
+
+/* Almas Sternenfeld */
+.field { position: relative; height: 270px; border-radius: 14px; background: rgba(11, 14, 32, 0.6); border: 1px solid var(--line); overflow: hidden; touch-action: manipulation; }
+.starbtn { position: absolute; width: 72px; height: 72px; padding: 0; border: 0; background: transparent; cursor: pointer; animation: bob 3.4s ease-in-out infinite; transition: opacity 0.3s; }
+.starbtn svg { width: 100%; height: 100%; display: block; }
+.starbtn.pop { animation: pop 0.4s ease-out forwards; }
+@keyframes bob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-9px) rotate(4deg); } }
+@keyframes pop { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.2); opacity: 0; } }
+
 /* Warp: Karten werden durchsichtiger, Inhalt bleibt lesbar */
 body.warping .card { background: rgba(21, 26, 58, 0.5); }
 
 @media (prefers-reduced-motion: reduce) {
-  .warp { animation: none; }
+  .warp, .starbtn { animation: none; }
+  .starbtn.pop { animation: none; opacity: 0; }
 }
 </style>
 </head>
@@ -126,7 +142,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.5); }
   <header>
     <p class="eyebrow">Wiedersehen am 26.11.2026 um 14:10 Uhr</p>
     <h1>Penzing <span aria-hidden="true">&rarr;</span><span class="sr" style="position:absolute;left:-9999px"> nach </span> Simmern</h1>
-    <p class="lede">Masüsel und Mafifee: 500 Kilometer, ein Mond und zwölf Türchen, bis zur Glückseligkeit und noch viel weiter. Diese Seite gehört nur uns beiden.</p>
+    <p class="lede">Masüsel und Mafifee: 500 Kilometer, ein Mond und dreizehn Türchen, bis zur Glückseligkeit und noch viel weiter. Diese Seite gehört nur uns beiden.</p>
   </header>
 
   <section class="card" id="journey" aria-labelledby="jh">
@@ -180,11 +196,18 @@ body.warping .card { background: rgba(21, 26, 58, 0.5); }
   </section>
 
   <section class="card" aria-labelledby="dh">
-    <h2 id="dh">Zwölf Türchen</h2>
-    <p class="muted" style="margin-bottom:12px">Jeden Tag öffnet sich eins. Antwortet einander, die Antworten sehen immer beide.</p>
+    <h2 id="dh">Dreizehn Türchen</h2>
+    <p class="muted" style="margin-bottom:12px">Heute gibt es eins vorab, ab morgen öffnet sich jeden Tag eins. Antwortet einander, die Antworten sehen immer beide.</p>
     <label class="preview" id="previewBox"><input type="checkbox" id="previewAll"> Vorschau: alle Türchen öffnen (nur für dich als Besitzer)</label>
     <div class="doors" id="doors"></div>
     <div class="panel" id="panel" hidden></div>
+  </section>
+
+  <section class="card" aria-labelledby="alh">
+    <h2 id="alh">Almas Sternenfeld</h2>
+    <p class="muted" style="margin-bottom:12px">Für Alma: Sterne antippen und fangen.</p>
+    <div class="field" id="field" role="group" aria-label="Sternenfeld zum Antippen"></div>
+    <p class="muted" id="caught" style="margin-top:10px" aria-live="polite">Noch kein Stern gefangen.</p>
   </section>
 
   <footer>Masüsel und Mafifee unter demselben Mond.</footer>
@@ -246,18 +269,19 @@ const ASTRO = {
 const ASTRO_DEFAULT = 'Die Leoniden sind noch bis zum 30. November aktiv. Vielleicht fällt heute Nacht eine Sternschnuppe für euch.';
 
 const DOORS = [
+  { n: 0, kind: 'Heute', title: 'Nacht eins von zwölf', text: 'Heute ist die erste von zwölf Nächten. Noch zwölf Mal schlafen, dann ist es soweit für Masüsel, Mafifee und Alma. Der Mond steht heute als schmale, zunehmende Sichel am Himmel und wächst mit euch auf den Vollmond zu. Wirf einen Blick nach oben, er ist für euch beide derselbe.', ask: 'Schick eine Sternschnuppe los und schreib dazu, was du dir wünschst.', star: true },
   { n: 1, kind: 'Himmel', title: 'Der Mond wächst', text: 'Der Mond ist heute eine junge, zunehmende Sichel. Jede Nacht wird er ein Stück voller, und jede Nacht seid ihr einander ein Stück näher.', ask: 'Was machst du als Erstes, wenn du ankommst?' },
   { n: 2, kind: 'Spaß', title: 'Schneckenpost', text: 'Seit dem 6. November nähert ihr euch mit etwa {v} km/h. Das ist viel langsamer als ein Spaziergang und etwa {x} Mal schneller als eine Weinbergschnecke. Respekt.', ask: 'Welches Tier wärst du für diese 500 Kilometer?' },
   { n: 3, kind: 'Wunsch', title: 'Sternschnuppennacht', text: 'Heute Nacht erreichen die Leoniden ihr Maximum, am besten zu sehen nach Mitternacht. Wer eine Sternschnuppe sieht, darf sich etwas wünschen. Wer keine sieht, darf es trotzdem.', ask: 'Schreib deinen Wunsch auf.' },
   { n: 4, kind: 'Frage', title: 'Drei Dinge', text: 'Kleine Aufgabe für heute, ganz ohne Druck.', ask: 'Drei Dinge, die ich an dir mag.' },
-  { n: 5, kind: 'Spaß', title: 'Das Gepäck', text: 'In 500 Kilometern Entfernung packt es sich leichter, wenn man weiß, was wirklich nötig ist.', ask: 'Was darf auf keinen Fall im Gepäck fehlen?' },
+  { n: 5, kind: 'Spaß', title: 'Das Gepäck', text: 'In 500 Kilometern Entfernung packt es sich leichter, wenn man weiß, was wirklich nötig ist.', ask: 'Was darf auf keinen Fall im Gepäck fehlen? Und was muss für Alma mit?' },
   { n: 6, kind: 'Himmel', title: 'Gleicher Himmel', text: 'Der Mond zieht heute am Saturn vorbei. Wenn es aufklart, schau am Abend nach oben. Über Penzing und über Simmern liegt derselbe Himmel.', ask: 'Was siehst du, wenn du hochschaust?' },
   { n: 7, kind: 'Orakel', title: 'Das Sehnsuchtsorakel', text: 'Zieh eine Karte. Die Sterne sind nicht immer präzise, aber immer freundlich.', oracle: true },
   { n: 8, kind: 'Himmel', title: 'Aufbruch', text: 'Heute wechselt die Sonne vom Skorpion in den Schützen. Das Zeichen für Reiselust, Weite und das Gefühl, dass es bald losgeht.', ask: 'Wofür bist du gerade bereit aufzubrechen?' },
   { n: 9, kind: 'Frage', title: 'Dein Lied', text: 'Noch drei Nächte. Der Mond ist fast voll und wird ein bisschen ungeduldig.', ask: 'Welches Lied soll am Tag der Ankunft laufen?' },
   { n: 10, kind: 'Himmel', title: 'Supermond', text: 'Heute um 15:53 Uhr ist Vollmond, und er ist ein Supermond, nur 360.768 Kilometer von der Erde entfernt. Er geht am Abend auf. Ihr könnt ihn zur gleichen Zeit anschauen, jeder an seinem Ort.', ask: 'Welchen Satz gibst du dem Mond mit?' },
   { n: 11, kind: 'Frage', title: 'Die letzte Nacht davor', text: 'Uranus steht heute der Sonne gegenüber. Mit bloßem Auge ist er kaum zu sehen. Ihr braucht ihn nicht, ihr habt bald einander.', ask: 'Wie aufgeregt bist du, von 1 bis 10?' },
-  { n: 12, kind: 'Ankunft', title: 'Heute ist es soweit', text: 'In der Nacht wechselte Mars vom Löwen in die Jungfrau. Aus Mut wird Sorgfalt, aus Warten wird Ankommen. Um 14:10 Uhr ist es soweit.', ask: 'Was sagst du als Allererstes?' }
+  { n: 12, kind: 'Ankunft', title: 'Heute ist es soweit', text: 'In der Nacht wechselte Mars vom Löwen in die Jungfrau. Aus Mut wird Sorgfalt, aus Warten wird Ankommen. Um 14:10 Uhr ist es soweit.', ask: 'Was sagst du als Allererstes? Und was sagt Alma?' }
 ];
 const ORACLE = [
   'Die Sterne sagen: Plane Zeit für Umarmungen ein. Viel Zeit.',
@@ -269,7 +293,10 @@ const ORACLE = [
   'Prophezeiung: Der erste Satz wird peinlich und perfekt.',
   'Der Schütze rät: Aufbruch ist der halbe Weg.',
   'Die Karten sind sich einig: Es gibt Kuchen. Irgendwo.',
-  'Die Zukunft sagt: viel Schweigen, das sich gut anfühlt.'
+  'Die Zukunft sagt: viel Schweigen, das sich gut anfühlt.',
+  'Almas Orakel: Heute wird gehüpft, bis die Pfützen Angst bekommen.',
+  'Alma fragt: Gibt es ein Eis? Die Sterne sind ausnahmsweise dafür.',
+  'Prophezeiung: Ein Kuscheltier wird dringend gebraucht. Mehrfach.'
 ];
 
 const $ = id => document.getElementById(id);
@@ -443,11 +470,11 @@ function renderDoors() {
   DOORS.forEach(d => {
     const open = isOpen(d.n);
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'door ' + (open ? 'open' : 'locked') + (state.sel === d.n ? ' sel' : '');
+    b.type = 'button'; b.className = 'door ' + (open ? 'open' : 'locked') + (state.sel === d.n ? ' sel' : '') + (d.n === 0 ? ' wide' : '');
     const dateTxt = (14 + d.n) + '.11.';
     b.setAttribute('aria-label', open ? 'Türchen ' + d.n + ', ' + dateTxt + ', öffnen' : 'Türchen ' + d.n + ' öffnet am ' + dateTxt);
     if (!open) b.setAttribute('aria-disabled', 'true');
-    const n = document.createElement('span'); n.className = 'n'; n.textContent = d.n;
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = d.n === 0 ? 'Heute' : d.n;
     const dt = document.createElement('span'); dt.className = 'd'; dt.textContent = open ? dateTxt : 'ab ' + dateTxt;
     const dot = document.createElement('span'); dot.className = 'dot';
     const hearts = Object.values(state.notes).filter(x => x && x['d' + d.n] && x['d' + d.n].heart).length;
@@ -478,6 +505,10 @@ function renderPanel() {
     f.append(o, b);
   }
   if (d.ask) f.append(el('p', 'ask', d.ask));
+  if (d.star) {
+    const sb = el('button', 'btn solid', 'Sternschnuppe schicken'); sb.type = 'button';
+    sb.addEventListener('click', shoot); f.append(sb);
+  }
 
   if (!state.db) {
     f.append(el('p', 'muted', 'Die gemeinsamen Antworten sind gerade nicht erreichbar. Das Türchen kannst du trotzdem lesen.'));
@@ -546,6 +577,37 @@ $('goBtn').addEventListener('click', () => {
 });
 
 $('previewAll').addEventListener('change', e => { state.preview = e.target.checked; renderAll(true); renderPanel(); });
+
+/* ---- Sternschnuppe ---- */
+function shoot() {
+  if (reduce) return;
+  const s = document.createElement('div'); s.className = 'shot';
+  s.style.top = (8 + Math.random() * 24) + '%';
+  s.addEventListener('animationend', () => s.remove());
+  document.body.appendChild(s);
+}
+
+/* ---- Almas Sternenfeld ---- */
+(function starField() {
+  const field = $('field'), counter = $('caught');
+  const colors = ['#f2c46d', '#f08fa9', '#9ad8ff', '#f2c46d', '#f08fa9'];
+  const pts = '32,4 39.5,23.5 60.5,24.5 44,37.5 49.5,58 32,46.5 14.5,58 20,37.5 3.5,24.5 24.5,23.5';
+  let caught = 0;
+  function place(b) { b.style.left = (3 + Math.random() * 72) + '%'; b.style.top = (3 + Math.random() * 62) + '%'; b.style.animationDelay = (-Math.random() * 3) + 's'; }
+  colors.forEach(c => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'starbtn'; b.setAttribute('aria-label', 'Stern fangen');
+    b.innerHTML = '<svg viewBox="0 0 64 64" aria-hidden="true"><polygon points="' + pts + '" fill="' + c + '" stroke="#fff5da" stroke-width="2" stroke-linejoin="round"/></svg>';
+    place(b);
+    b.addEventListener('click', () => {
+      if (b.classList.contains('pop')) return;
+      b.style.animationDelay = '0s'; b.classList.add('pop'); caught++;
+      counter.textContent = caught === 1 ? 'Ein Stern gefangen.' : caught + ' Sterne gefangen.';
+      if (caught % 5 === 0) shoot();
+      setTimeout(() => { place(b); b.classList.remove('pop'); }, reduce ? 200 : 450);
+    });
+    field.appendChild(b);
+  });
+})();
 
 /* ---- Start ---- */
 sizeSky();
