@@ -130,6 +130,22 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .small { font-size: 13px; margin-top: 10px; }
 .basis { display: block; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11.5px; line-height: 1.4; color: var(--muted); overflow-wrap: anywhere; }
 
+/* Vorfreude */
+.love { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; margin-bottom: 18px; }
+.heart-btn { appearance: none; border: 0; cursor: pointer; width: 100%; min-height: 64px; border-radius: 18px; background: linear-gradient(135deg, #f6a3b8, #e36c8e); color: #2b0f19; font-family: var(--display); font-size: 22px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.heart-btn:active { transform: scale(0.98); }
+.heart-btn svg { width: 28px; height: 28px; }
+.tapnum { font-size: clamp(40px, 12vw, 56px); color: var(--rose); line-height: 1.1; margin-top: 10px; }
+.scale { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--line); padding-top: 16px; }
+.scale input[type="range"] { width: 100%; height: 36px; accent-color: #f2c46d; }
+.bars { display: flex; flex-direction: column; gap: 8px; }
+.bar { display: grid; grid-template-columns: 96px 1fr 28px; gap: 8px; align-items: center; font-size: 14px; }
+.bar .track { height: 10px; border-radius: 6px; background: rgba(11, 14, 32, 0.7); border: 1px solid var(--line); overflow: hidden; }
+.bar .fill { display: block; height: 100%; background: var(--gold); }
+.floaty { position: fixed; z-index: 30; pointer-events: none; color: var(--rose); width: 26px; height: 26px; animation: floaty 1.7s ease-out forwards; }
+.floaty svg { width: 100%; height: 100%; }
+@keyframes floaty { 0% { transform: translateY(0) scale(0.6); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-150px) scale(1.3); opacity: 0; } }
+
 /* Sternschnuppe */
 .shot { position: fixed; left: 0; z-index: 20; pointer-events: none; width: 170px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, rgba(242, 196, 109, 0), #fff5da); box-shadow: 0 0 10px 2px rgba(255, 236, 180, 0.7); transform-origin: right center; animation: shoot 1.3s cubic-bezier(0.3, 0.1, 0.6, 1) forwards; }
 @keyframes shoot { 0% { transform: translate(-10vw, 0) rotate(24deg); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(95vw, 44vh) rotate(24deg); opacity: 0; } }
@@ -175,13 +191,31 @@ body.warping .card { background: rgba(21, 26, 58, 0.5); }
 
   <section class="card" aria-labelledby="sh">
     <h2 id="sh">Tempo</h2>
-    <div class="speed"><span class="big num" id="speed">1,8 km/h</span><span class="muted">so schnell nähert ihr euch</span></div>
+    <div class="speed"><span class="big num" id="speed">1,8 km/h</span><span class="muted">so schnell nähern wir uns</span></div>
     <ul class="ladder" id="ladder"></ul>
   </section>
 
   <section aria-label="Zeitmaschine" style="display:flex;flex-direction:column;gap:10px">
     <button class="warp" id="warp" type="button">Zeitmaschine starten</button>
     <p class="warp-note" id="warpNote" aria-live="polite"></p>
+  </section>
+
+  <section class="card" aria-labelledby="vh">
+    <h2 id="vh">Vorfreude</h2>
+    <div class="love">
+      <button class="heart-btn" id="heartBtn" type="button"><span id="heartIcon" aria-hidden="true"></span>Ich denke an dich</button>
+      <p class="tapnum num" id="tapTotal">0</p>
+      <p class="muted">Mal haben wir aneinander gedacht</p>
+      <p class="muted num" id="tapSplit" style="font-size:13px"></p>
+      <p class="muted" id="tapMsg" aria-live="polite"></p>
+    </div>
+    <div class="scale">
+      <h3>Vorfreude heute</h3>
+      <label for="vorIn" class="muted">Von 0 (geht so) bis 10 (ich platze): wie groß ist sie gerade?</label>
+      <input type="range" id="vorIn" min="0" max="10" step="1" value="5">
+      <p class="num" id="vorVal" style="color:var(--gold)">Noch nicht gesetzt</p>
+      <div class="bars" id="vorBars"></div>
+    </div>
   </section>
 
   <section class="card" aria-labelledby="mh">
@@ -194,13 +228,13 @@ body.warping .card { background: rgba(21, 26, 58, 0.5); }
   </section>
 
   <section class="card" aria-labelledby="fh">
-    <h2 id="fh">Eure Sternbilder</h2>
+    <h2 id="fh">Unsere Sternbilder</h2>
     <svg id="figs" viewBox="0 0 400 200" role="img" aria-label="Die Sternbilder Wassermann und Löwe, vereinfacht gezeichnet" style="width:100%;height:auto;display:block"></svg>
-    <p class="astro">Löwe und Wassermann liegen am Tierkreis genau gegenüber. Die Astrologie nennt das Gegenpole, die sich anziehen. Löwe ist das Zeichen von Masüsel und der kleinen Löwin, Wassermann das von Mafifee.</p>
+    <p class="astro">Löwe und Wassermann liegen am Tierkreis genau gegenüber. Die Astrologie nennt das Gegenpole, die sich anziehen. Masüsel ist Löwe, die kleine Löwin auch, Mafifee ist Wassermann.</p>
   </section>
 
   <section class="card" aria-labelledby="hh">
-    <h2 id="hh">Euer Horoskop</h2>
+    <h2 id="hh">Unser Horoskop</h2>
     <div class="horonav">
       <button class="btn" id="hPrev" type="button">Zurück</button>
       <span class="when" id="hDate"></span>
@@ -210,7 +244,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.5); }
       <div class="hcol w"><h3>Mafifee</h3><span class="sign">Wassermann</span><p id="hW"></p><span class="basis" id="hGW"></span></div>
       <div class="hcol l"><h3>Masüsel</h3><span class="sign">Löwe</span><p id="hL"></p><span class="basis" id="hGL"></span></div>
     </div>
-    <div class="hboth"><h3>Für euch beide</h3><p id="hB"></p><span class="basis" id="hGB"></span></div>
+    <div class="hboth"><h3>Für uns beide</h3><p id="hB"></p><span class="basis" id="hGB"></span></div>
   </section>
 
   <section class="card" id="arrive" aria-labelledby="ah" hidden>
@@ -223,7 +257,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.5); }
 
   <section class="card" aria-labelledby="dh">
     <h2 id="dh">Dreizehn Türchen</h2>
-    <p class="muted" style="margin-bottom:12px">Heute gibt es eins vorab, ab morgen öffnet sich jeden Tag eins. Antwortet einander, die Antworten sehen immer beide.</p>
+    <p class="muted" style="margin-bottom:12px">Heute gibt es eins vorab, ab morgen öffnet sich jeden Tag eins. Wir antworten einander und sehen beide alle Antworten.</p>
     <label class="preview" id="previewBox"><input type="checkbox" id="previewAll"> Vorschau: alle Türchen öffnen (nur für dich als Besitzer)</label>
     <div class="doors" id="doors"></div>
     <div class="panel" id="panel" hidden></div>
@@ -285,12 +319,12 @@ const ASTRO = {
   '2026-11-25': 'Uranus steht heute in Opposition zur Sonne. Der Mond ist noch so gut wie voll.',
   '2026-11-26': 'In der Nacht wechselt Mars vom Löwen in die Jungfrau. Um 14:10 Uhr ist es soweit.'
 };
-const ASTRO_DEFAULT = 'Die Leoniden sind noch bis zum 30. November aktiv. Vielleicht fällt heute Nacht eine Sternschnuppe für euch.';
+const ASTRO_DEFAULT = 'Die Leoniden sind noch bis zum 30. November aktiv. Vielleicht fällt heute Nacht eine Sternschnuppe für uns.';
 
 const DOORS = [
-  { n: 0, kind: 'Heute', title: 'Nacht eins von zwölf', text: 'Heute ist die erste von zwölf Nächten. Noch zwölf Mal schlafen, dann ist es soweit für Masüsel und Mafifee. Der Mond steht heute als schmale, zunehmende Sichel am Himmel und wächst mit euch auf den Vollmond zu. Wirf einen Blick nach oben, er ist für euch beide derselbe.', ask: 'Schick eine Sternschnuppe los und schreib dazu, was du dir wünschst.', star: true },
-  { n: 1, kind: 'Himmel', title: 'Der Mond wächst', text: 'Der Mond ist heute eine junge, zunehmende Sichel. Jede Nacht wird er ein Stück voller, und jede Nacht seid ihr einander ein Stück näher.', ask: 'Was machst du als Erstes, wenn du ankommst?' },
-  { n: 2, kind: 'Spaß', title: 'Schneckenpost', text: 'Seit dem 6. November nähert ihr euch mit etwa {v} km/h. Das ist viel langsamer als ein Spaziergang und etwa {x} Mal schneller als eine Weinbergschnecke. Respekt.', ask: 'Welches Tier wärst du für diese 500 Kilometer?' },
+  { n: 0, kind: 'Heute', title: 'Nacht eins von zwölf', text: 'Heute ist die erste von zwölf Nächten. Noch zwölf Mal schlafen, dann ist es soweit für uns. Der Mond steht heute als schmale, zunehmende Sichel am Himmel und wächst mit uns auf den Vollmond zu. Wirf einen Blick nach oben, er ist für uns beide derselbe.', ask: 'Schick eine Sternschnuppe los und schreib dazu, was du dir wünschst.', star: true },
+  { n: 1, kind: 'Himmel', title: 'Der Mond wächst', text: 'Der Mond ist heute eine junge, zunehmende Sichel. Jede Nacht wird er ein Stück voller, und jede Nacht sind wir einander ein Stück näher.', ask: 'Was machst du als Erstes, wenn du ankommst?' },
+  { n: 2, kind: 'Spaß', title: 'Schneckenpost', text: 'Seit dem 6. November nähern wir uns mit etwa {v} km/h. Das ist viel langsamer als ein Spaziergang und etwa {x} Mal schneller als eine Weinbergschnecke. Respekt.', ask: 'Welches Tier wärst du für diese 500 Kilometer?' },
   { n: 3, kind: 'Wunsch', title: 'Sternschnuppennacht', text: 'Heute Nacht erreichen die Leoniden ihr Maximum, am besten zu sehen nach Mitternacht. Wer eine Sternschnuppe sieht, darf sich etwas wünschen. Wer keine sieht, darf es trotzdem.', ask: 'Schreib deinen Wunsch auf.' },
   { n: 4, kind: 'Frage', title: 'Drei Dinge', text: 'Kleine Aufgabe für heute, ganz ohne Druck.', ask: 'Drei Dinge, die ich an dir mag.' },
   { n: 5, kind: 'Spaß', title: 'Das Gepäck', text: 'In 500 Kilometern Entfernung packt es sich leichter, wenn man weiß, was wirklich nötig ist.', ask: 'Was darf auf keinen Fall im Gepäck fehlen?' },
@@ -298,13 +332,13 @@ const DOORS = [
   { n: 7, kind: 'Orakel', title: 'Das Sehnsuchtsorakel', text: 'Zieh eine Karte. Die Sterne sind nicht immer präzise, aber immer freundlich.', oracle: true },
   { n: 8, kind: 'Himmel', title: 'Aufbruch', text: 'Heute wechselt die Sonne vom Skorpion in den Schützen. Das Zeichen für Reiselust, Weite und das Gefühl, dass es bald losgeht.', ask: 'Wofür bist du gerade bereit aufzubrechen?' },
   { n: 9, kind: 'Frage', title: 'Dein Lied', text: 'Noch drei Nächte. Der Mond ist fast voll und wird ein bisschen ungeduldig.', ask: 'Welches Lied soll am Tag der Ankunft laufen?' },
-  { n: 10, kind: 'Himmel', title: 'Supermond', text: 'Heute um 15:53 Uhr ist Vollmond, und er ist ein Supermond, nur 360.768 Kilometer von der Erde entfernt. Er geht am Abend auf. Ihr könnt ihn zur gleichen Zeit anschauen, jeder an seinem Ort.', ask: 'Welchen Satz gibst du dem Mond mit?' },
-  { n: 11, kind: 'Frage', title: 'Die letzte Nacht davor', text: 'Uranus steht heute der Sonne gegenüber. In der Astrologie ist er der Planet des Wassermanns, also Mafifees Planet. Mit bloßem Auge ist er kaum zu sehen. Ihr braucht ihn nicht, ihr habt bald einander.', ask: 'Wie aufgeregt bist du, von 1 bis 10?' },
+  { n: 10, kind: 'Himmel', title: 'Supermond', text: 'Heute um 15:53 Uhr ist Vollmond, und er ist ein Supermond, nur 360.768 Kilometer von der Erde entfernt. Er geht am Abend auf. Wir können ihn zur gleichen Zeit anschauen, jeder an seinem Ort.', ask: 'Welchen Satz gibst du dem Mond mit?' },
+  { n: 11, kind: 'Frage', title: 'Die letzte Nacht davor', text: 'Uranus steht heute der Sonne gegenüber. In der Astrologie ist er der Planet des Wassermanns, also Mafifees Planet. Mit bloßem Auge ist er kaum zu sehen. Wir brauchen ihn nicht, wir haben bald einander.', ask: 'Wie aufgeregt bist du, von 1 bis 10?' },
   { n: 12, kind: 'Ankunft', title: 'Heute ist es soweit', text: 'In der Nacht verließ Mars den Löwen, Masüsels Zeichen, und zog in die Jungfrau. Jupiter bleibt im Löwen. Aus Mut wird Sorgfalt, aus Warten wird Ankommen. Um 14:10 Uhr ist es soweit.', ask: 'Was sagst du als Allererstes?' }
 ];
 const ORACLE = [
   'Die Sterne sagen: Plane Zeit für Umarmungen ein. Viel Zeit.',
-  'Orakel: Es gibt Kaffee, und er wird kalt, weil ihr redet.',
+  'Orakel: Es gibt Kaffee, und er wird kalt, weil wir reden.',
   'Jupiter flüstert: Das Wiedersehen wird besser als jeder Countdown.',
   'Eine Karte aus dem Nichts: Heute nichts erklären, nur lachen.',
   'Das Universum hat nachgerechnet: 500 Kilometer sind kleiner, als sie aussehen.',
@@ -376,7 +410,7 @@ function renderRoute(frac) {
 function renderLadder(v) {
   const ul = $('ladder'); const frag = document.createDocumentFragment(); let placed = false;
   const you = document.createElement('li'); you.className = 'you';
-  const a = document.createElement('span'); a.textContent = 'Ihr beide';
+  const a = document.createElement('span'); a.textContent = 'Wir beide';
   const b = document.createElement('span'); b.className = 'num'; b.textContent = fmtSpeed(v) + ' km/h';
   you.append(a, b);
   SPEEDS.forEach(s => {
@@ -406,7 +440,7 @@ function renderAll(force) {
   const key = berlinDay(now) + '|' + state.preview;
   if (force === true || key !== lastKey) {
     lastKey = key; state.hday = null;
-    renderSky(now); renderHoro();
+    renderSky(now); renderHoro(); renderVor();
     renderDoors();
     renderArriveVisibility();
   }
@@ -488,7 +522,7 @@ function endWarp() {
 $('warp').addEventListener('click', startWarp);
 
 /* ---- Tuerchen und gemeinsame Daten ---- */
-const state = { hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
+const state = { myTaps: null, localTaps: 0, tapTimer: null, seen: false, connectDone: false, vorLocal: null, vorDrag: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
 let writeChain = Promise.resolve();
 function writeOwn(patch) {
   if (!state.db || !state.uid) return Promise.resolve();
@@ -623,19 +657,19 @@ $('previewAll').addEventListener('change', e => { state.preview = e.target.check
 
 /* ---- Horoskop ---- */
 const HORO = [
-  { w: "Der Mond steht im Steinbock und macht den Tag sachlich. Gut, um Dinge zu ordnen und Termine zu sichern, bevor die Woche beginnt.", gw: "Mond im Steinbock (19 Grad)", l: "Die Sonne steht im Skorpion, 3 Grad vor dem genauen Quadrat zu deiner Geburtssonne. Das kann dickköpfig machen. Ab dem 22. wechselt sie in den Schützen, eine leichte Verbindung zu deinem Löwen.", gl: "Sonne im Skorpion, Quadrat zu deiner Sonne (3,3 Grad Abstand)", b: "Venus steht in der Waage: im Trigon zum Wassermann und im Sextil zum Löwen. Diese Grundstimmung begleitet euch beide bis zum Wiedersehen.", gb: "Venus in der Waage (23 bis 26 Grad)" },
-  { w: "Der Mond tritt heute in den Wassermann, dein Zeichen. Gefühle und Ideen werden klarer. Zweieinhalb Tage lang steht er bei dir.", gw: "Mond wechselt in den Wassermann (0,8 Grad)", l: "Jupiter und Mars stehen in deinem Zeichen nur 0,3 Grad auseinander. Glück und Tatkraft ballen sich im Löwen. Der Mond im Wassermann steht dir gegenüber, bei ihr.", gl: "Jupiter und Mars im Löwen (0,3 Grad) · Mond im Wassermann gegenüber dem Löwen", b: "Er trägt die Kraft des Löwen, sie das Licht des Mondes in ihrem Zeichen. Zwei Gegenpole, jeder mit eigenem Rückenwind.", gb: "Mond im Wassermann · Jupiter und Mars im Löwen" },
-  { w: "Der Mond zieht fast genau über deine Geburtssonne, nur 0,5 Grad daneben. Traditionell fühlen sich Gefühl und Wesen dann im Einklang an. Gute Zeit, etwas anzustoßen.", gw: "Mond im Wassermann, Konjunktion zu deiner Sonne (0,5 Grad)", l: "Jupiter und Mars stehen fast genau übereinander (0,1 Grad), beide in deinem Löwen. Mut und Glück laufen heute zusammen. Nutze es für etwas Schönes.", gl: "Jupiter und Mars im Löwen, Konjunktion (0,1 Grad)", b: "Der Mond steht über ihrer Sonne und gegenüber deiner. Ihr schaut aus entgegengesetzten Richtungen auf dasselbe Licht.", gb: "Mond über der Wassermann-Sonne, gegenüber der Löwe-Sonne" },
-  { w: "Der Mond erreicht das Erste Viertel, in der Überlieferung der Moment, in dem Pläne Gestalt annehmen. In der Nacht fliegen die Leoniden.", gw: "Erstes Viertel 12:48 Uhr · Mond im Wassermann (25 Grad)", l: "Das Erste Viertel steht für Entscheidungen. Der Mond im Wassermann gegenüber deinem Löwen fragt: Was willst du wirklich? Antworte mit dem Herzen.", gl: "Erstes Viertel · Mond gegenüber dem Löwen", b: "Heute Nacht erreichen die Leoniden ihr Maximum, 10 bis 15 Sternschnuppen pro Stunde, am besten nach Mitternacht. Wünscht euch dasselbe.", gb: "Leoniden-Maximum (Quelle: Star Walk)" },
-  { w: "Der Mond steht seit gestern Abend in den Fischen, dem Nachbarzeichen deines Wassermanns. Es wird weicher und träumerischer. Hör mehr auf dein Gefühl als auf Listen.", gw: "Mond in den Fischen (7 Grad)", l: "Der Mond in den Fischen macht empfindsam. Auch ein Löwe darf heute weich sein, das nimmt dir nichts von deiner Stärke.", gl: "Mond in den Fischen", b: "Ein Tag für Träume und leise Worte. Erzählt euch, wovon ihr nachts nicht loskommt.", gb: "Mond in den Fischen" },
-  { w: "Der Mond bleibt in den Fischen. Merkur steht im Skorpion und macht Gespräche tiefer. Ein guter Abend für ein langes Telefonat.", gw: "Mond in den Fischen (20 Grad) · Merkur im Skorpion", l: "Merkur im Skorpion steht im Zeichenquadrat zu deinem Löwen. Worte können schärfer klingen als gemeint. Schreib lieber einen Satz mehr, damit nichts missverstanden wird.", gl: "Merkur im Skorpion, Quadrat zum Löwen (Zeichenaspekt)", b: "Tiefe Gespräche liegen nah, auch wenn Worte holpern. Fragt nach, statt zu raten.", gb: "Merkur im Skorpion, Quadrat zu beiden Zeichen" },
-  { w: "Der Mond tritt in den Widder und nähert sich Saturn, den er am Abend erreicht. Beide stehen im Sextil zu deinem Wassermann: Antrieb und Disziplin ziehen am selben Strang.", gw: "Mond (3 Grad) und Saturn (8 Grad) im Widder, Sextil zum Wassermann", l: "Der Mond im Widder steht im Trigon zu deinem Löwen, Feuer und Feuer. Der Tatendrang ist da, Saturn hilft dir, ihn gut einzuteilen.", gl: "Mond im Widder, Trigon zum Löwen · Saturn im Widder", b: "Der Widder-Mond bringt Schwung in beide Zeichen, bei ihm als Trigon, bei ihr als Sextil. Noch sechs Nächte.", gb: "Mond im Widder: Trigon zum Löwen, Sextil zum Wassermann" },
-  { w: "Der Mond bildet ein Sextil zu deiner Geburtssonne. Das gilt als leichte, freundliche Verbindung. Schreib auf, was du beim Wiedersehen sagen willst.", gw: "Mond im Widder, Sextil zu deiner Sonne (3,3 Grad)", l: "Der Mond bildet ein Trigon zu deiner Geburtssonne, die harmonischste Verbindung. Dein Herz ist weit offen, zeig, dass du dich freust.", gl: "Mond im Widder, Trigon zu deiner Sonne (2,4 Grad)", b: "Beide Sonnen werden heute vom Mond freundlich angeschaut. Macht eine Liste mit allem, was ihr zusammen erleben wollt. Streichen dürft ihr später. Noch fünf Nächte.", gb: "Mond: Trigon zur Löwe-Sonne, Sextil zur Wassermann-Sonne" },
+  { w: "Der Mond steht im Steinbock und macht den Tag sachlich. Gut, um Dinge zu ordnen und Termine zu sichern, bevor die Woche beginnt.", gw: "Mond im Steinbock (19 Grad)", l: "Die Sonne steht im Skorpion, 3 Grad vor dem genauen Quadrat zu deiner Geburtssonne. Das kann dickköpfig machen. Ab dem 22. wechselt sie in den Schützen, eine leichte Verbindung zu deinem Löwen.", gl: "Sonne im Skorpion, Quadrat zu deiner Sonne (3,3 Grad Abstand)", b: "Venus steht in der Waage: im Trigon zum Wassermann und im Sextil zum Löwen. Diese Grundstimmung begleitet uns beide bis zum Wiedersehen.", gb: "Venus in der Waage (23 bis 26 Grad)" },
+  { w: "Der Mond tritt heute in den Wassermann, dein Zeichen. Gefühle und Ideen werden klarer. Zweieinhalb Tage lang steht er bei dir.", gw: "Mond wechselt in den Wassermann (0,8 Grad)", l: "Jupiter und Mars stehen in deinem Zeichen nur 0,3 Grad auseinander. Glück und Tatkraft ballen sich im Löwen. Der Mond im Wassermann steht dir gegenüber, bei Mafifee.", gl: "Jupiter und Mars im Löwen (0,3 Grad) · Mond im Wassermann gegenüber dem Löwen", b: "Wir sind Gegenpole, jeder mit eigenem Rückenwind: der Löwe mit Jupiter und Mars, der Wassermann mit dem Mond.", gb: "Mond im Wassermann · Jupiter und Mars im Löwen" },
+  { w: "Der Mond zieht fast genau über deine Geburtssonne, nur 0,5 Grad daneben. Traditionell fühlen sich Gefühl und Wesen dann im Einklang an. Gute Zeit, etwas anzustoßen.", gw: "Mond im Wassermann, Konjunktion zu deiner Sonne (0,5 Grad)", l: "Jupiter und Mars stehen fast genau übereinander (0,1 Grad), beide in deinem Löwen. Mut und Glück laufen heute zusammen. Nutze es für etwas Schönes.", gl: "Jupiter und Mars im Löwen, Konjunktion (0,1 Grad)", b: "Der Mond steht über der Sonne des Wassermanns und gegenüber der Sonne des Löwen. Wir schauen aus entgegengesetzten Richtungen auf dasselbe Licht.", gb: "Mond über der Wassermann-Sonne, gegenüber der Löwe-Sonne" },
+  { w: "Der Mond erreicht das Erste Viertel, in der Überlieferung der Moment, in dem Pläne Gestalt annehmen. In der Nacht fliegen die Leoniden.", gw: "Erstes Viertel 12:48 Uhr · Mond im Wassermann (25 Grad)", l: "Das Erste Viertel steht für Entscheidungen. Der Mond im Wassermann gegenüber deinem Löwen fragt: Was willst du wirklich? Antworte mit dem Herzen.", gl: "Erstes Viertel · Mond gegenüber dem Löwen", b: "Heute Nacht erreichen die Leoniden ihr Maximum, 10 bis 15 Sternschnuppen pro Stunde, am besten nach Mitternacht. Wünschen wir uns dasselbe.", gb: "Leoniden-Maximum (Quelle: Star Walk)" },
+  { w: "Der Mond steht seit gestern Abend in den Fischen, dem Nachbarzeichen deines Wassermanns. Es wird weicher und träumerischer. Hör mehr auf dein Gefühl als auf Listen.", gw: "Mond in den Fischen (7 Grad)", l: "Der Mond in den Fischen macht empfindsam. Auch ein Löwe darf heute weich sein, das nimmt dir nichts von deiner Stärke.", gl: "Mond in den Fischen", b: "Ein Tag für Träume und leise Worte. Erzählen wir uns, wovon wir nachts nicht loskommen.", gb: "Mond in den Fischen" },
+  { w: "Der Mond bleibt in den Fischen. Merkur steht im Skorpion und macht Gespräche tiefer. Ein guter Abend für ein langes Telefonat.", gw: "Mond in den Fischen (20 Grad) · Merkur im Skorpion", l: "Merkur im Skorpion steht im Zeichenquadrat zu deinem Löwen. Worte können schärfer klingen als gemeint. Schreib lieber einen Satz mehr, damit nichts missverstanden wird.", gl: "Merkur im Skorpion, Quadrat zum Löwen (Zeichenaspekt)", b: "Tiefe Gespräche liegen nah, auch wenn Worte holpern. Fragen wir nach, statt zu raten.", gb: "Merkur im Skorpion, Quadrat zu beiden Zeichen" },
+  { w: "Der Mond tritt in den Widder und nähert sich Saturn, den er am Abend erreicht. Beide stehen im Sextil zu deinem Wassermann: Antrieb und Disziplin ziehen am selben Strang.", gw: "Mond (3 Grad) und Saturn (8 Grad) im Widder, Sextil zum Wassermann", l: "Der Mond im Widder steht im Trigon zu deinem Löwen, Feuer und Feuer. Der Tatendrang ist da, Saturn hilft dir, ihn gut einzuteilen.", gl: "Mond im Widder, Trigon zum Löwen · Saturn im Widder", b: "Der Widder-Mond bringt Schwung in uns beide, beim Löwen als Trigon, beim Wassermann als Sextil. Noch sechs Nächte.", gb: "Mond im Widder: Trigon zum Löwen, Sextil zum Wassermann" },
+  { w: "Der Mond bildet ein Sextil zu deiner Geburtssonne. Das gilt als leichte, freundliche Verbindung. Schreib auf, was du beim Wiedersehen sagen willst.", gw: "Mond im Widder, Sextil zu deiner Sonne (3,3 Grad)", l: "Der Mond bildet ein Trigon zu deiner Geburtssonne, die harmonischste Verbindung. Dein Herz ist weit offen, zeig, dass du dich freust.", gl: "Mond im Widder, Trigon zu deiner Sonne (2,4 Grad)", b: "Der Mond schaut heute beide Sonnen freundlich an. Machen wir eine Liste mit allem, was wir zusammen erleben wollen. Streichen dürfen wir später. Noch fünf Nächte.", gb: "Mond: Trigon zur Löwe-Sonne, Sextil zur Wassermann-Sonne" },
   { w: "Die Sonne wechselt um 8:23 Uhr in den Schützen, ein Sextil zu deinem Wassermann: Weite, Freiheit, Aufbruch. Merkur steht im Quadrat zu deiner Sonne, achte auf die Wortwahl.", gw: "Sonne in den Schützen (8:23 Uhr) · Merkur im Quadrat zu deiner Sonne (2,4 Grad)", l: "Die Sonne zieht in den Schützen, dein Feuerbruder im Trigon. Aus der zähen Skorpion-Zeit wird Lust auf Reise, Lachen und Abenteuer.", gl: "Sonne im Schützen, Trigon zum Löwen", b: "Die Reisezeit beginnt, auch im Herzen. Noch vier Nächte.", gb: "Sonne wechselt in den Schützen" },
-  { w: "Der Mond im Stier steht im Quadrat zu deiner Sonne, Merkur ebenfalls. Das kann reizbar machen, Vorfreude kippt leicht in Ungeduld. Nachsicht hilft.", gw: "Mond im Stier, Quadrat zu deiner Sonne (1,9 Grad) · Merkur im Quadrat (1,3 Grad)", l: "Der Mond im Stier steht im Quadrat zu deiner Sonne. Traditionell bedeutet das Eigensinn und Spannung. Gönn dir etwas Gutes, der Stier liebt Genuss.", gl: "Mond im Stier, Quadrat zu deiner Sonne (3,8 Grad)", b: "Noch drei Nächte, und der Mond stellt sich quer zu beiden Sonnen. Nehmt euch heute nichts übel, das ist Vorfreude in Verkleidung.", gb: "Mond im Stier: Quadrat zu beiden Sonnen" },
-  { w: "Vollmond um 15:54 Uhr in den Zwillingen, einem Luftzeichen wie deins. Merkur steht genau im Quadrat zu deiner Sonne: Worte lieber zweimal wählen.", gw: "Vollmond in den Zwillingen · Merkur im Quadrat zu deiner Sonne (0,1 Grad)", l: "Der Vollmond ist ein Supermond, nur 360.768 Kilometer entfernt. Ihm gegenüber steht die Sonne im Schützen, in guter Verbindung zu deinem Löwen. Sag etwas Liebes laut.", gl: "Supermond in den Zwillingen · Sonne im Schützen, Trigon zum Löwen", b: "Heute Abend schauen zwei Orte zum selben Supermond. Sagt euch gleichzeitig Gute Nacht, er hört zu.", gb: "Vollmond 15:54 Uhr (Supermond)" },
+  { w: "Der Mond im Stier steht im Quadrat zu deiner Sonne, Merkur ebenfalls. Das kann reizbar machen, Vorfreude kippt leicht in Ungeduld. Nachsicht hilft.", gw: "Mond im Stier, Quadrat zu deiner Sonne (1,9 Grad) · Merkur im Quadrat (1,3 Grad)", l: "Der Mond im Stier steht im Quadrat zu deiner Sonne. Traditionell bedeutet das Eigensinn und Spannung. Gönn dir etwas Gutes, der Stier liebt Genuss.", gl: "Mond im Stier, Quadrat zu deiner Sonne (3,8 Grad)", b: "Noch drei Nächte, und der Mond stellt sich quer zu beiden Sonnen. Nehmen wir uns heute nichts übel, das ist Vorfreude in Verkleidung.", gb: "Mond im Stier: Quadrat zu beiden Sonnen" },
+  { w: "Vollmond um 15:54 Uhr in den Zwillingen, einem Luftzeichen wie deins. Merkur steht genau im Quadrat zu deiner Sonne: Worte lieber zweimal wählen.", gw: "Vollmond in den Zwillingen · Merkur im Quadrat zu deiner Sonne (0,1 Grad)", l: "Der Vollmond ist ein Supermond, nur 360.768 Kilometer entfernt. Ihm gegenüber steht die Sonne im Schützen, in guter Verbindung zu deinem Löwen. Sag etwas Liebes laut.", gl: "Supermond in den Zwillingen · Sonne im Schützen, Trigon zum Löwen", b: "Heute Abend schauen wir an zwei Orten zum selben Supermond. Sagen wir uns gleichzeitig Gute Nacht, er hört zu.", gb: "Vollmond 15:54 Uhr (Supermond)" },
   { w: "Uranus, der moderne Herrscher deines Zeichens, steht heute der Sonne gegenüber. Der Mond bildet ein Trigon zu deiner Sonne. Ein Tag für Überraschungen und leichte Gespräche.", gw: "Uranus in Opposition zur Sonne · Mond in den Zwillingen, Trigon zu deiner Sonne (1,8 Grad)", l: "Der Mond in den Zwillingen bildet ein Sextil zu deiner Sonne. Uranus gehört zum Gegenzeichen deines Löwen und ist heute im Spiel. Lass dich überraschen.", gl: "Mond in den Zwillingen, Sextil zu deiner Sonne (3,8 Grad) · Uranus in Opposition", b: "Letzte Nacht davor. Der Mond verbindet sich freundlich mit beiden Sonnen, und Uranus kündigt Überraschungen an.", gb: "Mond: Trigon zum Wassermann, Sextil zum Löwen · Uranus in Opposition" },
-  { w: "Heute ist dein Tag der Ankunft. Der Mond tritt in den Krebs, es wird häuslich und herzlich. Merkur im Quadrat zu deiner Sonne: Nimm kleine Missverständnisse leicht.", gw: "Mond tritt in den Krebs · Merkur im Quadrat zu deiner Sonne (2,5 Grad)", l: "Mars verlässt deinen Löwen und zieht in die Jungfrau, Jupiter bleibt. Aus Mut wird Genauigkeit. Merkur im Quadrat zu deiner Sonne: lieber nachfragen als raten.", gl: "Mars in die Jungfrau, Jupiter im Löwen · Merkur im Quadrat zu deiner Sonne (3,1 Grad)", b: "Um 14:10 Uhr treffen sich zwei Gegenpole. Der Mond steht im Krebs, dem Zeichen der Geborgenheit. Alles, was ihr euch erhofft habt, darf jetzt beginnen.", gb: "Mond im Krebs · Venus in der Waage" }
+  { w: "Heute ist dein Tag der Ankunft. Der Mond tritt in den Krebs, es wird häuslich und herzlich. Merkur im Quadrat zu deiner Sonne: Nimm kleine Missverständnisse leicht.", gw: "Mond tritt in den Krebs · Merkur im Quadrat zu deiner Sonne (2,5 Grad)", l: "Mars verlässt deinen Löwen und zieht in die Jungfrau, Jupiter bleibt. Aus Mut wird Genauigkeit. Merkur im Quadrat zu deiner Sonne: lieber nachfragen als raten.", gl: "Mars in die Jungfrau, Jupiter im Löwen · Merkur im Quadrat zu deiner Sonne (3,1 Grad)", b: "Um 14:10 Uhr treffen sich zwei Gegenpole. Der Mond steht im Krebs, dem Zeichen der Geborgenheit. Alles, was wir uns erhofft haben, darf jetzt beginnen.", gb: "Mond im Krebs · Venus in der Waage" }
 ];
 function todayIdx(now) {
   const d = berlinDay(now);
@@ -656,6 +690,70 @@ function renderHoro() {
 $('hPrev').addEventListener('click', () => { const now = Date.now(); const cur = state.hday == null ? todayIdx(now) : state.hday; state.hday = Math.max(0, cur - 1); renderHoro(); });
 $('hNext').addEventListener('click', () => { const now = Date.now(); const cur = state.hday == null ? todayIdx(now) : state.hday; state.hday = cur + 1; renderHoro(); });
 
+/* ---- Herz und Vorfreude ---- */
+const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+$('heartIcon').innerHTML = HEART;
+function floatHearts(n) {
+  if (reduce) return;
+  const r = $('heartBtn').getBoundingClientRect();
+  for (let i = 0; i < n; i++) {
+    const h = document.createElement('div'); h.className = 'floaty'; h.innerHTML = HEART;
+    h.style.left = (r.left + r.width * (0.15 + Math.random() * 0.7)) + 'px';
+    h.style.top = (r.top + 8) + 'px';
+    h.style.animationDelay = (i * 0.18) + 's';
+    h.addEventListener('animationend', () => h.remove());
+    document.body.appendChild(h);
+  }
+}
+function renderTaps() {
+  let total = 0; const parts = [];
+  for (const id in state.notes) {
+    const v = state.notes[id]; let t = Number((v && v.taps) || 0);
+    if (id === state.uid && state.myTaps != null) t = Math.max(t, state.myTaps);
+    total += t; if (t) parts.push(nameOf(id, v) + ' ' + nf.format(t));
+  }
+  if (state.uid && state.myTaps != null && !state.notes[state.uid]) { total += state.myTaps; parts.push(nameOf(state.uid, null) + ' ' + nf.format(state.myTaps)); }
+  total += state.localTaps;
+  $('tapTotal').textContent = nf.format(total);
+  $('tapSplit').textContent = parts.join(' · ');
+  const note = $('tapMsg');
+  if (!state.msgUntil || Date.now() > state.msgUntil) note.textContent = (state.connectDone && !state.db) ? 'Gemeinsam zählt das Herz nur in der Version in Claude.' : '';
+}
+function canShare() { return state.db && state.uid && state.canWrite !== false; }
+$('heartBtn').addEventListener('click', () => {
+  floatHearts(1);
+  if (canShare()) {
+    if (state.myTaps == null) state.myTaps = Number((myNote().taps) || 0);
+    state.myTaps++;
+    clearTimeout(state.tapTimer);
+    state.tapTimer = setTimeout(() => writeOwn({ taps: state.myTaps }), 700);
+  } else state.localTaps++;
+  renderTaps();
+});
+function vorKey() { return 'v' + berlinDay(Date.now()).replace(/-/g, ''); }
+function renderVor() {
+  const key = vorKey(); const rows = [];
+  for (const id in state.notes) { const v = state.notes[id]; const x = v && v.vor && v.vor[key]; if (typeof x === 'number') rows.push({ name: nameOf(id, v), x, mine: id === state.uid }); }
+  if (state.vorLocal != null && !rows.some(r => r.mine)) rows.push({ name: 'Du', x: state.vorLocal, mine: true });
+  const mine = rows.find(r => r.mine);
+  if (!state.vorDrag) { if (mine) $('vorIn').value = mine.x; $('vorVal').textContent = mine ? mine.x + ' von 10' : 'Noch nicht gesetzt'; }
+  const frag = document.createDocumentFragment();
+  rows.forEach(r => {
+    const d = document.createElement('div'); d.className = 'bar';
+    const n = document.createElement('span'); n.textContent = r.name;
+    const t = document.createElement('span'); t.className = 'track'; const f = document.createElement('span'); f.className = 'fill'; f.style.width = (r.x * 10) + '%'; t.appendChild(f);
+    const x = document.createElement('span'); x.className = 'num'; x.textContent = r.x;
+    d.append(n, t, x); frag.appendChild(d);
+  });
+  $('vorBars').replaceChildren(frag);
+}
+$('vorIn').addEventListener('input', () => { state.vorDrag = true; $('vorVal').textContent = $('vorIn').value + ' von 10'; });
+$('vorIn').addEventListener('change', () => {
+  state.vorDrag = false; const n = Number($('vorIn').value);
+  if (canShare()) writeOwn({ vor: { [vorKey()]: n } }); else state.vorLocal = n;
+  renderVor();
+});
+
 /* ---- Sternschnuppe ---- */
 function shoot() {
   if (reduce) return;
@@ -667,6 +765,8 @@ function shoot() {
 
 /* ---- Start ---- */
 renderFigs();
+renderTaps();
+renderVor();
 sizeSky();
 renderAll(true);
 setInterval(renderAll, 1000);
@@ -688,10 +788,16 @@ document.addEventListener('visibilitychange', () => renderAll(true));
     db.collection('notes').onSnapshot(snap => {
       clearTimeout(timer); state.dbSlow = false;
       const m = {}; snap.docs.forEach(d => { m[d.id] = d.data(); });
-      state.notes = m; renderDoors(); renderPanel(); renderArriveVisibility();
+      let who = null;
+      for (const id in m) { if (id !== state.uid && state.seen && Number((m[id] && m[id].taps) || 0) > Number((state.notes[id] && state.notes[id].taps) || 0)) who = nameOf(id, m[id]); }
+      if (state.uid && m[state.uid] && Number(m[state.uid].taps || 0) > Number(state.myTaps || 0)) state.myTaps = Number(m[state.uid].taps);
+      state.notes = m; state.seen = true;
+      if (who) { $('tapMsg').textContent = who + ' denkt gerade an dich.'; state.msgUntil = Date.now() + 7000; floatHearts(3); setTimeout(renderTaps, 7100); }
+      renderDoors(); renderPanel(); renderArriveVisibility(); renderTaps(); renderVor();
     }, () => { clearTimeout(timer); state.db = null; renderPanel(); });
     renderPanel();
   } catch (e) { /* Seite funktioniert auch ohne gemeinsame Daten */ }
+  finally { state.connectDone = true; renderTaps(); }
 })();
 </script>
 </body>
