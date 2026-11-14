@@ -473,9 +473,23 @@ function drawCalm(t) {
   g.addColorStop(0, 'rgba(40,48,110,0.55)'); g.addColorStop(1, 'rgba(11,14,32,0)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   calm.forEach(s => { const a = s.a * (0.35 + 0.65 * Math.abs(Math.sin(t * s.sp + s.ph))); ctx.fillStyle = 'rgba(236,233,247,' + a.toFixed(3) + ')'; ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r, 0, 6.2832); ctx.fill(); });
+  drawBgMoon(t);
   const k = Math.max(1.5, Math.min(W * 0.0054, H * 0.0072));
-  bgFig(FIG_AQR, W * 0.02 + Math.sin(t / 2600) * 9, H * 0.3 + Math.cos(t / 3300) * 8, k, '154,216,255', t, 0);
-  bgFig(FIG_LEO, W * 0.98 - 92 * k + Math.sin(t / 2900 + 2) * 9, H * 0.17 + Math.cos(t / 3700 + 1) * 8, k, '242,196,109', t, 3);
+  bgFig(FIG_AQR, 6 - 22 * k + Math.sin(t / 2600) * 9, H * 0.3 + Math.cos(t / 3300) * 8, k, '154,216,255', t, 0);
+  bgFig(FIG_LEO, W - 6 - 90 * k + Math.sin(t / 2900 + 2) * 9, H * 0.17 + Math.cos(t / 3700 + 1) * 8, k, '242,196,109', t, 3);
+}
+let moonImg = null, moonKey = '';
+function drawBgMoon(t) {
+  const day = berlinDay(Date.now());
+  if (moonKey !== day) {
+    moonKey = day; moonImg = new Image();
+    moonImg.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(moonSVG(moonPhase(Date.now())).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '));
+  }
+  const R = Math.max(60, Math.min(W * 0.3, H * 0.2)), cx = W / 2, cy = H * 0.6, pulse = 1 + 0.04 * Math.sin(t / 1500);
+  const g = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R * 2.1 * pulse);
+  g.addColorStop(0, 'rgba(243,236,210,0.16)'); g.addColorStop(1, 'rgba(243,236,210,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  if (moonImg && moonImg.complete && moonImg.naturalWidth) { ctx.globalAlpha = 0.5; ctx.drawImage(moonImg, cx - R, cy - R, R * 2, R * 2); ctx.globalAlpha = 1; }
 }
 function bgFig(f, ox, oy, k, rgb, t, off) {
   t = t || 0; off = off || 0;
@@ -491,10 +505,6 @@ function bgFig(f, ox, oy, k, rgb, t, off) {
     ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(255,248,226,' + (0.35 * tw).toFixed(3) + ')'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(x - r * 2.6, y); ctx.lineTo(x + r * 2.6, y); ctx.moveTo(x, y - r * 2.6); ctx.lineTo(x, y + r * 2.6); ctx.stroke();
   });
-  // Ein Lichtpunkt wandert an den Linien entlang
-  const n = f.lines.length, u = (t / 1300 + off) % n, li = Math.floor(u), fr = u - li, l = f.lines[li];
-  const a = f.pts[l[0]], b = f.pts[l[1]], px = ox + (a[0] + (b[0] - a[0]) * fr) * k, py = oy + (a[1] + (b[1] - a[1]) * fr) * k;
-  ctx.shadowBlur = 18; ctx.shadowColor = 'rgba(' + rgb + ',1)'; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(px, py, 3.2, 0, 6.2832); ctx.fill();
   ctx.restore();
 }
 function sizeSky() {
@@ -727,7 +737,7 @@ $('hNext').addEventListener('click', () => { const now = Date.now(); const cur =
 
 /* ---- Fangbare Sternschnuppe ---- */
 let catchBusy = false;
-function shoot() { if (wishesToday() >= 2) { showToast('Heute hattest du schon zwei Wünsche. Morgen zieht wieder eine für dich.'); return; } spawnStar(); }
+function shoot() { spawnStar(); }
 function wishesToday() {
   const mine = Object.assign({}, (state.notes[state.uid] || {}).diary || {}, state.myDiary, state.localDiary);
   const today = berlinDay(Date.now()); let n = 0;
@@ -736,7 +746,6 @@ function wishesToday() {
 }
 function spawnStar() {
   if (catchBusy || warping || document.hidden) return;
-  if (wishesToday() >= 2) return;
   catchBusy = true;
   const vw = window.innerWidth, vh = window.innerHeight;
   const s = document.createElement('button'); s.type = 'button'; s.className = 'cstar'; s.setAttribute('aria-label', 'Sternschnuppe fangen');
@@ -749,7 +758,7 @@ function spawnStar() {
   const tr = (x, y) => 'translate(' + (x - 110) + 'px,' + (y - 20) + 'px) rotate(' + rot + 'deg)';
   s.style.opacity = '0';
   document.body.appendChild(s);
-  const dur = reduce ? 6000 : 2900 + Math.random() * 1000;
+  const dur = reduce ? 5000 : 2500 + Math.random() * 900;
   const anim = s.animate([
     { transform: tr(sx, sy), opacity: 0, offset: 0 },
     { opacity: 1, offset: 0.1 },
@@ -779,7 +788,7 @@ const WISHES = [
 let wishIdx = -1;
 function otherName() { return (state.db && state.uid) ? (state.owner ? 'Mafifee' : 'Masüsel') : null; }
 function pickWish() { let i; do { i = Math.floor(Math.random() * WISHES.length); } while (i === wishIdx); wishIdx = i; const o = otherName(); $('wishTxt').textContent = (o ? 'Du wünschst dir von ' + o + ': ' : 'Du wünschst dir: ') + WISHES[i] + '.'; }
-function openWish() { if (wishesToday() >= 2) { showToast('Heute hattest du schon zwei Wünsche. Morgen zieht wieder eine für dich.'); return; } $('wishOwn').value = ''; pickWish(); $('wishPop').hidden = false; $('wishGo').focus(); }
+function openWish() { if (wishesToday() >= 2) { showToast('Gefangen, aber heute hattest du schon zwei Wünsche. Morgen darfst du wieder.'); return; } $('wishOwn').value = ''; pickWish(); $('wishPop').hidden = false; $('wishGo').focus(); }
 function closeWish() { $('wishPop').hidden = true; }
 $('wishAgain').addEventListener('click', pickWish);
 $('wishClose').addEventListener('click', closeWish);
