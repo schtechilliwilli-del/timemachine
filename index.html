@@ -868,7 +868,7 @@ function renderDiary() {
   });
   list.replaceChildren(frag);
   $('diaryAttach').hidden = !state.assets;
-  $('diaryInfo').textContent = (state.connectDone && !state.db) ? 'Gerade ist keine Verbindung zum gemeinsamen Speicher da. Einträge bleiben nur auf diesem Gerät, bis die Seite neu lädt.' : $('diaryInfo').dataset.msg || '';
+  $('diaryInfo').textContent = (state.connectDone && !state.db) ? 'Keine Verbindung zum gemeinsamen Speicher' + (state.connErr ? ' (' + state.connErr + ')' : '') + '. Einträge bleiben nur auf diesem Gerät, bis die Seite neu lädt.' : $('diaryInfo').dataset.msg || '';
 }
 function shrink(file) {
   return new Promise((res, rej) => {
@@ -982,7 +982,7 @@ function startNotes(db) {
     state.notes = m; state.seen = true;
     renderDoors(); renderPanel(); renderArriveVisibility(); renderDiary();
     if (fresh.length) showToast(fresh[fresh.length - 1]);
-  }, () => { clearTimeout(timer); state.db = null; renderPanel(); });
+  }, e => { clearTimeout(timer); state.db = null; state.connErr = (e && (e.code || e.message)) || 'unbekannt'; renderPanel(); renderDiary(); showToast('Keine Verbindung zum Speicher: ' + state.connErr); });
   renderPanel();
 }
 
@@ -1002,7 +1002,7 @@ function startNotes(db) {
     state.db = db;
     startNotes(db);
     renderPanel();
-  } catch (e) { /* Seite funktioniert auch ohne gemeinsame Daten */ }
+  } catch (e) { state.connErr = (e && (e.code || e.message)) || 'unbekannt'; showToast('Keine Verbindung zum Speicher: ' + state.connErr); }
   finally { state.connectDone = true; renderDiary(); }
 })();
 </script>
