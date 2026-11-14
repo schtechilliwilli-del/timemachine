@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bayern nach Westerwald</title>
+<title>Penzing nach Simmern</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Gloock&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
@@ -172,7 +172,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
 <main>
   <header>
     <p class="eyebrow">Wiedersehen am 26.11.2026 um 14:10 Uhr</p>
-    <h1>Bayern <span aria-hidden="true">&rarr;</span><span class="sr" style="position:absolute;left:-9999px"> nach </span> Westerwald</h1>
+    <h1>Penzing <span aria-hidden="true">&rarr;</span><span class="sr" style="position:absolute;left:-9999px"> nach </span> Simmern</h1>
     <p class="lede">Masüsel und Mafifee: 500 Kilometer, ein Mond und dreizehn Türchen, bis zur Glückseligkeit und noch viel weiter. Diese Seite gehört nur uns beiden.</p>
   </header>
 
@@ -272,9 +272,10 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <span class="kind">Gefangen</span>
     <h3 id="wishH">Ein Wunsch ist frei</h3>
     <p id="wishTxt"></p>
+    <textarea id="wishOwn" maxlength="300" placeholder="Oder wünsch dir etwas ganz Eigenes ..." aria-label="Eigener Wunsch"></textarea>
     <div class="popbtns">
       <button class="btn solid" id="wishGo" type="button">Wünschen und ins Tagebuch</button>
-      <button class="btn" id="wishAgain" type="button">Anderer Wunsch</button>
+      <button class="btn" id="wishAgain" type="button">Anderer Vorschlag</button>
       <button class="btn" id="wishClose" type="button">Schließen</button>
     </div>
   </div>
@@ -753,11 +754,11 @@ const WISHES = [
 let wishIdx = -1;
 function otherName() { return (state.db && state.uid) ? (state.owner ? 'Mafifee' : 'Masüsel') : null; }
 function pickWish() { let i; do { i = Math.floor(Math.random() * WISHES.length); } while (i === wishIdx); wishIdx = i; const o = otherName(); $('wishTxt').textContent = (o ? 'Du wünschst dir von ' + o + ': ' : 'Du wünschst dir: ') + WISHES[i] + '.'; }
-function openWish() { pickWish(); $('wishPop').hidden = false; $('wishGo').focus(); }
+function openWish() { $('wishOwn').value = ''; pickWish(); $('wishPop').hidden = false; $('wishGo').focus(); }
 function closeWish() { $('wishPop').hidden = true; }
 $('wishAgain').addEventListener('click', pickWish);
 $('wishClose').addEventListener('click', closeWish);
-$('wishGo').addEventListener('click', async () => { const w = WISHES[wishIdx]; closeWish(); showToast('Dein Wunsch steht im Tagebuch.' + (otherName() ? ' ' + otherName() + ' erfährt davon.' : '')); await addEntry({ star: true, wish: w }); });
+$('wishGo').addEventListener('click', async () => { const own = $('wishOwn').value.trim(); const w = own || WISHES[wishIdx]; closeWish(); showToast('Dein Wunsch steht im Tagebuch.' + (otherName() ? ' ' + otherName() + ' erfährt davon.' : '')); await addEntry({ star: true, wish: w }); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('wishPop').hidden) closeWish(); });
 
 let toastTimer = null;
