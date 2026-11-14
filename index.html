@@ -648,17 +648,19 @@ function renderPanel() {
     f.append(el('p', 'muted', 'Die gemeinsamen Antworten sind gerade nicht erreichbar. Das Türchen kannst du trotzdem lesen.'));
   } else {
     const canEdit = !!(state.uid && state.canWrite !== false);
-    const notMe = id => !(canEdit && id === state.uid);
+    const notMe = () => true;
     const entries = Object.entries(state.notes).filter(([id, v]) => notMe(id) && v && v['d' + d.n] && v['d' + d.n].text);
     const list = el('div', 'replies');
     entries.forEach(([id, v]) => {
       const r = el('div', 'reply'); const w = el('div', 'who', nameOf(id, v));
       if (v['d' + d.n].heart) { const h = el('span', 'h', ' ♥'); w.append(h); }
-      r.append(w, el('p', '', v['d' + d.n].text)); list.append(r);
+      r.append(w, el('p', '', v['d' + d.n].text));
+      if (canEdit && id === state.uid) { const eb = el('button', 'btn', 'Ändern'); eb.type = 'button'; eb.addEventListener('click', () => { const t = document.getElementById('replyText'); if (t) { t.value = v['d' + d.n].text; t.focus(); } }); r.append(eb); }
+      list.append(r);
     });
     const heartOnlyOthers = Object.entries(state.notes).filter(([id, v]) => notMe(id) && v && v['d' + d.n] && v['d' + d.n].heart && !(v['d' + d.n].text));
     heartOnlyOthers.forEach(([id, v]) => { const r = el('div', 'reply'); r.append(el('div', 'who', nameOf(id, v) + ' hat ein Herz dagelassen ♥')); list.append(r); });
-    if (!entries.length && !heartOnlyOthers.length) list.append(el('p', 'muted', canEdit ? 'Noch keine Antwort vom anderen.' : 'Noch keine Antworten. Mach den Anfang.'));
+    if (!entries.length && !heartOnlyOthers.length) list.append(el('p', 'muted', 'Noch keine Antworten. Mach den Anfang.'));
     f.append(list);
 
     if (state.uid && state.canWrite !== false) {
@@ -669,17 +671,16 @@ function renderPanel() {
         nb.addEventListener('click', () => { const v = inp.value.trim(); if (v) writeOwn({ name: v }); });
         nr.append(inp, nb); f.append(nr);
       }
-      const ta = el('textarea'); ta.id = 'replyText'; ta.maxLength = 600; ta.placeholder = 'Deine Antwort'; ta.setAttribute('aria-label', 'Deine Antwort');
+      const ta = el('textarea'); ta.id = 'replyText'; ta.maxLength = 600; ta.placeholder = (myNote()['d' + d.n] || {}).text ? 'Neue Antwort schreiben, sie ersetzt die alte' : 'Deine Antwort'; ta.setAttribute('aria-label', 'Deine Antwort');
       const mine = (myNote()['d' + d.n] || {});
-      ta.value = keepText != null ? keepText : (mine.text || '');
+      ta.value = keepText != null ? keepText : '';
       const row = el('div', 'row');
       const save = el('button', 'btn solid', 'Antwort speichern'); save.type = 'button';
-      save.addEventListener('click', () => { const v = ta.value.trim(); if (v) writeOwn({ ['d' + d.n]: { text: v, ts: Date.now() } }); });
+      save.addEventListener('click', () => { const v = ta.value.trim(); if (v) { ta.value = ''; writeOwn({ ['d' + d.n]: { text: v, ts: Date.now() } }); } });
       const hb = el('button', 'btn heart' + (mine.heart ? ' on' : ''), mine.heart ? 'Herz zurücknehmen' : 'Herz schicken'); hb.type = 'button';
       hb.setAttribute('aria-pressed', mine.heart ? 'true' : 'false');
       hb.addEventListener('click', () => writeOwn({ ['d' + d.n]: { heart: !mine.heart } }));
       row.append(save, hb);
-      if (mine.text) f.append(el('p', 'muted small', 'Deine Antwort, du kannst sie jederzeit ändern:'));
       f.append(ta, row);
     } else if (state.canWrite === false) {
       f.append(el('p', 'muted', 'Zum Antworten braucht diese Seite eine Einladung als Bearbeiter. Frag, ob du eingeladen wirst.'));
