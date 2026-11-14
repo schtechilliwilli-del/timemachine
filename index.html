@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Penzing nach Simmern</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Gloock&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Nachthimmel, eine Spalte, goldene Reiselinie als einziger Akzent, Rosa nur fuer Herzen */
+:root {
+  --night: #0b0e20;
+  --deep: #151a3a;
+  --line: #2a3066;
+  --ink: #ece9f7;
+  --muted: #a3a9d3;
+  --gold: #f2c46d;
+  --rose: #f08fa9;
+  --display: "Gloock", Georgia, serif;
+  --body: "Karla", system-ui, sans-serif;
+  --mono: "DM Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--night); color: var(--ink); }
+body {
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.5;
+  background: radial-gradient(120% 60% at 50% 0%, #1b2150 0%, var(--night) 60%);
+  min-height: 100%;
+}
+#sky { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+main { position: relative; z-index: 1; max-width: 560px; margin: 0 auto; padding: 28px 16px 64px; display: flex; flex-direction: column; gap: 20px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(38px, 11vw, 56px); line-height: 1.05; }
+h2 { font-size: 26px; line-height: 1.15; }
+h3 { font-size: 22px; line-height: 1.2; }
+p { margin: 0; }
+.eyebrow { font-family: var(--mono); font-size: 13px; letter-spacing: 0.04em; color: var(--gold); margin-bottom: 8px; }
+.lede { color: var(--muted); margin-top: 10px; }
+.card { background: rgba(21, 26, 58, 0.82); border: 1px solid var(--line); border-radius: 18px; padding: 18px; backdrop-filter: blur(4px); }
+.card > h2 { margin-bottom: 12px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* Reise */
+.km { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.km .big { font-size: clamp(34px, 10vw, 46px); color: var(--gold); line-height: 1.1; }
+.km .unit { color: var(--muted); }
+.route { width: 100%; height: 60px; display: block; margin: 8px 0 4px; }
+.route text { font-family: var(--body); font-size: 12px; fill: var(--muted); }
+.count { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+.count div { background: rgba(11, 14, 32, 0.6); border: 1px solid var(--line); border-radius: 12px; padding: 10px 4px; text-align: center; }
+.count b { display: block; font-family: var(--mono); font-weight: 500; font-size: clamp(22px, 7vw, 30px); font-variant-numeric: tabular-nums; }
+.count span { font-size: 12px; color: var(--muted); }
+.arrived { display: none; text-align: center; font-family: var(--display); font-size: 30px; color: var(--gold); padding: 12px 0 4px; }
+body.done .arrived { display: block; }
+
+/* Tempo */
+.speed { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.speed .big { font-size: 26px; color: var(--gold); }
+.ladder { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.ladder li { display: flex; justify-content: space-between; padding: 7px 12px; border-radius: 10px; color: var(--muted); font-size: 15px; }
+.ladder li .num { font-size: 14px; }
+.ladder li.you { background: var(--gold); color: #1a1530; font-weight: 700; }
+
+/* Knopf */
+.warp { appearance: none; width: 100%; border: 0; border-radius: 18px; padding: 18px 16px; min-height: 64px; cursor: pointer; font-family: var(--display); font-size: 24px; color: #1a1530; background: linear-gradient(135deg, #f7d78d, #e8a94a); box-shadow: 0 0 0 0 rgba(242, 196, 109, 0.5); animation: pulse 2.8s ease-out infinite; }
+.warp:disabled { opacity: 0.7; animation: none; cursor: default; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(242, 196, 109, 0.45); } 70% { box-shadow: 0 0 0 18px rgba(242, 196, 109, 0); } 100% { box-shadow: 0 0 0 0 rgba(242, 196, 109, 0); } }
+.warp-note { color: var(--muted); font-size: 15px; text-align: center; min-height: 1.5em; }
+:focus-visible { outline: 3px solid var(--rose); outline-offset: 3px; }
+
+/* Himmel */
+.sky-row { display: flex; gap: 16px; align-items: center; }
+.sky-row svg { flex: none; width: 84px; height: 84px; }
+.sky-row .name { font-family: var(--display); font-size: 22px; }
+.sky-row .pct { color: var(--muted); font-size: 15px; }
+.astro { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+
+/* Tuerchen */
+.doors { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.door { appearance: none; border: 1px solid var(--line); border-radius: 14px; background: rgba(11, 14, 32, 0.6); color: var(--ink); min-height: 76px; padding: 8px 4px; cursor: pointer; font-family: var(--body); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.door .n { font-family: var(--display); font-size: 28px; line-height: 1; }
+.door .d { font-size: 12px; color: var(--muted); }
+.door.open { border-color: var(--gold); }
+.door.open .n { color: var(--gold); }
+.door.locked { opacity: 0.5; cursor: default; }
+.door.sel { background: var(--gold); border-color: var(--gold); }
+.door.sel .n, .door.sel .d { color: #1a1530; }
+.door .dot { font-size: 12px; color: var(--rose); min-height: 14px; }
+.panel { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 12px; }
+.kind { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold); }
+.ask { background: rgba(242, 196, 109, 0.12); border-left: 3px solid var(--gold); padding: 10px 12px; border-radius: 0 10px 10px 0; }
+.btn { appearance: none; border: 1px solid var(--gold); background: transparent; color: var(--gold); border-radius: 12px; padding: 10px 14px; min-height: 44px; cursor: pointer; font-family: var(--body); font-size: 16px; font-weight: 500; }
+.btn.solid { background: var(--gold); color: #1a1530; }
+.btn.heart.on { background: var(--rose); border-color: var(--rose); color: #2b0f19; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+textarea, input[type="text"] { width: 100%; font: inherit; color: var(--ink); background: rgba(11, 14, 32, 0.7); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+textarea { min-height: 84px; resize: vertical; }
+.replies { display: flex; flex-direction: column; gap: 8px; }
+.reply { background: rgba(11, 14, 32, 0.6); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.reply .who { font-size: 13px; color: var(--muted); margin-bottom: 2px; }
+.reply .who .h { color: var(--rose); }
+.reply p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.muted { color: var(--muted); font-size: 15px; }
+.err { color: var(--rose); font-size: 15px; }
+.oracle { font-family: var(--display); font-size: 22px; text-align: center; padding: 14px 8px; }
+.preview { display: none; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+.preview.show { display: flex; }
+footer { text-align: center; color: var(--gold); font-family: var(--display); font-size: clamp(24px, 7vw, 30px); line-height: 1.25; text-wrap: balance; padding: 28px 8px 0; border-top: 1px solid var(--line); }
+
+/* Warp: Karten werden durchsichtiger, Inhalt bleibt lesbar */
+body.warping .card { background: rgba(21, 26, 58, 0.5); }
+
+@media (prefers-reduced-motion: reduce) {
+  .warp { animation: none; }
+}
+</style>
+</head>
+<body>
+<canvas id="sky" aria-hidden="true"></canvas>
+<main>
+  <header>
+    <p class="eyebrow">Wiedersehen am 26.11.2026 um 14:10 Uhr</p>
+    <h1>Penzing <span aria-hidden="true">&rarr;</span><span class="sr" style="position:absolute;left:-9999px"> nach </span> Simmern</h1>
+    <p class="lede">Masüsel und Mafifee: 500 Kilometer, ein Mond und zwölf Türchen, bis zur Glückseligkeit und noch viel weiter. Diese Seite gehört nur uns beiden.</p>
+  </header>
+
+  <section class="card" id="journey" aria-labelledby="jh">
+    <h2 id="jh">Noch unterwegs</h2>
+    <div class="km"><span class="big num" id="km">500,000</span><span class="unit">Kilometer bis Simmern</span></div>
+    <p class="muted" id="doneKm"></p>
+    <svg class="route" viewBox="0 0 400 60" role="img" aria-label="Strecke von Penzing nach Simmern">
+      <line x1="24" y1="26" x2="376" y2="26" stroke="#2a3066" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 9"/>
+      <line id="routeDone" x1="24" y1="26" x2="24" y2="26" stroke="#f2c46d" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="24" cy="26" r="7" fill="#151a3a" stroke="#a3a9d3" stroke-width="2"/>
+      <circle cx="376" cy="26" r="7" fill="#151a3a" stroke="#f2c46d" stroke-width="2"/>
+      <circle id="routeDot" cx="24" cy="26" r="9" fill="#f2c46d"/>
+      <text x="24" y="54" text-anchor="start">Penzing</text>
+      <text x="376" y="54" text-anchor="end">Simmern</text>
+    </svg>
+    <div class="count" aria-live="off">
+      <div><b id="cd">0</b><span>Tage</span></div>
+      <div><b id="ch">00</b><span>Stunden</span></div>
+      <div><b id="cm">00</b><span>Minuten</span></div>
+      <div><b id="cs">00</b><span>Sekunden</span></div>
+    </div>
+    <p class="arrived">Angekommen, bis zur Glückseligkeit und noch viel weiter.</p>
+  </section>
+
+  <section class="card" aria-labelledby="sh">
+    <h2 id="sh">Tempo</h2>
+    <div class="speed"><span class="big num" id="speed">1,8 km/h</span><span class="muted">so schnell nähert ihr euch</span></div>
+    <ul class="ladder" id="ladder"></ul>
+  </section>
+
+  <section aria-label="Zeitmaschine" style="display:flex;flex-direction:column;gap:10px">
+    <button class="warp" id="warp" type="button">Zeitmaschine starten</button>
+    <p class="warp-note" id="warpNote" aria-live="polite"></p>
+  </section>
+
+  <section class="card" aria-labelledby="mh">
+    <h2 id="mh">Der Himmel heute</h2>
+    <div class="sky-row">
+      <div id="moon" aria-hidden="true"></div>
+      <div><p class="name" id="moonName"></p><p class="pct" id="moonPct"></p></div>
+    </div>
+    <p class="astro" id="astro"></p>
+  </section>
+
+  <section class="card" id="arrive" aria-labelledby="ah" hidden>
+    <h2 id="ah">Auf dem Weg</h2>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <p class="muted" id="arriveList">Noch ist niemand losgefahren.</p>
+      <div class="row"><button class="btn solid" id="goBtn" type="button" hidden>Ich bin losgefahren</button></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="dh">
+    <h2 id="dh">Zwölf Türchen</h2>
+    <p class="muted" style="margin-bottom:12px">Jeden Tag öffnet sich eins. Antwortet einander, die Antworten sehen immer beide.</p>
+    <label class="preview" id="previewBox"><input type="checkbox" id="previewAll"> Vorschau: alle Türchen öffnen (nur für dich als Besitzer)</label>
+    <div class="doors" id="doors"></div>
+    <div class="panel" id="panel" hidden></div>
+  </section>
+
+  <footer>Masüsel und Mafifee unter demselben Mond.</footer>
+</main>
+
+<script>
+/*CORE*/
+const TARGET = Date.UTC(2026, 10, 26, 13, 10, 0);   // 26.11.2026 14:10 Uhr MEZ
+const START  = Date.UTC(2026, 10, 5, 23, 0, 0);     // 6.11.2026 00:00 Uhr MEZ, Tag der Buchung
+const TOTAL_KM = 500;
+const SPEED = TOTAL_KM / ((TARGET - START) / 3600000);   // km/h
+const LIGHT = 1079252848.8;                                // km/h
+
+function kmLeft(now) {
+  const f = (TARGET - now) / (TARGET - START);
+  return TOTAL_KM * Math.min(1, Math.max(0, f));
+}
+function parts(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  return { d: Math.floor(s / 86400), h: Math.floor(s % 86400 / 3600), m: Math.floor(s % 3600 / 60), s: s % 60 };
+}
+// Mondphase 0 bis 1 (0 Neumond, 0.25 erstes Viertel, 0.5 Vollmond), verankert an den echten Terminen
+const NM = Date.UTC(2026, 10, 9, 7, 2), FQ = Date.UTC(2026, 10, 17, 11, 48), FM = Date.UTC(2026, 10, 24, 14, 53);
+function moonPhase(t) {
+  if (t <= FQ) return 0.25 * (t - NM) / (FQ - NM);
+  return Math.min(0.97, 0.25 + 0.25 * (t - FQ) / (FM - FQ));
+}
+function illum(p) { return (1 - Math.cos(2 * Math.PI * p)) / 2; }
+function moonName(p) {
+  if (p < 0.03) return 'Neumond';
+  if (p < 0.22) return 'Zunehmende Sichel';
+  if (p < 0.28) return 'Erstes Viertel';
+  if (p < 0.47) return 'Zunehmender Mond';
+  if (p < 0.53) return 'Vollmond';
+  if (p < 0.72) return 'Abnehmender Mond';
+  if (p < 0.78) return 'Letztes Viertel';
+  return 'Abnehmende Sichel';
+}
+const dayFmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit' });
+function berlinDay(ms) { return dayFmt.format(new Date(ms)); }
+function doorOpen(n, now) { return berlinDay(now) >= '2026-11-' + String(14 + n); }
+/*ENDCORE*/
+
+const SPEEDS = [
+  { n: 'Licht', v: LIGHT }, { n: 'Schall', v: 1235 }, { n: 'ICE', v: 250 },
+  { n: 'Fahrrad', v: 20 }, { n: 'Spaziergang', v: 5 }, { n: 'Weinbergschnecke', v: 0.05 }
+];
+const ASTRO = {
+  '2026-11-14': 'Um den 14. November stehen Merkur, Venus, Mars und Jupiter vor Sonnenaufgang am Himmel aufgereiht.',
+  '2026-11-15': 'Jupiter und Mars stehen heute extrem nah beieinander, am Morgenhimmel.',
+  '2026-11-17': 'Erstes Viertel um 12:48 Uhr. In der Nacht erreichen die Leoniden ihr Maximum, mit 10 bis 15 Sternschnuppen pro Stunde. Am besten nach Mitternacht.',
+  '2026-11-20': 'Der zunehmende Mond zieht heute am Saturn vorbei.',
+  '2026-11-22': 'Die Sonne wechselt vom Skorpion in den Schützen. Aus Tiefe wird Aufbruch.',
+  '2026-11-23': 'Der Mond ist von heute bis zum 25. November fast oder ganz voll zu sehen.',
+  '2026-11-24': 'Vollmond um 15:53 Uhr und ein Supermond: nur 360.768 Kilometer von der Erde entfernt. Astronomisch steht er im Stier bei den Plejaden und bei Aldebaran, astrologisch in den Zwillingen.',
+  '2026-11-25': 'Uranus steht heute in Opposition zur Sonne. Der Mond ist noch so gut wie voll.',
+  '2026-11-26': 'In der Nacht wechselt Mars vom Löwen in die Jungfrau. Um 14:10 Uhr ist es soweit.'
+};
+const ASTRO_DEFAULT = 'Die Leoniden sind noch bis zum 30. November aktiv. Vielleicht fällt heute Nacht eine Sternschnuppe für euch.';
+
+const DOORS = [
+  { n: 1, kind: 'Himmel', title: 'Der Mond wächst', text: 'Der Mond ist heute eine junge, zunehmende Sichel. Jede Nacht wird er ein Stück voller, und jede Nacht seid ihr einander ein Stück näher.', ask: 'Was machst du als Erstes, wenn du ankommst?' },
+  { n: 2, kind: 'Spaß', title: 'Schneckenpost', text: 'Seit dem 6. November nähert ihr euch mit etwa {v} km/h. Das ist viel langsamer als ein Spaziergang und etwa {x} Mal schneller als eine Weinbergschnecke. Respekt.', ask: 'Welches Tier wärst du für diese 500 Kilometer?' },
+  { n: 3, kind: 'Wunsch', title: 'Sternschnuppennacht', text: 'Heute Nacht erreichen die Leoniden ihr Maximum, am besten zu sehen nach Mitternacht. Wer eine Sternschnuppe sieht, darf sich etwas wünschen. Wer keine sieht, darf es trotzdem.', ask: 'Schreib deinen Wunsch auf.' },
+  { n: 4, kind: 'Frage', title: 'Drei Dinge', text: 'Kleine Aufgabe für heute, ganz ohne Druck.', ask: 'Drei Dinge, die ich an dir mag.' },
+  { n: 5, kind: 'Spaß', title: 'Das Gepäck', text: 'In 500 Kilometern Entfernung packt es sich leichter, wenn man weiß, was wirklich nötig ist.', ask: 'Was darf auf keinen Fall im Gepäck fehlen?' },
+  { n: 6, kind: 'Himmel', title: 'Gleicher Himmel', text: 'Der Mond zieht heute am Saturn vorbei. Wenn es aufklart, schau am Abend nach oben. Über Penzing und über Simmern liegt derselbe Himmel.', ask: 'Was siehst du, wenn du hochschaust?' },
+  { n: 7, kind: 'Orakel', title: 'Das Sehnsuchtsorakel', text: 'Zieh eine Karte. Die Sterne sind nicht immer präzise, aber immer freundlich.', oracle: true },
+  { n: 8, kind: 'Himmel', title: 'Aufbruch', text: 'Heute wechselt die Sonne vom Skorpion in den Schützen. Das Zeichen für Reiselust, Weite und das Gefühl, dass es bald losgeht.', ask: 'Wofür bist du gerade bereit aufzubrechen?' },
+  { n: 9, kind: 'Frage', title: 'Dein Lied', text: 'Noch drei Nächte. Der Mond ist fast voll und wird ein bisschen ungeduldig.', ask: 'Welches Lied soll am Tag der Ankunft laufen?' },
+  { n: 10, kind: 'Himmel', title: 'Supermond', text: 'Heute um 15:53 Uhr ist Vollmond, und er ist ein Supermond, nur 360.768 Kilometer von der Erde entfernt. Er geht am Abend auf. Ihr könnt ihn zur gleichen Zeit anschauen, jeder an seinem Ort.', ask: 'Welchen Satz gibst du dem Mond mit?' },
+  { n: 11, kind: 'Frage', title: 'Die letzte Nacht davor', text: 'Uranus steht heute der Sonne gegenüber. Mit bloßem Auge ist er kaum zu sehen. Ihr braucht ihn nicht, ihr habt bald einander.', ask: 'Wie aufgeregt bist du, von 1 bis 10?' },
+  { n: 12, kind: 'Ankunft', title: 'Heute ist es soweit', text: 'In der Nacht wechselte Mars vom Löwen in die Jungfrau. Aus Mut wird Sorgfalt, aus Warten wird Ankommen. Um 14:10 Uhr ist es soweit.', ask: 'Was sagst du als Allererstes?' }
+];
+const ORACLE = [
+  'Die Sterne sagen: Plane Zeit für Umarmungen ein. Viel Zeit.',
+  'Orakel: Es gibt Kaffee, und er wird kalt, weil ihr redet.',
+  'Jupiter flüstert: Das Wiedersehen wird besser als jeder Countdown.',
+  'Eine Karte aus dem Nichts: Heute nichts erklären, nur lachen.',
+  'Das Universum hat nachgerechnet: 500 Kilometer sind kleiner, als sie aussehen.',
+  'Mondweisheit: Wer wartet, hat mehr zu erzählen.',
+  'Prophezeiung: Der erste Satz wird peinlich und perfekt.',
+  'Der Schütze rät: Aufbruch ist der halbe Weg.',
+  'Die Karten sind sich einig: Es gibt Kuchen. Irgendwo.',
+  'Die Zukunft sagt: viel Schweigen, das sich gut anfühlt.'
+];
+
+const $ = id => document.getElementById(id);
+const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const nf = new Intl.NumberFormat('de-DE');
+function fmtSpeed(v) {
+  if (v < 10) return v.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+  if (v >= 1e6) return new Intl.NumberFormat('de-DE', { notation: 'compact', maximumFractionDigits: 1 }).format(v);
+  return nf.format(Math.round(v));
+}
+const two = n => String(n).padStart(2, '0');
+
+/* ---- Himmel ---- */
+function moonSVG(p) {
+  const r = 38, c = 42, waning = p > 0.5, q = waning ? 1 - p : p;
+  const rx = r * Math.abs(Math.cos(2 * Math.PI * q));
+  const sweep = q < 0.25 ? 0 : 1;
+  const lit = q < 0.005 ? '' : '<path d="M ' + c + ' ' + (c - r) + ' A ' + r + ' ' + r + ' 0 0 1 ' + c + ' ' + (c + r) + ' A ' + rx.toFixed(2) + ' ' + r + ' 0 0 ' + sweep + ' ' + c + ' ' + (c - r) + ' Z" fill="#f3ecd2"' + (waning ? ' transform="translate(' + (2 * c) + ',0) scale(-1,1)"' : '') + '/>';
+  return '<svg viewBox="0 0 84 84" role="img" aria-label="Mondphase"><circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="#1d2250" stroke="#2a3066" stroke-width="2"/>' + lit + '</svg>';
+}
+function renderSky(now) {
+  const p = moonPhase(now);
+  $('moon').innerHTML = moonSVG(p);
+  $('moonName').textContent = moonName(p);
+  $('moonPct').textContent = Math.round(illum(p) * 100) + ' Prozent beleuchtet';
+  $('astro').textContent = ASTRO[berlinDay(now)] || ASTRO_DEFAULT;
+}
+
+/* ---- Anzeige ---- */
+let warping = false;
+function renderCount(ms) {
+  const q = parts(ms);
+  $('cd').textContent = q.d; $('ch').textContent = two(q.h); $('cm').textContent = two(q.m); $('cs').textContent = two(q.s);
+}
+function renderKm(km) { $('km').textContent = km.toLocaleString('de-DE', { minimumFractionDigits: 3, maximumFractionDigits: 3 }); }
+function renderRoute(frac) {
+  const x = 24 + 352 * Math.min(1, Math.max(0, frac));
+  $('routeDot').setAttribute('cx', x.toFixed(1));
+  $('routeDone').setAttribute('x2', x.toFixed(1));
+}
+function renderLadder(v) {
+  const ul = $('ladder'); const frag = document.createDocumentFragment(); let placed = false;
+  const you = document.createElement('li'); you.className = 'you';
+  const a = document.createElement('span'); a.textContent = 'Ihr beide';
+  const b = document.createElement('span'); b.className = 'num'; b.textContent = fmtSpeed(v) + ' km/h';
+  you.append(a, b);
+  SPEEDS.forEach(s => {
+    if (!placed && v >= s.v) { frag.appendChild(you); placed = true; }
+    const li = document.createElement('li');
+    const n = document.createElement('span'); n.textContent = s.n;
+    const m = document.createElement('span'); m.className = 'num'; m.textContent = fmtSpeed(s.v) + ' km/h';
+    li.append(n, m); frag.appendChild(li);
+  });
+  if (!placed) frag.appendChild(you);
+  ul.replaceChildren(frag);
+  $('speed').textContent = fmtSpeed(v) + ' km/h';
+}
+let lastKey = '';
+function renderAll(force) {
+  if (warping) return;
+  const now = Date.now();
+  renderCount(TARGET - now);
+  renderKm(kmLeft(now));
+  renderRoute(1 - kmLeft(now) / TOTAL_KM);
+  renderLadder(now >= TARGET ? 0.05 : SPEED);
+  const doneKm = TOTAL_KM - kmLeft(now);
+  $('doneKm').textContent = now >= TARGET ? '' : 'Seit der Buchung am 6. November schon ' + Math.round(doneKm) + ' Kilometer geschafft.';
+  document.body.classList.toggle('done', now >= TARGET);
+  $('jh').textContent = now >= TARGET ? 'Angekommen' : 'Noch unterwegs';
+  // Tuerchen und Himmel nur neu zeichnen, wenn sich der Tag oder die Vorschau aendert, damit Taps nicht verloren gehen
+  const key = berlinDay(now) + '|' + state.preview;
+  if (force === true || key !== lastKey) {
+    lastKey = key;
+    renderSky(now);
+    renderDoors();
+    renderArriveVisibility();
+  }
+}
+
+/* ---- Sternenhimmel und Warp ---- */
+const cv = $('sky'), ctx = cv.getContext('2d');
+let W = 0, H = 0, calm = [];
+function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+function drawCalm() {
+  ctx.fillStyle = '#0b0e20'; ctx.fillRect(0, 0, W, H);
+  const g = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, H * 0.7);
+  g.addColorStop(0, 'rgba(40,48,110,0.55)'); g.addColorStop(1, 'rgba(11,14,32,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  calm.forEach(s => { ctx.fillStyle = 'rgba(236,233,247,' + s.a + ')'; ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r, 0, 6.2832); ctx.fill(); });
+}
+function sizeSky() {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const R = rng(42); calm = [];
+  for (let i = 0; i < 150; i++) calm.push({ x: R(), y: R(), r: 0.4 + R() * 1.1, a: 0.25 + R() * 0.65 });
+  if (!warping) drawCalm();
+}
+window.addEventListener('resize', sizeSky);
+let streaks = [];
+function resetStar(s, far) { s.x = Math.random() * 2 - 1; s.y = Math.random() * 2 - 1; s.z = far ? 1 : Math.random(); return s; }
+function drawWarp(w) {
+  if (reduce) return;
+  ctx.fillStyle = 'rgba(11,14,32,0.28)'; ctx.fillRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2, k = Math.max(W, H) * 0.55;
+  const step = 0.004 + 0.07 * w * w + 0.012 * w;
+  streaks.forEach(s => {
+    const pz = s.z; s.z -= step;
+    if (s.z <= 0.03) { resetStar(s, true); return; }
+    const x1 = cx + s.x / pz * k * 0.25, y1 = cy + s.y / pz * k * 0.25;
+    const x2 = cx + s.x / s.z * k * 0.25, y2 = cy + s.y / s.z * k * 0.25;
+    ctx.strokeStyle = 'rgba(255,240,205,' + Math.min(1, 0.3 + (1 - s.z)) + ')';
+    ctx.lineWidth = 0.6 + (1 - s.z) * 2.2;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  });
+}
+function startWarp() {
+  if (warping) return;
+  warping = true;
+  document.body.classList.add('warping');
+  $('warp').disabled = true; $('warp').textContent = 'Reise läuft';
+  $('warpNote').textContent = '';
+  $('journey').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  streaks = []; for (let i = 0; i < 260; i++) streaks.push(resetStar({}, false));
+  const dur = reduce ? 2500 : 9000, t0 = performance.now(), real0 = Date.now();
+  const remMs = Math.max(0, TARGET - real0), remKm = kmLeft(real0);
+  function frame(t) {
+    const w = Math.min(1, (t - t0) / dur), e = w * w * (3 - 2 * w), left = 1 - e;
+    renderCount(remMs * left); renderKm(remKm * left); renderRoute(1 - remKm * left / TOTAL_KM);
+    renderLadder(SPEED * Math.pow(LIGHT / SPEED, w));
+    drawWarp(w);
+    if (w < 1) { requestAnimationFrame(frame); return; }
+    document.body.classList.add('done'); $('jh').textContent = 'Angekommen';
+    setTimeout(endWarp, 2600);
+  }
+  requestAnimationFrame(frame);
+}
+function endWarp() {
+  warping = false;
+  document.body.classList.remove('warping');
+  drawCalm(); renderAll(true);
+  const q = parts(TARGET - Date.now());
+  $('warp').disabled = false; $('warp').textContent = 'Zeitmaschine noch einmal starten';
+  $('warpNote').textContent = 'Zurück in der Gegenwart: noch ' + q.d + ' Tage und ' + q.h + ' Stunden. Der Vorgeschmack war echt.';
+}
+$('warp').addEventListener('click', startWarp);
+
+/* ---- Tuerchen und gemeinsame Daten ---- */
+const state = { db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
+let writeChain = Promise.resolve();
+function writeOwn(patch) {
+  if (!state.db || !state.uid) return Promise.resolve();
+  writeChain = writeChain.then(async () => {
+    const ref = state.db.doc('notes/' + state.uid);
+    const snap = await ref.get();
+    if (snap.exists) await ref.update(patch); else await ref.set(patch);
+    state.err = '';
+  }).catch(e => { state.err = 'Das Speichern hat nicht geklappt. Frag den Besitzer der Seite, ob du als Bearbeiter eingeladen bist.'; renderPanel(); });
+  return writeChain;
+}
+function isOpen(n) { return state.preview || doorOpen(n, Date.now()); }
+function myNote() { return state.notes[state.uid] || {}; }
+function nameOf(id, data) {
+  if (data && data.name) return data.name;
+  // Besitzer der Seite ist Masüsel, die eingeladene Person Mafifee
+  if (id === state.uid) return state.owner ? 'Masüsel' : 'Mafifee';
+  return state.owner ? 'Mafifee' : 'Masüsel';
+}
+function renderDoors() {
+  const box = $('doors'); const frag = document.createDocumentFragment();
+  DOORS.forEach(d => {
+    const open = isOpen(d.n);
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'door ' + (open ? 'open' : 'locked') + (state.sel === d.n ? ' sel' : '');
+    const dateTxt = (14 + d.n) + '.11.';
+    b.setAttribute('aria-label', open ? 'Türchen ' + d.n + ', ' + dateTxt + ', öffnen' : 'Türchen ' + d.n + ' öffnet am ' + dateTxt);
+    if (!open) b.setAttribute('aria-disabled', 'true');
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = d.n;
+    const dt = document.createElement('span'); dt.className = 'd'; dt.textContent = open ? dateTxt : 'ab ' + dateTxt;
+    const dot = document.createElement('span'); dot.className = 'dot';
+    const hearts = Object.values(state.notes).filter(x => x && x['d' + d.n] && x['d' + d.n].heart).length;
+    const replies = Object.values(state.notes).filter(x => x && x['d' + d.n] && x['d' + d.n].text).length;
+    dot.textContent = (hearts ? '♥'.repeat(Math.min(hearts, 2)) + ' ' : '') + (replies ? replies + ' Antw.' : '');
+    b.append(n, dt, dot);
+    if (open) b.addEventListener('click', () => { state.sel = state.sel === d.n ? null : d.n; renderDoors(); renderPanel(); });
+    frag.appendChild(b);
+  });
+  box.replaceChildren(frag);
+}
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function renderPanel() {
+  const p = $('panel');
+  if (state.sel == null) { p.hidden = true; p.replaceChildren(); return; }
+  const d = DOORS.find(x => x.n === state.sel);
+  if (!d || !isOpen(d.n)) { p.hidden = true; return; }
+  const keepText = document.getElementById('replyText') ? document.getElementById('replyText').value : null;
+  const keepName = document.getElementById('nameIn') ? document.getElementById('nameIn').value : null;
+  p.hidden = false;
+  const f = document.createDocumentFragment();
+  f.append(el('span', 'kind', d.kind + ', ' + (14 + d.n) + '. November'), el('h3', '', d.title), el('p', '', d.text.replace('{v}', fmtSpeed(SPEED)).replace('{x}', String(Math.round(SPEED / 0.05)))));
+  if (d.oracle) {
+    const o = el('p', 'oracle', state.oracleIdx >= 0 ? ORACLE[state.oracleIdx] : 'Noch keine Karte gezogen.');
+    o.setAttribute('aria-live', 'polite');
+    const b = el('button', 'btn solid', 'Karte ziehen'); b.type = 'button';
+    b.addEventListener('click', () => { let i; do { i = Math.floor(Math.random() * ORACLE.length); } while (i === state.oracleIdx); state.oracleIdx = i; renderPanel(); });
+    f.append(o, b);
+  }
+  if (d.ask) f.append(el('p', 'ask', d.ask));
+
+  if (!state.db) {
+    f.append(el('p', 'muted', 'Die gemeinsamen Antworten sind gerade nicht erreichbar. Das Türchen kannst du trotzdem lesen.'));
+  } else {
+    const entries = Object.entries(state.notes).filter(([, v]) => v && v['d' + d.n] && v['d' + d.n].text);
+    const list = el('div', 'replies');
+    entries.forEach(([id, v]) => {
+      const r = el('div', 'reply'); const w = el('div', 'who', nameOf(id, v));
+      if (v['d' + d.n].heart) { const h = el('span', 'h', ' ♥'); w.append(h); }
+      r.append(w, el('p', '', v['d' + d.n].text)); list.append(r);
+    });
+    const heartOnlyOthers = Object.entries(state.notes).filter(([id, v]) => v && v['d' + d.n] && v['d' + d.n].heart && !(v['d' + d.n].text));
+    heartOnlyOthers.forEach(([id, v]) => { const r = el('div', 'reply'); r.append(el('div', 'who', nameOf(id, v) + ' hat ein Herz dagelassen ♥')); list.append(r); });
+    if (!entries.length && !heartOnlyOthers.length) list.append(el('p', 'muted', 'Noch keine Antworten. Mach den Anfang.'));
+    f.append(list);
+
+    if (state.uid && state.canWrite !== false) {
+      if (!myNote().name) {
+        const nr = el('div', 'row'); const inp = el('input'); inp.type = 'text'; inp.id = 'nameIn'; inp.maxLength = 30; inp.placeholder = 'Wie sollen wir dich hier nennen?'; inp.setAttribute('aria-label', 'Dein Name auf dieser Seite');
+        inp.style.flex = '1 1 180px'; inp.value = keepName != null ? keepName : (state.owner ? 'Masüsel' : 'Mafifee');
+        const nb = el('button', 'btn', 'Name speichern'); nb.type = 'button';
+        nb.addEventListener('click', () => { const v = inp.value.trim(); if (v) writeOwn({ name: v }); });
+        nr.append(inp, nb); f.append(nr);
+      }
+      const ta = el('textarea'); ta.id = 'replyText'; ta.maxLength = 600; ta.placeholder = 'Deine Antwort'; ta.setAttribute('aria-label', 'Deine Antwort');
+      const mine = (myNote()['d' + d.n] || {});
+      ta.value = keepText != null ? keepText : (mine.text || '');
+      const row = el('div', 'row');
+      const save = el('button', 'btn solid', 'Antwort speichern'); save.type = 'button';
+      save.addEventListener('click', () => { const v = ta.value.trim(); if (v) writeOwn({ ['d' + d.n]: { text: v, ts: Date.now() } }); });
+      const hb = el('button', 'btn heart' + (mine.heart ? ' on' : ''), mine.heart ? 'Herz zurücknehmen' : 'Herz schicken'); hb.type = 'button';
+      hb.setAttribute('aria-pressed', mine.heart ? 'true' : 'false');
+      hb.addEventListener('click', () => writeOwn({ ['d' + d.n]: { heart: !mine.heart } }));
+      row.append(save, hb); f.append(ta, row);
+    } else if (state.canWrite === false) {
+      f.append(el('p', 'muted', 'Zum Antworten braucht diese Seite eine Einladung als Bearbeiter. Frag, ob du eingeladen wirst.'));
+    } else if (!state.uid) {
+      f.append(el('p', 'muted', 'Melde dich an, dann kannst du hier antworten.'));
+    }
+  }
+  if (state.dbSlow) f.append(el('p', 'muted', 'Die gemeinsamen Daten melden sich gerade nicht. Eventuell ist der Stand nicht aktuell.'));
+  if (state.err) f.append(el('p', 'err', state.err));
+  p.replaceChildren(f);
+}
+
+/* ---- Auf dem Weg (nur am Ankunftstag) ---- */
+function renderArriveVisibility() {
+  const show = state.preview || berlinDay(Date.now()) >= '2026-11-26';
+  $('arrive').hidden = !show;
+  if (!show) return;
+  const go = $('goBtn');
+  const entries = Object.entries(state.notes).filter(([, v]) => v && typeof v.departed === 'number');
+  const tf = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' });
+  $('arriveList').textContent = entries.length
+    ? entries.map(([id, v]) => nameOf(id, v) + ' ist um ' + tf.format(new Date(v.departed)) + ' Uhr losgefahren.').join(' ')
+    : 'Noch ist niemand losgefahren.';
+  if (state.db && state.uid && state.canWrite !== false) {
+    go.hidden = false;
+    const mine = myNote();
+    go.textContent = typeof mine.departed === 'number' ? 'Doch noch nicht' : 'Ich bin losgefahren';
+  } else go.hidden = true;
+}
+$('goBtn').addEventListener('click', () => {
+  const mine = myNote();
+  writeOwn({ departed: typeof mine.departed === 'number' ? false : Date.now() });
+});
+
+$('previewAll').addEventListener('change', e => { state.preview = e.target.checked; renderAll(true); renderPanel(); });
+
+/* ---- Start ---- */
+sizeSky();
+renderAll(true);
+setInterval(renderAll, 1000);
+document.addEventListener('visibilitychange', () => renderAll(true));
+
+(async function connect() {
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (user) {
+      state.owner = !!user.isOwner();
+      if (state.owner) $('previewBox').classList.add('show');
+      try { state.uid = await user.id(); } catch (e) { state.uid = null; }
+      try { state.canWrite = user.can ? user.can('data.write') : null; if (state.canWrite && typeof state.canWrite.then === 'function') state.canWrite = await state.canWrite; } catch (e) { state.canWrite = null; }
+    }
+    if (!db) return;
+    state.db = db;
+    const timer = setTimeout(() => { state.dbSlow = true; renderPanel(); }, 10000);
+    db.collection('notes').onSnapshot(snap => {
+      clearTimeout(timer); state.dbSlow = false;
+      const m = {}; snap.docs.forEach(d => { m[d.id] = d.data(); });
+      state.notes = m; renderDoors(); renderPanel(); renderArriveVisibility();
+    }, () => { clearTimeout(timer); state.db = null; renderPanel(); });
+    renderPanel();
+  } catch (e) { /* Seite funktioniert auch ohne gemeinsame Daten */ }
+})();
+</script>
+</body>
+</html>
