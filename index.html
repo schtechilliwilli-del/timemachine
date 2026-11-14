@@ -265,6 +265,8 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <div id="diaryList"></div>
   </section>
 
+  <p class="muted small" id="whoLine" hidden style="text-align:center"></p>
+
   <footer>Masüsel und Mafifee unter demselben Mond.</footer>
 </main>
 <div class="pop" id="wishPop" role="dialog" aria-modal="true" aria-labelledby="wishH" hidden>
@@ -277,6 +279,16 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
       <button class="btn solid" id="wishGo" type="button">Wünschen und ins Tagebuch</button>
       <button class="btn" id="wishAgain" type="button">Anderer Wunsch</button>
       <button class="btn" id="wishClose" type="button">Schließen</button>
+    </div>
+  </div>
+</div>
+<div class="pop" id="whoPop" role="dialog" aria-modal="true" aria-labelledby="whoH" hidden>
+  <div class="popbox">
+    <h3 id="whoH">Wer bist du?</h3>
+    <p class="muted">Das merkt sich dieses Gerät.</p>
+    <div class="popbtns">
+      <button class="btn solid" type="button" data-who="masuesel">Ich bin Masüsel</button>
+      <button class="btn solid" type="button" data-who="mafifee">Ich bin Mafifee</button>
     </div>
   </div>
 </div>
@@ -848,23 +860,25 @@ function renderDiary() {
       }
     } else if (x.e.text) box.append(el('p', '', x.e.text));
     if (x.e.img && /^[A-Za-z0-9_-]+$/.test(x.e.img)) {
-      const a = document.createElement('a'); a.href = '/_blob/' + x.e.img; a.target = '_blank'; a.rel = 'noopener';
-      const im = document.createElement('img'); im.src = '/_blob/' + x.e.img; im.loading = 'lazy'; im.alt = 'Bild im Tagebuch'; a.append(im); box.append(a);
+      const im = document.createElement('img'); im.loading = 'lazy'; im.alt = 'Bild im Tagebuch';
+      if (state.fb) { fillImg(x.e.img, im); box.append(im); }
+      else { const a = document.createElement('a'); a.href = '/_blob/' + x.e.img; a.target = '_blank'; a.rel = 'noopener'; im.src = '/_blob/' + x.e.img; a.append(im); box.append(a); }
     }
     frag.append(box);
   });
   list.replaceChildren(frag);
   $('diaryAttach').hidden = !state.assets;
-  $('diaryInfo').textContent = (state.connectDone && !state.db) ? 'Gemeinsam schreiben geht nur in der Version in Claude. Hier bleiben Einträge nur auf diesem Gerät, bis die Seite neu lädt.' : $('diaryInfo').dataset.msg || '';
+  $('diaryInfo').textContent = (state.connectDone && !state.db) ? 'Gerade ist keine Verbindung zum gemeinsamen Speicher da. Einträge bleiben nur auf diesem Gerät, bis die Seite neu lädt.' : $('diaryInfo').dataset.msg || '';
 }
 function shrink(file) {
   return new Promise((res, rej) => {
     const im = new Image(), u = URL.createObjectURL(file);
     im.onload = () => {
-      const sc = Math.min(1, 1400 / Math.max(im.width, im.height));
+      const sc = Math.min(1, (state.fb ? 1100 : 1400) / Math.max(im.width, im.height));
       const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.width * sc)); c.height = Math.max(1, Math.round(im.height * sc));
       c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u);
-      c.toBlob(b => b ? res(b) : rej(new Error('blob')), 'image/jpeg', 0.85);
+      const tryQ = q => c.toBlob(b => { if (!b) { rej(new Error('blob')); return; } if (state.fb && b.size * 1.37 > 900000 && q > 0.35) { tryQ(q - 0.15); return; } res(b); }, 'image/jpeg', q);
+      tryQ(state.fb ? 0.7 : 0.85);
     };
     im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('img')); };
     im.src = u;
@@ -901,9 +915,80 @@ renderAll(true);
 setInterval(renderAll, 1000);
 document.addEventListener('visibilitychange', () => renderAll(true));
 
+/* ---- Gemeinsamer Speicher ausserhalb von Claude: Firebase ---- */
+const FB_CONFIG = {
+  apiKey: "AIzaSyAqnPZ34utumtn0qXrkVwLqzGsmEbg_m6k",
+  authDomain: "timemachine-a3c39.firebaseapp.com",
+  projectId: "timemachine-a3c39",
+  storageBucket: "timemachine-a3c39.firebasestorage.app",
+  messagingSenderId: "159029387061",
+  appId: "1:159029387061:web:5d8360bae4cf9c9ed3767c"
+};
+const imgCache = {};
+function askWho() {
+  return new Promise(res => {
+    const pop = $('whoPop'); pop.hidden = false;
+    pop.querySelectorAll('[data-who]').forEach(b => { b.onclick = () => { pop.hidden = true; try { localStorage.setItem('zm_who', b.dataset.who); } catch (e) { } res(b.dataset.who); }; });
+  });
+}
+function showWhoLine() {
+  const l = $('whoLine'); l.hidden = false; l.textContent = '';
+  l.append('Hier schreibt ' + (state.owner ? 'Masüsel' : 'Mafifee') + '. Nicht du? ');
+  const b = el('button', 'btn', 'Wechseln'); b.type = 'button';
+  b.addEventListener('click', () => { try { localStorage.removeItem('zm_who'); } catch (e) { } location.reload(); });
+  l.append(b);
+}
+async function connectFirebase() {
+  let who = null; try { who = localStorage.getItem('zm_who'); } catch (e) { }
+  if (who !== 'masuesel' && who !== 'mafifee') who = await askWho();
+  state.uid = who; state.owner = who === 'masuesel'; state.canWrite = true;
+  if (state.owner) $('previewBox').classList.add('show');
+  showWhoLine();
+  const base = 'https://www.gstatic.com/firebasejs/10.14.1/';
+  const [appM, fsM] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-firestore.js')]);
+  const fs = fsM.getFirestore(appM.initializeApp(FB_CONFIG));
+  state.fb = { fs, fsM };
+  state.assets = {
+    upload: async blob => {
+      const data = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
+      const id = 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+      await fsM.setDoc(fsM.doc(fs, 'images/' + id), { owner: state.uid, data, t: Date.now() });
+      imgCache[id] = data; return { id };
+    }
+  };
+  const db = {
+    doc(path) { const ref = fsM.doc(fs, path); return { get: async () => ({ exists: (await fsM.getDoc(ref)).exists() }), set: p => fsM.setDoc(ref, p, { merge: true }), update: p => fsM.setDoc(ref, p, { merge: true }) }; },
+    collection(name) { return { onSnapshot(ok, err) { return fsM.onSnapshot(fsM.collection(fs, name), snap => ok({ docs: snap.docs.map(d => ({ id: d.id, data: () => d.data() })) }), err); } }; }
+  };
+  state.db = db; renderDiary(); startNotes(db);
+}
+function fillImg(id, im) {
+  if (imgCache[id]) { im.src = imgCache[id]; return; }
+  state.fb.fsM.getDoc(state.fb.fsM.doc(state.fb.fs, 'images/' + id)).then(sn => { if (sn.exists()) { imgCache[id] = sn.data().data; im.src = imgCache[id]; } }).catch(() => { });
+}
+
+function startNotes(db) {
+  const timer = setTimeout(() => { state.dbSlow = true; renderPanel(); }, 10000);
+  db.collection('notes').onSnapshot(snap => {
+    clearTimeout(timer); state.dbSlow = false;
+    const m = {}; snap.docs.forEach(d => { m[d.id] = d.data(); });
+    const fresh = [];
+    for (const id in m) {
+      const v = m[id] || {};
+      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); continue; }
+      for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen && v.diary[k]) fresh.push(nameOf(id, v) + (v.diary[k].star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + v.diary[k].wish : ' hat ins Tagebuch geschrieben.')); } }
+      for (const k in (v.ack || {})) { const key = id + '|' + k; if (!state.seenA.has(key)) { state.seenA.add(key); if (state.seen && k.indexOf(ackKey(state.uid, '')) === 0) fresh.push(nameOf(id, v) + ' hat einen Wunsch von dir erfüllt.'); } }
+    }
+    state.notes = m; state.seen = true;
+    renderDoors(); renderPanel(); renderArriveVisibility(); renderDiary();
+    if (fresh.length) showToast(fresh[fresh.length - 1]);
+  }, () => { clearTimeout(timer); state.db = null; renderPanel(); });
+  renderPanel();
+}
+
 (async function connect() {
   try {
-    if (!window.claude || !window.claude.use) return;
+    if (!window.claude || !window.claude.use) { await connectFirebase(); return; }
     const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
     if (user) {
       state.owner = !!user.isOwner();
@@ -915,21 +1000,7 @@ document.addEventListener('visibilitychange', () => renderAll(true));
     renderDiary();
     if (!db) return;
     state.db = db;
-    const timer = setTimeout(() => { state.dbSlow = true; renderPanel(); }, 10000);
-    db.collection('notes').onSnapshot(snap => {
-      clearTimeout(timer); state.dbSlow = false;
-      const m = {}; snap.docs.forEach(d => { m[d.id] = d.data(); });
-      const fresh = [];
-      for (const id in m) {
-        const v = m[id] || {};
-        if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); continue; }
-        for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen && v.diary[k]) fresh.push(nameOf(id, v) + (v.diary[k].star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + v.diary[k].wish : ' hat ins Tagebuch geschrieben.')); } }
-        for (const k in (v.ack || {})) { const key = id + '|' + k; if (!state.seenA.has(key)) { state.seenA.add(key); if (state.seen && k.indexOf(ackKey(state.uid, '')) === 0) fresh.push(nameOf(id, v) + ' hat einen Wunsch von dir erfüllt.'); } }
-      }
-      state.notes = m; state.seen = true;
-      renderDoors(); renderPanel(); renderArriveVisibility(); renderDiary();
-      if (fresh.length) showToast(fresh[fresh.length - 1]);
-    }, () => { clearTimeout(timer); state.db = null; renderPanel(); });
+    startNotes(db);
     renderPanel();
   } catch (e) { /* Seite funktioniert auch ohne gemeinsame Daten */ }
   finally { state.connectDone = true; renderDiary(); }
