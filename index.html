@@ -86,8 +86,8 @@ p { margin: 0; }
 .mbtn.main { background: #1d2030; color: #fff; border-color: #1d2030; }
 .mform { background: #fff; min-height: 100%; padding: 14px 16px 30px; display: flex; flex-direction: column; gap: 4px; }
 .mform .to { padding: 10px 0; border-bottom: 1px solid #e6e8f0; font-size: 15px; color: #6a6f87; }
-.mform input, .mform textarea { width: 100%; box-sizing: border-box; border: 0; border-bottom: 1px solid #e6e8f0; border-radius: 0; background: transparent; color: #1d2030; font: inherit; font-size: 16px; padding: 12px 0; outline: none; }
-.mform textarea { min-height: 260px; border-bottom: 0; font-family: var(--display); font-size: 18px; line-height: 1.55; resize: vertical; }
+.mailapp .mform input[type="text"], .mailapp .mform textarea { width: 100%; box-sizing: border-box; border: 0; border-bottom: 1px solid #e6e8f0; border-radius: 0; background: transparent; color: #1d2030; font: inherit; font-size: 16px; padding: 12px 0; outline: none; }
+.mailapp .mform textarea { min-height: 170px; border-bottom: 0; font-family: var(--display); font-size: 18px; line-height: 1.55; resize: vertical; }
 .mform .hint { font-size: 13px; color: #6a6f87; min-height: 18px; }
 .mform .acts { display: flex; gap: 10px; margin-top: 10px; }
 .mfab { position: absolute; right: 18px; bottom: 22px; border: 0; border-radius: 28px; padding: 0 22px; min-height: 56px; background: #1d2030; color: #fff; font-size: 16px; box-shadow: 0 6px 18px rgba(20, 24, 50, 0.3); }
@@ -101,6 +101,33 @@ p { margin: 0; }
 .mbook .lab { font-weight: 700; margin-top: 2px; }
 .mbook .tx { font-size: 18px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; margin: 2px 0 0; }
 .mbook .royal { border: 1px solid #c9b88f; border-radius: 6px; padding: 14px 16px; margin: 24px 0; background: #f4ecda; }
+.mbook .royal .rh { font-family: var(--body); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #6b4fb3; margin-bottom: 6px; }
+.mbook .royal .rs { font-weight: 700; margin-bottom: 8px; }
+.mav.queen { background: #6b4fb3; }
+.mrow.queenrow { background: #f4effb; }
+.mrow.rate { cursor: default; background: #fff8ec; }
+.mrow.rate .mav { background: #f0a23a; font-size: 20px; }
+.mtask { margin: 10px 12px; padding: 14px 16px; background: #fff; border: 1px solid #dfe2ec; border-left: 5px solid #e0a93e; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; }
+.mtask.fee { border-left-color: #d9607f; }
+.mtask .th { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: #6a6f87; }
+.mtask .tt { font-size: 18px; font-weight: 700; }
+.mtask .tx { font-family: var(--display); font-size: 16px; line-height: 1.5; }
+.mtask .rl { font-size: 13px; color: #6a6f87; }
+.mtask .res { font-size: 15px; }
+.mrate { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px dashed #d4d8e6; }
+.mrate .ic { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.mrate .ic button { border: 0; background: transparent; font-size: 30px; line-height: 1; padding: 4px; opacity: 0.3; }
+.mrate .ic button.on { opacity: 1; }
+.mrate .ic .zero { font-size: 13px; opacity: 1; color: #6a6f87; border: 1px solid #c9cde0; border-radius: 14px; padding: 6px 10px; }
+.mrate .ic .zero.on { background: #1d2030; color: #fff; }
+.mailapp .mrate input[type="text"] { width: 100%; box-sizing: border-box; border: 1px solid #dfe2ec; border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 15px; color: #1d2030; background: #fff; }
+.mthread { padding: 8px 16px 40px; background: #f3f4f8; }
+.mthread h3 { font-family: var(--body); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: #6a6f87; margin: 14px 0 8px; }
+.mthread .tm { background: #fff; border: 1px solid #e6e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
+.mthread .tm .who { font-size: 13px; color: #6a6f87; margin-bottom: 4px; }
+.mthread .tm p { font-family: var(--display); font-size: 16px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+.mread.royal { border-top: 6px solid #6b4fb3; }
+.mbook .rt { text-align: center; font-family: var(--body); font-size: 14px; color: #8a6a2a; margin: 22px 0 0; }
 .eyebrow { font-family: var(--mono); font-size: 13px; letter-spacing: 0.04em; color: var(--gold); margin-bottom: 8px; }
 .lede { color: var(--muted); margin-top: 10px; }
 .card { background: rgba(21, 26, 58, 0.56); border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
@@ -367,6 +394,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
   </header>
   <div class="mmenu" id="mMenuBox" hidden>
     <button type="button" data-act="inbox">Posteingang</button>
+    <button type="button" data-act="tasks">Meine Aufgaben</button>
     <button type="button" data-act="book">Als Buch lesen</button>
     <button type="button" data-act="title">Titel ändern</button>
     <button type="button" data-act="txt">Als Textdatei speichern</button>
@@ -1075,7 +1103,36 @@ $('toast').addEventListener('click', () => { $('toast').hidden = true; });
 
 /* ---- Postfach (Briefroman) ---- */
 const bookS = { my: {}, local: {}, myTitle: null };
-const mailS = { view: 'list', cur: null, reply: null };
+const rateS = { my: {} };
+const mailS = { view: 'list', cur: null, reply: null, draft: {} };
+const QUEEN = [
+  { k: 'prolog', t: Date.UTC(2026, 10, 13, 23, 0), sub: 'Amtliches Schreiben des Feenhofs', text: 'An die Fee Mafifee, zuständig für Penzing, und an den Esel Masüsel, wohnhaft in Simmern.\n\nEs wurde festgestellt, dass der Esel manchmal süß und die Fee manchmal fies ist. Das ist zulässig. Die Entfernung von 500 Kilometern ist es nicht.\n\nDaher wird hiermit angeordnet:\n\n1. Die Fee prüft den Esel. Jeden Tag gibt es eine Aufgabe, und die Fee bewertet, was der Esel liefert, mit null bis fünf Karotten.\n2. Der Esel darf sich auf seine eigene Art beweisen. Die Fee darf prüfen, wie sie will, aber sie darf nicht schummeln.\n3. An manchen Tagen gerät die Fee ins Wanken. Dann prüft der Esel sie und vergibt Sterne.\n4. Am 26. November findet die Abschlussprüfung statt, im echten Leben und ohne Mail.\n5. Danach spreche ich das Urteil. Ich bin die Richterin und entscheide weitestgehend. Dabei achte ich nicht nur auf Karotten.\n6. Fällt der Esel durch, kann die Fee eine Nachprüfung anordnen. Der Zauberstab bleibt in ihrer Hand. Ob aus meinem Urteil ein Happy End wird, liegt allein bei der Fee.\n\nFür Pannen des Zauberstabs ist der Hof nicht zuständig.\n\nGezeichnet,\nKönigin Ernestine die Vorläufige\nHof zu Wolkenstein' },
+  { k: 'halbzeit', t: Date.UTC(2026, 10, 20, 7, 0), sub: 'Zwischenbescheid des Feenhofs', text: 'An Fee und Esel.\n\nDer Hof stellt fest: Die Halbzeit ist erreicht. Die Königin beobachtet, wie jeder weiß, aus den Wolken.\n\nSie erinnert daran, dass Punkte nicht alles sind. Auch ein Esel, der schlecht rechnet, kann sich beweisen, und auch eine Fee, die streng tut, darf weich werden.\n\nNoch sechs Tage bis zur Abschlussprüfung.\n\nGezeichnet,\nKönigin Ernestine die Vorläufige' }
+];
+const TASKS = [
+  { d: 'Die Vorstellung', lead: 'fee', f: 'Du eröffnest die Prüfung. Stell dich dem Esel als strenge Prüferin vor und gib ihm die erste Aufgabe: Er soll dir in drei Sätzen erklären, warum du ihn nicht gleich durchfallen lassen sollst.', e: 'Die Fee eröffnet die Prüfung. Antworte ihr in drei Sätzen auf deine eigene Art und versuch dabei, möglichst wenig zu schummeln.' },
+  { d: 'Die Eselsbeichte', lead: 'fee', f: 'Fordere vom Esel eine Beichte: Er soll dir die eselhafteste Sache gestehen, die er je getan hat. Ehrlichkeit zählt für dich mehr als Eleganz.', e: 'Gestehe der Fee die eselhafteste Sache, die du je getan hast. Ehrlich, aber gern mit Humor.' },
+  { d: 'Die Reise im Kopf', lead: 'fee', f: 'Der Esel soll dir seinen Weg nach Bayern als Heldenreise erzählen, mit drei Hindernissen. Du darfst jedes Hindernis kommentieren, möglichst spitz.', e: 'Erzähl der Fee den Weg zu ihr als Heldenreise mit drei Hindernissen. Sei ruhig dramatisch, es ist ja ein weiter Weg.' },
+  { d: 'Der erste Wackler', lead: 'esel', f: 'Heute flackert dein Zauberstab, und du bist nicht darauf vorbereitet. Verrate es nicht offen, aber ein bisschen darfst du dich verraten. Löse die Aufgabe des Esels, so gut es ohne Magie geht.', e: 'Dir fällt auf, dass bei der Fee etwas flackert. Stell ihr heute die Aufgabe, dir etwas zu zeigen, das sie ohne Magie kann. Du bewertest sie am Ende mit Sternen.' },
+  { d: 'Das Geschenk ohne Preis', lead: 'fee', f: 'Der Esel soll ein Geschenk erfinden, das nichts kostet und das nur du bekommen kannst. Prüfe, ob es wirklich von ihm kommt.', e: 'Erfinde für die Fee ein Geschenk, das nichts kostet und das nur sie bekommen kann. Beschreib es so, dass sie es fast anfassen kann.' },
+  { d: 'Fünf Beobachtungen', lead: 'fee', f: 'Der Esel soll dir fünf Dinge nennen, die ihm an dir auffallen, ohne Schmeichelei. Du darfst jede Beobachtung kommentieren und sagen, ob sie stimmt.', e: 'Nenne der Fee fünf Dinge, die dir an ihr auffallen, ohne zu schmeicheln. Genau hinsehen zählt mehr als nett sein.' },
+  { d: 'Die Geduldsprobe', lead: 'fee', f: 'Lass den Esel warten: Gib ihm eine Aufgabe in Etappen, zum Beispiel drei kurze Mails über den Tag verteilt. Teste, ob er dranbleibt.', e: 'Die Fee gibt dir heute eine Aufgabe in Etappen. Bleib dran und halte durch, auch wenn es nervt.' },
+  { d: 'Der Zauberstab ist kaputt', lead: 'esel', f: 'Dein Zauberstab ist heute endgültig kaputt. Verheimliche es, so gut du kannst, und beantworte die Aufgabe des Esels trotzdem. Eine echte Fee gibt nie ganz auf.', e: 'Die Fee hat ein Problem, das sie verbergen will. Stell ihr eine Aufgabe, für die man eigentlich Magie braucht, und beobachte, wie sie sich schlägt. Ausnutzen oder helfen, das entscheidest du. Bewerte sie am Ende mit Sternen.' },
+  { d: 'Die Mutprobe', lead: 'fee', f: 'Der Esel soll dir etwas sagen, das er sich bisher nicht getraut hat. Sei streng, aber ein bisschen zart, wenn er es wirklich tut.', e: 'Sag der Fee etwas, das du dich bisher nicht getraut hast. Es muss nicht groß sein, aber es muss wahr sein.' },
+  { d: 'Das Chaos der Ankunft', lead: 'fee', f: 'Der Esel soll dir das Wiedersehen als Chaos beschreiben: alles, was schiefgehen könnte, und wie er es trotzdem hinbekommt. Prüfe, ob er auch an dich denkt und nicht nur an sich.', e: 'Beschreib der Fee das Wiedersehen als Chaos: alles, was schiefgehen könnte, und wie du es trotzdem hinbekommst.' },
+  { d: 'Die Gegenprobe', lead: 'esel', f: 'Heute merkst du, dass du den Esel mehr magst, als du zugeben wolltest. Beantworte seine Frage, ohne dich hinter einer Prüferinnenmiene zu verstecken.', e: 'Stell der Fee die eine Frage, vor der sie sich am meisten fürchtet, und lass sie nicht ausweichen. Danach bewertest du sie mit Sternen.' },
+  { d: 'Der Brief für die Haustür', lead: 'fee', f: 'Der Esel soll dir den Brief schreiben, den er dir überreicht, wenn du vor der Tür stehst. Du bewertest, ob er sich traut.', e: 'Schreib den Brief, den du der Fee übergibst, wenn sie vor der Tür steht. Er muss ehrlich sein und darf kurz sein.' },
+  { d: 'Die Abschlussprüfung', lead: 'both', f: 'Heute zählt keine Mail. Die Abschlussprüfung findet im echten Leben statt, und du entscheidest, was dir dabei auffällt. Schreib später kurz auf, was du gesehen hast.', e: 'Heute zählt keine Mail. Bestehe die Abschlussprüfung auf deine eigene Art im echten Leben und schreib später auf, was passiert ist.' },
+  { d: 'Das Zwischenzeugnis', lead: 'after', f: 'Schreib dem Esel dein ehrliches Zwischenzeugnis, fies und liebevoll zugleich. Das Urteil der Königin steht noch aus.', e: 'Schreib der Fee, was du aus der Prüfung gelernt hast. Das Urteil der Königin steht noch aus.' },
+  { d: 'Das Urteil', lead: 'after', f: 'Die Königin hat gesprochen. Entscheide, was du daraus machst, und sag es dem Esel auf deine Art.', e: 'Reagiere auf das Urteil der Königin und auf das, was die Fee daraus macht.' },
+  { d: 'Der freie Tag', lead: 'after', f: 'Kein Auftrag mehr, nur Zeit. Erzähl dem Esel etwas, das du ihm noch nie erzählt hast.', e: 'Kein Auftrag mehr, nur Zeit. Erzähl der Fee etwas, das du ihr noch nie erzählt hast.' },
+  { d: 'Der letzte volle Tag', lead: 'after', f: 'Schreib dem Esel, was du mitnimmst, wenn du morgen fährst.', e: 'Schreib der Fee, was du ihr gern mitgeben würdest, wenn sie morgen fährt.' },
+  { d: 'Der Abschied', lead: 'after', f: 'Du fährst heute. Schreib die erste Mail unterwegs, noch auf der Fahrt.', e: 'Die Fee fährt heute. Schreib ihr, was zu Hause bleibt und worauf du dich freust.' },
+  { d: 'Das Happy End', lead: 'after', f: 'Schreibt das Ende. Ihr entscheidet beide, wie es ausgeht, und die Fee hat das letzte Wort.', e: 'Schreibt das Ende. Du steuerst deinen Teil bei, und die Fee hat das letzte Wort.' }
+];
+function dayIdx(now) { const n = Math.round((Date.parse(berlinDay(now) + 'T12:00:00Z') - Date.parse('2026-11-14T12:00:00Z')) / 86400000); return Math.max(0, Math.min(TASKS.length - 1, n)); }
+function dayDate(i) { return berlinDay(Date.UTC(2026, 10, 14 + i, 12)); }
+function myRole() { return nameOf(state.uid, state.notes[state.uid]) === 'Mafifee' ? 'fee' : 'esel'; }
 function allBook() {
   const out = [];
   const ids = Object.keys(state.notes); if (state.uid && ids.indexOf(state.uid) < 0) ids.push(state.uid);
@@ -1085,7 +1142,30 @@ function allBook() {
     for (const k in bb) { const e = bb[k]; if (e && typeof e.t === 'number' && e.text) out.push({ id, k, key: id + '|' + k, who, mine, e }); }
   });
   for (const k in bookS.local) { const e = bookS.local[k]; out.push({ id: 'local', k, key: 'local|' + k, who: 'Du', mine: true, e }); }
+  const now = Date.now();
+  QUEEN.forEach(q => { if (q.t <= now) out.push({ id: 'queen', k: q.k, key: 'queen|' + q.k, who: 'Die Feenkönigin', mine: false, queen: true, e: { t: q.t, text: q.text, sub: q.sub } }); });
   return out.sort((a, b) => a.e.t - b.e.t);
+}
+function realMails(list) { return list.filter(x => !x.queen); }
+function allRates() {
+  const out = [];
+  const ids = Object.keys(state.notes); if (state.uid && ids.indexOf(state.uid) < 0) ids.push(state.uid);
+  ids.forEach(id => {
+    const v = state.notes[id] || {}; const mine = id === state.uid; const rr = mine ? Object.assign({}, v.rate || {}, rateS.my) : (v.rate || {});
+    for (const k in rr) { const r = rr[k], m = /^d(\d+)$/.exec(k); if (r && m && typeof r.n === 'number') out.push({ id, mine, who: nameOf(id, v), day: Number(m[1]), n: r.n, c: r.c || '', t: r.t || 0 }); }
+  });
+  return out;
+}
+function rateIcon(day) { return TASKS[day] && TASKS[day].lead === 'esel' ? '⭐' : '🥕'; }
+function rateIcons(day, n) { const ic = rateIcon(day); return n > 0 ? ic.repeat(n) + ' (' + n + ' von 5)' : 'keine ' + (ic === '🥕' ? 'Karotte' : 'Stern') + ' (0 von 5)'; }
+function rateStats() {
+  const today = dayIdx(Date.now()), rs = allRates(); let cs = 0, cm = 0, ss = 0, sm = 0;
+  for (let i = 0; i <= today; i++) {
+    const L = TASKS[i].lead; if (L !== 'fee' && L !== 'esel') continue;
+    const r = rs.find(x => x.day === i);
+    if (L === 'fee') { cm += 5; if (r) cs += r.n; } else { sm += 5; if (r) ss += r.n; }
+  }
+  return { cs, cm, ss, sm };
 }
 function bookTitleNow() {
   let best = bookS.myTitle;
@@ -1103,8 +1183,8 @@ const bookShort = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', 
 const bookHour = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', hour: 'numeric', hour12: false });
 function mailWhen(t) { return berlinDay(t) === berlinDay(Date.now()) ? bookTime.format(new Date(t)) : bookShort.format(new Date(t)); }
 function bookDefaultSub(list) {
-  if (!list.length) return '(ohne Betreff)';
-  return 'AW: ' + (list[list.length - 1].e.sub || '(ohne Betreff)').replace(/^(AW: )+/, '');
+  const rm = realMails(list); if (!rm.length) return '(ohne Betreff)';
+  return 'AW: ' + (rm[rm.length - 1].e.sub || '(ohne Betreff)').replace(/^(AW: )+/, '');
 }
 const NUMW = ['Null', 'Eine', 'Zwei', 'Drei', 'Vier', 'Fünf', 'Sechs', 'Sieben', 'Acht', 'Neun', 'Zehn', 'Elf', 'Zwölf'];
 function numW(n, one) { return n <= 12 ? (n === 1 ? one : NUMW[n]) : String(n); }
@@ -1118,24 +1198,63 @@ function bookGap(prev, t) {
   return numW(dayDiff, 'Ein') + (dayDiff === 1 ? ' Tag später' : ' Tage später');
 }
 function el(tag, cls, txt) { const n = document.createElement(tag); if (cls) n.className = cls; if (txt != null) n.textContent = txt; return n; }
-function avatar(x) { const a = el('div', 'mav' + (x.who === 'Mafifee' ? ' her' : ''), (x.who || '?').charAt(0).toUpperCase()); a.setAttribute('aria-hidden', 'true'); return a; }
+function avatar(x) { const a = el('div', 'mav' + (x.queen ? ' queen' : x.who === 'Mafifee' ? ' her' : ''), x.queen ? '♛' : (x.who || '?').charAt(0).toUpperCase()); a.setAttribute('aria-hidden', 'true'); return a; }
 function mailOther() { return nameOf(state.uid, state.notes[state.uid]) === 'Masüsel' ? 'Mafifee' : 'Masüsel'; }
-function mailSetHeader(title, sub, back) { $('mTitle').textContent = title; $('mSub').textContent = sub || ''; $('mFab').hidden = mailS.view !== 'list'; }
+function mailSetHeader(title, sub) { $('mTitle').textContent = title; $('mSub').textContent = sub || ''; $('mFab').hidden = mailS.view !== 'list' && mailS.view !== 'tasks'; }
+function taskCard(i, list) {
+  const T = TASKS[i], role = myRole(), rs = allRates();
+  const c = el('div', 'mtask ' + role);
+  c.append(el('div', 'th', 'Kapitel ' + (i + 1) + ' · ' + bookShort.format(new Date(Date.UTC(2026, 10, 14 + i, 12))) + ' · Deine Aufgabe als ' + (role === 'fee' ? 'Fee' : 'Esel')));
+  c.append(el('div', 'tt', T.d), el('div', 'tx', role === 'fee' ? T.f : T.e));
+  if (T.lead !== 'fee' && T.lead !== 'esel') return c;
+  const ic = rateIcon(i), rater = T.lead, r = rs.find(x => x.day === i);
+  if (r) { const res = el('div', 'res', 'Bewertung von ' + (r.mine ? 'dir' : r.who) + ': ' + rateIcons(i, r.n) + (r.c ? ', „' + r.c + '“' : '')); c.append(res); return c; }
+  if (rater !== role) { c.append(el('div', 'rl', 'Die Bewertung vergibt ' + (rater === 'fee' ? 'die Fee' : 'der Esel') + ' nach deiner Antwort.')); return c; }
+  const has = realMails(list).some(x => !x.mine && berlinDay(x.e.t) === dayDate(i));
+  if (!has) { c.append(el('div', 'rl', 'Sobald ' + mailOther() + ' an diesem Tag geschrieben hat, kannst du bewerten.')); return c; }
+  const d = mailS.draft[i] || (mailS.draft[i] = { n: null, c: '' });
+  const w = el('div', 'mrate'); w.append(el('div', 'rl', 'Deine Bewertung für ' + mailOther() + ':'));
+  const row = el('div', 'ic'); const btns = [];
+  const paint = () => { btns.forEach((b, k) => b.classList.toggle('on', d.n != null && (k === 0 ? d.n === 0 : k <= d.n))); };
+  const z = el('button', 'zero', '0'); z.type = 'button'; z.setAttribute('aria-label', 'Null'); z.addEventListener('click', () => { d.n = 0; paint(); }); btns.push(z); row.append(z);
+  for (let k = 1; k <= 5; k++) { const b = el('button', '', ic); b.type = 'button'; b.setAttribute('aria-label', k + ' von 5'); b.addEventListener('click', () => { d.n = k; paint(); }); btns.push(b); row.append(b); }
+  const inp = el('input'); inp.type = 'text'; inp.maxLength = 140; inp.placeholder = 'Kurzer Kommentar (optional)'; inp.value = d.c; inp.addEventListener('input', () => { d.c = inp.value; });
+  const go = el('button', 'mbtn main', 'Bewertung abschicken'); go.type = 'button';
+  go.addEventListener('click', async () => {
+    if (d.n == null) { showToast('Wähl erst aus, wie viele ' + (ic === '🥕' ? 'Karotten' : 'Sterne') + ' es sind.'); return; }
+    go.disabled = true; const t = Date.now(); const rec = { n: d.n, t }; if (d.c.trim()) rec.c = d.c.trim();
+    rateS.my['d' + i] = rec; delete mailS.draft[i]; renderBook();
+    if (canShare()) await writeOwn({ rate: Object.assign({}, rateS.my) });
+    if (state.err) showToast(state.err);
+  });
+  w.append(row, inp, go); c.append(w); paint(); return c;
+}
 function renderMail() {
   const app = $('mailApp'); if (app.hidden) return;
   const list = allBook(), body = $('mBody');
   const v = mailS.view;
   if (v === 'compose' || v === 'title') return;
   body.textContent = '';
-  if (v === 'list') {
-    mailSetHeader('Postfach', bookTitleNow());
-    if (!list.length) { body.append(el('div', 'mempty', 'Noch keine Post. Schreib die erste Mail, einer von uns macht den Anfang.')); return; }
-    const last = list[list.length - 1];
-    body.append(el('div', 'mturn', last.mine ? 'Wir warten auf die Antwort von ' + mailOther() + '.' : 'Du bist dran, ' + last.who + ' hat zuletzt geschrieben.'));
+  if (v === 'list' || v === 'tasks') {
+    mailSetHeader(v === 'tasks' ? 'Meine Aufgaben' : 'Postfach', bookTitleNow());
+    const rm = realMails(list), st = rateStats();
+    const bar = []; if (st.cm) bar.push('🥕 ' + st.cs + ' von ' + st.cm); if (st.sm) bar.push('⭐ ' + st.ss + ' von ' + st.sm);
+    const last = rm[rm.length - 1];
+    const turn = !last ? 'Noch keine Mail, einer von uns macht den Anfang.' : last.mine ? 'Wir warten auf die Antwort von ' + mailOther() + '.' : 'Du bist dran, ' + last.who + ' hat zuletzt geschrieben.';
+    body.append(el('div', 'mturn', (bar.length ? bar.join('   ') + '   ·   ' : '') + turn));
+    const today = dayIdx(Date.now());
+    if (v === 'tasks') { for (let i = today; i >= 0; i--) body.append(taskCard(i, list)); return; }
+    body.append(taskCard(today, list));
+    const items = list.map(x => ({ kind: 'mail', t: x.e.t, x })).concat(allRates().map(r => ({ kind: 'rate', t: r.t, r }))).sort((a, b) => b.t - a.t);
     const rd = mailReadSet();
-    list.slice().reverse().forEach(x => {
-      const unread = !x.mine && !rd.has(x.key);
-      const row = el('div', 'mrow' + (unread ? ' unread' : '')); row.tabIndex = 0; row.setAttribute('role', 'button');
+    items.forEach(it => {
+      if (it.kind === 'rate') {
+        const r = it.r, row = el('div', 'mrow rate'); const av = el('div', 'mav', rateIcon(r.day)); av.setAttribute('aria-hidden', 'true');
+        const c = el('div', 'mc'); const l1 = el('div', 'l1'); l1.append(el('span', 'nm', 'Bewertung ' + (r.mine ? 'von mir' : 'von ' + r.who)), el('span', 'tm', mailWhen(r.t)));
+        c.append(l1, el('div', 'sj', rateIcons(r.day, r.n)), el('div', 'pv', r.c || TASKS[r.day].d)); row.append(av, c); body.append(row); return;
+      }
+      const x = it.x, unread = !x.mine && !rd.has(x.key);
+      const row = el('div', 'mrow' + (unread ? ' unread' : '') + (x.queen ? ' queenrow' : '')); row.tabIndex = 0; row.setAttribute('role', 'button');
       const c = el('div', 'mc'); const l1 = el('div', 'l1');
       l1.append(el('span', 'nm', x.mine ? 'Ich' : x.who), el('span', 'tm', mailWhen(x.e.t)));
       c.append(l1, el('div', 'sj', x.e.sub || '(ohne Betreff)'), el('div', 'pv', x.e.text.replace(/\s+/g, ' ').slice(0, 100)));
@@ -1148,24 +1267,31 @@ function renderMail() {
     const x = list.find(y => y.key === mailS.cur);
     if (!x) { mailS.view = 'list'; renderMail(); return; }
     mailSetHeader('Nachricht', '');
-    const box = el('div', 'mread'); box.append(el('h2', '', x.e.sub || '(ohne Betreff)'));
-    const f = el('div', 'from'); const who = el('div'); who.append(document.createTextNode((x.mine ? 'Ich' : x.who) + ' an ' + (x.mine ? mailOther() : 'mich')), el('small', '', bookLong.format(new Date(x.e.t)) + ' Uhr'));
+    const box = el('div', 'mread' + (x.queen ? ' royal' : '')); box.append(el('h2', '', x.e.sub || '(ohne Betreff)'));
+    const f = el('div', 'from'); const who = el('div'); who.append(document.createTextNode(x.queen ? 'Die Feenkönigin an Fee und Esel' : (x.mine ? 'Ich' : x.who) + ' an ' + (x.mine ? mailOther() : 'mich')), el('small', '', bookLong.format(new Date(x.e.t)) + ' Uhr'));
     f.append(avatar(x), who); box.append(f, el('div', 'txt', x.e.text));
-    const acts = el('div', 'acts'); const rb = el('button', 'mbtn main', '↩ Antworten'); rb.type = 'button';
-    rb.addEventListener('click', () => { mailS.view = 'compose'; mailS.reply = 'AW: ' + (x.e.sub || '(ohne Betreff)').replace(/^(AW: )+/, ''); renderCompose(); });
-    acts.append(rb); box.append(acts); body.append(box);
+    if (!x.queen) {
+      const acts = el('div', 'acts'); const rb = el('button', 'mbtn main', '↩ Antworten'); rb.type = 'button';
+      rb.addEventListener('click', () => { mailS.view = 'compose'; mailS.reply = 'AW: ' + (x.e.sub || '(ohne Betreff)').replace(/^(AW: )+/, ''); renderCompose(); });
+      acts.append(rb); box.append(acts);
+    }
+    body.append(box);
   } else if (v === 'book') {
     mailSetHeader('Als Buch lesen', '');
     const b = el('div', 'mbook'); const cv = el('div', 'cover'); cv.append(el('h1', '', bookTitleNow()), el('p', '', 'Ein Briefroman von Masüsel und Mafifee')); b.append(cv);
+    const rs = allRates();
+    const items = list.map(x => ({ t: x.e.t, x })).concat(rs.map(r => ({ t: r.t, r }))).sort((a, c) => a.t - c.t);
     let lastDay = '', n = 0, prevT = 0, flip = false;
-    list.forEach(x => {
+    items.forEach(it => {
+      if (it.r) { b.append(el('div', 'rt', 'Bewertung ' + (it.r.mine ? 'von mir' : 'von ' + it.r.who) + ': ' + rateIcons(it.r.day, it.r.n) + (it.r.c ? ', „' + it.r.c + '“' : ''))); return; }
+      const x = it.x;
+      if (x.queen) { const rb = el('div', 'royal'); rb.append(el('div', 'rh', 'Brief der Feenkönigin'), el('div', 'rs', x.e.sub), el('p', 'tx', x.e.text)); b.append(rb); return; }
       const dk = berlinDay(x.e.t);
       if (dk !== lastDay) { lastDay = dk; n++; b.append(el('div', 'chap', 'Kapitel ' + n + ' · ' + bookFmt.format(new Date(x.e.t)))); }
       if (prevT) { b.append(el('div', 'gap', bookGap(prevT, x.e.t))); b.append(el('div', 'lab', flip ? 'AW:' : 'RE:')); flip = !flip; }
       else { flip = false; }
       b.append(el('p', 'tx', x.e.text)); prevT = x.e.t;
     });
-    if (!list.length) b.append(el('div', 'mempty', 'Das Buch ist noch leer.'));
     body.append(b);
   }
 }
@@ -1173,12 +1299,18 @@ function renderCompose() {
   const list = allBook(), body = $('mBody'); mailSetHeader('Neue Mail', ''); body.textContent = '';
   const f = el('form', 'mform');
   f.append(el('div', 'to', 'An: ' + mailOther()));
-  const sub = el('input'); sub.id = 'mSub2'; sub.type = 'text'; sub.maxLength = 80; sub.placeholder = 'Betreff'; sub.value = mailS.reply || ''; sub.setAttribute('aria-label', 'Betreff');
+  const sub = el('input'); sub.id = 'mSub2'; sub.type = 'text'; sub.maxLength = 80; sub.placeholder = 'Betreff, leer lassen für: ' + bookDefaultSub(list); sub.value = mailS.reply || ''; sub.setAttribute('aria-label', 'Betreff');
   const tx = el('textarea'); tx.id = 'mText'; tx.maxLength = 1500; tx.placeholder = 'Liebe/r ...'; tx.setAttribute('aria-label', 'Nachricht');
   const hint = el('div', 'hint'); hint.id = 'mHint'; hint.setAttribute('aria-live', 'polite');
   const acts = el('div', 'acts'); const go = el('button', 'mbtn main', 'Senden'); go.type = 'submit'; const ca = el('button', 'mbtn', 'Abbrechen'); ca.type = 'button';
   ca.addEventListener('click', () => { mailS.view = 'list'; mailS.reply = null; renderMail(); });
   acts.append(go, ca); f.append(sub, tx, hint, acts); body.append(f);
+  const rm = realMails(list).slice().reverse().slice(0, 8);
+  if (rm.length) {
+    const th = el('div', 'mthread'); th.append(el('h3', '', 'Bisheriger Verlauf'));
+    rm.forEach(x => { const m = el('div', 'tm'); m.append(el('div', 'who', (x.mine ? 'Ich' : x.who) + ' · ' + bookLong.format(new Date(x.e.t)) + ' · ' + (x.e.sub || '(ohne Betreff)')), el('p', '', x.e.text)); th.append(m); });
+    body.append(th);
+  }
   f.addEventListener('submit', async ev => {
     ev.preventDefault();
     const text = tx.value.trim(); if (!text) { hint.textContent = 'Schreib erst etwas hinein.'; return; }
@@ -1207,10 +1339,12 @@ function renderTitleEdit() {
 function bookAsText() {
   const list = allBook(); let out = bookTitleNow() + '\n\n'; let last = '', n = 0;
   list.forEach(x => {
+    if (x.queen) { out += '--- Brief der Feenkönigin ---\n' + x.e.sub + '\n\n' + x.e.text + '\n\n'; return; }
     const dk = berlinDay(x.e.t);
     if (dk !== last) { last = dk; n++; out += '=== Kapitel ' + n + ' · ' + bookFmt.format(new Date(x.e.t)) + ' ===\n\n'; }
     out += 'Von: ' + x.who + '\nBetreff: ' + (x.e.sub || '(ohne Betreff)') + '\n\n' + x.e.text + '\n\n';
   });
+  allRates().sort((a, b) => a.t - b.t).forEach(r => { out += 'Bewertung von ' + r.who + ' (' + TASKS[r.day].d + '): ' + rateIcons(r.day, r.n) + (r.c ? ', ' + r.c : '') + '\n'; });
   return out;
 }
 function mailOpen() {
@@ -1230,6 +1364,7 @@ $('mMenuBox').addEventListener('click', ev => {
   const b = ev.target.closest('button'); if (!b) return; $('mMenuBox').hidden = true;
   const a = b.getAttribute('data-act');
   if (a === 'inbox') { mailS.view = 'list'; renderMail(); }
+  else if (a === 'tasks') { mailS.view = 'tasks'; renderMail(); $('mBody').scrollTop = 0; }
   else if (a === 'book') { mailS.view = 'book'; renderMail(); $('mBody').scrollTop = 0; }
   else if (a === 'title') { mailS.view = 'title'; renderTitleEdit(); }
   else if (a === 'txt') {
@@ -1469,9 +1604,10 @@ function startNotes(db) {
     const fresh = [];
     for (const id in m) {
       const v = m[id] || {};
-      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
+      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
       for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz, weil ' + pron(nameOf(id, v)) + ' an dich denken musste ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       for (const k in (v.book || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.book[k]; if (state.seen && e && e.text) fresh.push(nameOf(id, v) + ' hat dir im Buch geschrieben: ' + (e.sub || '(ohne Betreff)')); } }
+      for (const k in (v.rate || {})) { const key = id + '|r|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const r = v.rate[k], m = /^d(\d+)$/.exec(k); if (state.seen && r && m) fresh.push(nameOf(id, v) + ' hat dich bewertet: ' + rateIcons(Number(m[1]), r.n)); } }
       DOORS.forEach(d => { const x = v['d' + d.n]; if (x && x.text) { const key = id + '|d' + d.n + '|' + (x.ts || x.text.length); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat bei Türchen ' + d.n + ' geantwortet.'); } } });
       for (const k in (v.ack || {})) { const key = id + '|' + k; if (!state.seenA.has(key)) { state.seenA.add(key); if (state.seen && k.indexOf(ackKey(state.uid, '')) === 0) fresh.push(nameOf(id, v) + ' hat einen Wunsch von dir erfüllt' + ((v.ack[k] && v.ack[k].text) ? ': ' + (v.ack[k].text.length > 70 ? v.ack[k].text.slice(0, 70) + ' ...' : v.ack[k].text) : '.')); } }
     }
