@@ -81,6 +81,15 @@ p { margin: 0; }
 .mread .from { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; }
 .mread .from small { display: block; color: #6a6f87; font-size: 13px; }
 .mread .txt { font-family: var(--display); font-size: 18px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mread .txt.let p { margin: 0 0 0.9em; white-space: pre-line; }
+.mread .txt.let { font-size: 17px; }
+.mhead { border-bottom: 1px solid #e6e8f0; padding-bottom: 12px; margin-bottom: 16px; font-size: 14px; display: flex; flex-direction: column; gap: 4px; }
+.mhead .hr { display: flex; gap: 8px; }
+.mhead .hl { flex: none; width: 58px; color: #6a6f87; }
+.mhead .hv { min-width: 0; overflow-wrap: anywhere; }
+.mquote { margin-top: 20px; padding-left: 12px; border-left: 3px solid #c9cde0; }
+.mquote .qh { font-size: 13px; color: #6a6f87; margin-bottom: 5px; }
+.mquote .qt { font-family: var(--display); font-size: 15px; line-height: 1.5; color: #4a4f68; white-space: pre-wrap; overflow-wrap: anywhere; }
 .mread .acts { margin-top: 22px; display: flex; gap: 10px; }
 .mbtn { border: 1px solid #c9cde0; background: #fff; color: #1d2030; border-radius: 22px; padding: 10px 18px; min-height: 44px; font-size: 15px; }
 .mbtn.main { background: #1d2030; color: #fff; border-color: #1d2030; }
@@ -98,7 +107,9 @@ p { margin: 0; }
 .mbook .cover p { margin: 8px 0 0; font-family: var(--body); font-size: 14px; color: #7a7061; }
 .mbook .chap { font-family: var(--body); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #8a7e6c; border-top: 1px solid #e3dac8; padding-top: 14px; margin-top: 30px; }
 .mbook .gap { font-style: italic; margin-top: 24px; color: #5b5346; }
-.mbook .lab { font-weight: 700; margin-top: 2px; }
+.mbook .lab { font-family: var(--body); font-size: 13px; color: #7a7061; margin-top: 2px; }
+.mbook .lab b { color: #231f1a; }
+.mbook .royal .tx p { margin: 0 0 0.8em; white-space: pre-line; }
 .mbook .tx { font-size: 18px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; margin: 2px 0 0; }
 .mbook .royal { border: 1px solid #c9b88f; border-radius: 6px; padding: 14px 16px; margin: 24px 0; background: #f4ecda; }
 .mbook .royal .rh { font-family: var(--body); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #6b4fb3; margin-bottom: 6px; }
@@ -121,7 +132,7 @@ p { margin: 0; }
 .mrate .ic .zero { font-size: 13px; opacity: 1; color: #6a6f87; border: 1px solid #c9cde0; border-radius: 14px; padding: 6px 10px; }
 .mrate .ic .zero.on { background: #1d2030; color: #fff; }
 .mailapp .mrate input[type="text"] { width: 100%; box-sizing: border-box; border: 1px solid #dfe2ec; border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 15px; color: #1d2030; background: #fff; }
-.mthread { padding: 8px 16px 40px; background: #f3f4f8; }
+.mthread { padding: 0 16px 40px; background: #fff; }
 .mthread h3 { font-family: var(--body); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: #6a6f87; margin: 14px 0 8px; }
 .mthread .tm { background: #fff; border: 1px solid #e6e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
 .mthread .tm .who { font-size: 13px; color: #6a6f87; margin-bottom: 4px; }
@@ -129,24 +140,28 @@ p { margin: 0; }
 .mread.royal { border-top: 6px solid #6b4fb3; }
 .mbook .rt { text-align: center; font-family: var(--body); font-size: 14px; color: #8a6a2a; margin: 22px 0 0; }
 #printBook { display: none; }
-@page { size: A5; margin: 18mm 16mm 20mm; @bottom-center { content: counter(page); font-size: 9pt; color: #555; } }
+@page { size: A5; margin: 14mm 13mm 16mm; @bottom-center { content: counter(page); font-size: 8pt; color: #555; } }
 @media print {
   :root { color-scheme: light; }
   html, body { background: #fff !important; color: #000 !important; height: auto !important; overflow: visible !important; }
   body > *:not(#printBook) { display: none !important; }
-  #printBook { display: block !important; font-family: Georgia, 'Times New Roman', serif; color: #111; font-size: 11.5pt; line-height: 1.55; }
+  #printBook { display: block !important; font-family: Georgia, 'Times New Roman', serif; color: #111; font-size: 10pt; line-height: 1.4; }
   #printBook .pcover { text-align: center; padding-top: 38mm; break-after: page; }
-  #printBook .pcover h1 { font-family: Georgia, serif; font-weight: 400; font-size: 30pt; line-height: 1.15; color: #111; margin: 0 0 10mm; }
-  #printBook .pcover p { margin: 3mm 0; font-style: italic; color: #444; }
-  #printBook .pchap { break-after: avoid; margin: 9mm 0 3mm; padding-top: 3mm; border-top: 0.4mm solid #bbb; font-size: 9pt; letter-spacing: 0.1em; text-transform: uppercase; color: #555; }
-  #printBook .pgap { font-style: italic; margin: 5mm 0 0; color: #333; break-after: avoid; }
-  #printBook .plab { font-weight: 700; margin: 0; break-after: avoid; }
+  #printBook .pcover h1 { font-family: Georgia, serif; font-weight: 400; font-size: 28pt; line-height: 1.15; color: #111; margin: 0 0 10mm; }
+  #printBook .pcover p { margin: 3mm 0; font-style: italic; color: #444; font-size: 11pt; }
+  #printBook .pchap { break-after: avoid; margin: 7mm 0 3mm; padding-top: 2mm; border-top: 0.3mm solid #bbb; font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: #555; }
+  #printBook .pgap { font-style: italic; margin: 4mm 0 2mm; color: #333; break-after: avoid; font-size: 9.5pt; }
+  #printBook .pmail { margin: 0 0 3mm; }
+  #printBook .phead { font-family: Arial, Helvetica, sans-serif; font-size: 7.5pt; line-height: 1.35; color: #555; border-bottom: 0.25mm solid #ccc; padding-bottom: 1.5mm; margin-bottom: 2mm; break-after: avoid; }
+  #printBook .phead .psub { font-weight: 700; color: #111; font-size: 8.5pt; }
   #printBook .ptx { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; orphans: 3; widows: 3; }
-  #printBook .proyal { border: 0.4mm solid #8a7a50; padding: 4mm 5mm; margin: 6mm 0; background: #f6f0e0; break-inside: avoid; }
-  #printBook .proyal .rh { font-size: 8.5pt; letter-spacing: 0.08em; text-transform: uppercase; color: #5a3f9a; margin-bottom: 2mm; }
-  #printBook .proyal .rs { font-weight: 700; margin-bottom: 2mm; }
-  #printBook .prt { text-align: center; font-size: 10pt; color: #7a5a1a; margin: 5mm 0 0; }
-  #printBook .pend { margin-top: 12mm; text-align: center; border-top: 0.4mm solid #bbb; padding-top: 5mm; font-style: italic; }
+  #printBook .ptx p { margin: 0 0 2mm; white-space: pre-line; }
+  #printBook .proyal { border-left: 0.8mm solid #8a6fc8; padding: 0 0 0 4mm; margin: 5mm 0; }
+  #printBook .proyal .ptx { font-size: 9pt; line-height: 1.3; }
+  #printBook .proyal .ptx p { margin: 0 0 1.6mm; }
+  #printBook .prt { text-align: center; font-size: 9pt; color: #7a5a1a; margin: 3mm 0 0; }
+  #printBook .pend { margin-top: 10mm; text-align: center; border-top: 0.3mm solid #bbb; padding-top: 4mm; font-style: italic; }
+}
 }
 .eyebrow { font-family: var(--mono); font-size: 13px; letter-spacing: 0.04em; color: var(--gold); margin-bottom: 8px; }
 .lede { color: var(--muted); margin-top: 10px; }
@@ -1143,7 +1158,7 @@ const bookS = { my: {}, local: {}, myTitle: null };
 const rateS = { my: {} };
 const mailS = { view: 'list', cur: null, reply: null, draft: {} };
 const QUEEN = [
-  { k: 'prolog', t: Date.UTC(2026, 10, 13, 23, 0), to: 'both', sub: 'Erlass der Königin', text: 'An die Fee Mafifee, zuständig für Penzing, und an den Esel Masüsel, wohnhaft in Simmern.\n\nEs wurde festgestellt, dass der Esel manchmal süß und manchmal Esel ist. Des Weiteren wurde festgestellt, dass die Fee manchmal fies und manchmal Fee ist. Beides ist zulässig. Die Entfernung von 500 Kilometern ist es nicht.\n\nIch ordne daher eine Prüfung an. Sie soll zeigen, ob beide einander vertrauen können. Süß wie fies, Esel wie Fee, an guten Tagen wie an schlechten. Wer sich auf den anderen verlassen kann, soll mit einem Happy End belohnt werden.\n\nHiermit wird im Namen des Feenreiches verfügt:\n\n§ 1 Die Prüfung. Die Fee prüft den Esel, ob er mehr süß oder mehr störrisch ist und ob sie sich auf ihn verlassen darf. Jeden Tag ergeht eine Aufgabe, und was der Esel liefert, bewertet die Fee mit null bis fünf goldenen Karotten.\n\n§ 2 Die Beweisführung. Der Esel darf sich auf seine eigene Weise beweisen, mit seinen eigenen Worten. Die Fee darf prüfen, wie es ihr beliebt, doch das Schummeln ist ihr untersagt.\n\n§ 3 Die Gegenprobe. Gleichzeitig prüft der Esel die Fee, ob sie mehr Fee oder mehr fies ist und ob er sich auf sie verlassen darf. Auch eine Fee ist nicht fehlerfrei: Entgleitet ihr der Zauber, ist der Esel berechtigt, sie auf die Probe zu stellen, und er vergibt Sterne.\n\n§ 4 Die Abschlussprüfung. Eine abschließende Prüfung ist für den 29. November geplant.\n\n§ 5 Die Beurteilung. Am Mittwoch, dem 2. Dezember, gebe ich meine Beurteilung ab, über den Esel und über die Fee.\n\n§ 6 Das letzte Wort. Maßgeblich ist die Fee, denn sie ist dem Königshaus unterstellt. Der Esel ist einfach nur ein Esel. Die Entscheidung am Ende trifft die Krone. Besteht der Esel nicht, kann die Fee eine Nachprüfung anordnen. Ob daraus ein gutes Ende wird, liegt in ihrer Hand.\n\nFür Pannen des Zauberstabs übernimmt der Hof keine Haftung.\n\nAusgefertigt zu Wolkenstein, am vierzehnten Tag des Novembers,\nErnestine die Vorläufige, Königin des Feenreiches\n(Siegel: ein Tropfen Mondlicht)' },
+  { k: 'prolog', t: Date.UTC(2026, 10, 13, 23, 0), to: 'both', sub: 'Erlass der Königin', text: 'An die Fee Mafifee, zuständig für Penzing, und an den Esel Masüsel, wohnhaft in Simmern.\n\nEs wurde festgestellt, dass der Esel manchmal süß und manchmal Esel ist. Des Weiteren wurde festgestellt, dass die Fee manchmal fies und manchmal Fee ist. Beides ist zulässig. Die Entfernung von 500 Kilometern ist es nicht.\n\nIch ordne daher eine Prüfung an. Sie soll zeigen, ob beide einander vertrauen können. Süß wie fies, Esel wie Fee, an guten Tagen wie an schlechten. Wer sich auf den anderen verlassen kann, soll mit einem Happy End belohnt werden.\n\nHiermit wird im Namen des Feenreiches verfügt:\n\n§ 1 Die Prüfung. Die Fee prüft den Esel, ob er mehr süß oder mehr störrisch ist und ob sie sich auf ihn verlassen darf. Jeden Tag ergeht eine Aufgabe, und was der Esel liefert, bewertet die Fee mit null bis fünf goldenen Karotten.\n\n§ 2 Die Beweisführung. Der Esel darf sich auf seine eigene Weise beweisen, mit seinen eigenen Worten. Die Fee darf prüfen, wie es ihr beliebt, doch das Schummeln ist ihr untersagt.\n\n§ 3 Die Gegenprobe. Gleichzeitig prüft der Esel die Fee, ob sie mehr Fee oder mehr fies ist und ob er sich auf sie verlassen darf. Auch eine Fee ist nicht fehlerfrei: Entgleitet ihr der Zauber, ist der Esel berechtigt, sie auf die Probe zu stellen, und er vergibt Sterne.\n\n§ 4 Die Abschlussprüfung. Eine abschließende Prüfung ist für den 29. November geplant.\n\n§ 5 Die Beurteilung. Am Mittwoch, dem 2. Dezember, gebe ich meine Beurteilung ab, über den Esel und über die Fee.\n\n§ 6 Das letzte Wort. Maßgeblich ist die Fee, denn sie ist dem Königshaus unterstellt. Der Esel ist einfach nur ein Esel. Die Beurteilung spricht die Krone. Besteht der Esel nicht, kann die Fee eine Nachprüfung anordnen. Ob daraus ein gutes Ende wird, liegt weder in der Hand der Fee noch in der des Esels. Es liegt in den Sternen, und die gehorchen nicht einmal der Krone.\n\nFür Pannen des Zauberstabs übernimmt der Hof keine Haftung.\n\nAusgefertigt zu Wolkenstein, am vierzehnten Tag des Novembers,\nErnestine die Vorläufige, Königin des Feenreiches\n(Siegel: ein Tropfen Mondlicht)' },
   { k: 'frage1', t: Date.UTC(2026, 10, 17, 6, 0), to: 'fee', sub: 'Anfrage der Krone an die Fee', text: 'An die Fee Mafifee, Kopie an den Esel Masüsel.\n\nIn der Sache Fiesheit ergeht folgende Anfrage: Wann hat die Fee zuletzt jemanden fies behandelt, der es verdient hatte, und wann jemanden, der es nicht verdient hatte?\n\nDie Fee wird aufgefordert, in ihrer nächsten Mail an den Esel wahrheitsgemäß Auskunft zu geben, so ehrlich, wie eine Fee es vermag. Der Esel wird gebeten, auf etwaiges Schummeln zu achten.\n\nAusgefertigt zu Wolkenstein,\nErnestine die Vorläufige, Königin des Feenreiches' },
   { k: 'halbzeit', t: Date.UTC(2026, 10, 20, 7, 0), to: 'both', sub: 'Zwischenbescheid der Krone', text: 'An Fee und Esel.\n\nIm Verfahren Fee gegen Entfernung ist die Hälfte der Wegstrecke erreicht. Die Krone hält fest: Punkte sind nicht allein maßgeblich. Auch ein Esel, der schlecht rechnet, kann sich beweisen, und auch eine Fee, die streng auftritt, darf weich werden.\n\nBis zur Abschlussprüfung verbleiben neun Tage.\n\nAusgefertigt zu Wolkenstein,\nErnestine die Vorläufige, Königin des Feenreiches' },
   { k: 'frage2', t: Date.UTC(2026, 10, 23, 7, 0), to: 'fee', sub: 'Zweite Anfrage der Krone an die Fee', text: 'An die Fee Mafifee, Kopie an den Esel Masüsel.\n\nDer Krone ist zu Ohren gekommen, dass die Fee den Esel gar nicht so schlimm findet, wie sie vorgibt. Die Fee ist nicht verpflichtet, dies zuzugeben.\n\nSie wird jedoch aufgefordert mitzuteilen: Angenommen, der Esel sähe sie heute zum ersten Mal und wüsste nicht, wer sie ist. Wie lautet der erste Satz, den sie zu ihm sagen würde? Die Antwort ist in der nächsten Mail schriftlich zu hinterlegen. Der Esel liest mit.\n\nAusgefertigt zu Wolkenstein,\nErnestine die Vorläufige, Königin des Feenreiches' },
@@ -1152,8 +1167,7 @@ const QUEEN = [
   { k: 'abschied', t: Date.UTC(2026, 11, 1, 7, 0), to: 'both', sub: 'Bescheid zur Abreise', text: 'An Fee und Esel.\n\nHeute fährt die Fee zurück nach Penzing, und der Esel bleibt mit seinen Möhren in Simmern. Das Verfahren ist damit nicht beendet. Das Buch wird bis zum Sonntag weitergeführt.\n\nMorgen, am Mittwoch, dem 2. Dezember, gebe ich meine Beurteilung ab. Danach haben beide gemeinsam das Ende zu schreiben, bis zum Sonntag.\n\nAusgefertigt zu Wolkenstein,\nErnestine die Vorläufige, Königin des Feenreiches' }
 ];
 const TASKS = [
-  { d: 'Die Vorstellung', lead: 'fee', f: 'Du eröffnest die Prüfung. Stell dich dem Esel als strenge Prüferin vor und gib ihm die erste Aufgabe: Er soll dir in drei Sätzen erklären, warum du ihn nicht gleich durchfallen lassen sollst.', e: 'Die Fee eröffnet die Prüfung. Antworte ihr in drei Sätzen auf deine eigene Art und versuch dabei, möglichst wenig zu schummeln.' },
-  { d: 'Die Eselsbeichte', lead: 'fee', f: 'Fordere vom Esel eine Beichte: Er soll dir die eselhafteste Sache gestehen, die er je getan hat. Ehrlichkeit zählt für dich mehr als Eleganz.', e: 'Gestehe der Fee die eselhafteste Sache, die du je getan hast. Ehrlich, aber gern mit Humor.' },
+  { d: 'Die Vorstellung', lead: 'fee', f: 'Du eröffnest die Prüfung, du schreibst die erste Mail. Stell dich dem Esel als strenge Prüferin vor und verlang von ihm zwei Dinge: die eselhafteste Sache, die er je getan hat, und drei Sätze, warum du ihn nicht gleich durchfallen lassen sollst.', e: 'Die Fee eröffnet die Prüfung und schreibt zuerst. Antworte ihr auf deine eigene Art: Gestehe die eselhafteste Sache, die du je getan hast, und erklär in drei Sätzen, warum sie dich nicht gleich durchfallen lassen soll. Möglichst wenig schummeln.' },
   { d: 'Die Reise im Kopf', lead: 'fee', f: 'Der Esel soll dir seinen Weg nach Bayern als Heldenreise erzählen, mit drei Hindernissen. Du darfst jedes Hindernis kommentieren, möglichst spitz.', e: 'Erzähl der Fee den Weg zu ihr als Heldenreise mit drei Hindernissen. Sei ruhig dramatisch, es ist ja ein weiter Weg.' },
   { d: 'Der erste Wackler', lead: 'esel', f: 'Heute flackert dein Zauberstab, und du bist nicht darauf vorbereitet. Verrate es nicht offen, aber ein bisschen darfst du dich verraten. Löse die Aufgabe des Esels, so gut es ohne Magie geht.', e: 'Dir fällt auf, dass bei der Fee etwas flackert. Stell ihr heute die Aufgabe, dir etwas zu zeigen, das sie ohne Magie kann. Du bewertest sie am Ende mit Sternen.' },
   { d: 'Das Geschenk ohne Preis', lead: 'fee', f: 'Der Esel soll ein Geschenk erfinden, das nichts kostet und das nur du bekommen kannst. Prüfe, ob es wirklich von ihm kommt.', e: 'Erfinde für die Fee ein Geschenk, das nichts kostet und das nur sie bekommen kann. Beschreib es so, dass sie es fast anfassen kann.' },
@@ -1176,8 +1190,8 @@ const TASKS = [
   { d: 'Der letzte Abend', lead: 'after', f: 'Morgen wird das Ende geschrieben. Schreib dem Esel, was auf keinen Fall darin fehlen darf.', e: 'Morgen wird das Ende geschrieben. Schreib der Fee, was auf keinen Fall darin fehlen darf.' },
   { d: 'Das Happy End', lead: 'after', f: 'Schreibt das Ende. Ihr entscheidet beide, wie es ausgeht, und die Fee hat das letzte Wort.', e: 'Schreibt das Ende. Du steuerst deinen Teil bei, und die Fee hat das letzte Wort.' }
 ];
-function dayIdx(now) { const n = Math.round((Date.parse(berlinDay(now) + 'T12:00:00Z') - Date.parse('2026-11-14T12:00:00Z')) / 86400000); return Math.max(0, Math.min(TASKS.length - 1, n)); }
-function dayDate(i) { return berlinDay(Date.UTC(2026, 10, 14 + i, 12)); }
+function dayIdx(now) { const n = Math.round((Date.parse(berlinDay(now) + 'T12:00:00Z') - Date.parse('2026-11-15T12:00:00Z')) / 86400000); return Math.max(0, Math.min(TASKS.length - 1, n)); }
+function dayDate(i) { return berlinDay(Date.UTC(2026, 10, 15 + i, 12)); }
 function myRole() { return nameOf(state.uid, state.notes[state.uid]) === 'Mafifee' ? 'fee' : 'esel'; }
 function allBook() {
   const out = [];
@@ -1230,7 +1244,7 @@ const bookHour = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', h
 function mailWhen(t) { return berlinDay(t) === berlinDay(Date.now()) ? bookTime.format(new Date(t)) : bookShort.format(new Date(t)); }
 function bookDefaultSub(list) {
   const rm = realMails(list); if (!rm.length) return '(ohne Betreff)';
-  return 'AW: ' + (rm[rm.length - 1].e.sub || '(ohne Betreff)').replace(/^(AW: )+/, '');
+  return 'AW: ' + (rm[rm.length - 1].e.sub || '(ohne Betreff)').replace(SUBRE, '');
 }
 const NUMW = ['Null', 'Eine', 'Zwei', 'Drei', 'Vier', 'Fünf', 'Sechs', 'Sieben', 'Acht', 'Neun', 'Zehn', 'Elf', 'Zwölf'];
 function numW(n, one) { return n <= 12 ? (n === 1 ? one : NUMW[n]) : String(n); }
@@ -1243,6 +1257,24 @@ function bookGap(prev, t) {
   if (dayDiff === 1) { const hr = Number(bookHour.format(new Date(t))); return hr < 11 ? 'Am nächsten Morgen' : hr < 17 ? 'Am nächsten Tag' : 'Am nächsten Abend'; }
   return numW(dayDiff, 'Ein') + (dayDiff === 1 ? ' Tag später' : ' Tage später');
 }
+const ADDR = { fee: ['Mafifee', 'mafifee@penzing.feenpost'], esel: ['Masüsel', 'masuesel@simmern.feenpost'], queen: ['Königin Ernestine die Vorläufige', 'krone@wolkenstein.feenreich'] };
+const SUBRE = /^((AW|RE):\s*)+/i;
+function addrStr(a) { return a[0] + ' <' + a[1] + '>'; }
+function fromOf(x) { if (x.queen) return ADDR.queen; return ADDR[(x.mine ? myRole() : (x.who === 'Mafifee' ? 'fee' : 'esel'))]; }
+function toOf(x) { if (x.queen) return x.to === 'fee' ? [ADDR.fee] : [ADDR.fee, ADDR.esel]; return [fromOf(x) === ADDR.fee ? ADDR.esel : ADDR.fee]; }
+function ccOf(x) { return x.queen && x.to === 'fee' ? [ADDR.esel] : []; }
+function headRows(x) {
+  const r = [['Von:', addrStr(fromOf(x))], ['An:', toOf(x).map(addrStr).join(', ')]];
+  const cc = ccOf(x); if (cc.length) r.push(['Kopie:', cc.map(addrStr).join(', ')]);
+  r.push(['Datum:', bookLong.format(new Date(x.e.t)) + ' Uhr']); return r;
+}
+function mailHead(x) { const h = el('div', 'mhead'); headRows(x).forEach(a => { const r = el('div', 'hr'); r.append(el('span', 'hl', a[0]), el('span', 'hv', a[1])); h.append(r); }); return h; }
+function letterNode(text, cls) {
+  const d = el('div', cls);
+  text.split('\n\n').forEach(t => { const m = /^(§ \d+ [^.]+\.)\s+([\s\S]*)$/.exec(t), n = el('p'); if (m) n.append(el('b', '', m[1]), document.createTextNode(' ' + m[2])); else n.textContent = t; d.append(n); });
+  return d;
+}
+function quoteNode(p) { const q = el('div', 'mquote'); q.append(el('div', 'qh', 'Am ' + bookLong.format(new Date(p.e.t)) + ' Uhr schrieb ' + addrStr(fromOf(p)) + ':'), el('div', 'qt', p.e.text)); return q; }
 function el(tag, cls, txt) { const n = document.createElement(tag); if (cls) n.className = cls; if (txt != null) n.textContent = txt; return n; }
 function avatar(x) { const a = el('div', 'mav' + (x.queen ? ' queen' : x.who === 'Mafifee' ? ' her' : ''), x.queen ? '♛' : (x.who || '?').charAt(0).toUpperCase()); a.setAttribute('aria-hidden', 'true'); return a; }
 function mailOther() { return nameOf(state.uid, state.notes[state.uid]) === 'Masüsel' ? 'Mafifee' : 'Masüsel'; }
@@ -1250,7 +1282,7 @@ function mailSetHeader(title, sub) { $('mTitle').textContent = title; $('mSub').
 function taskCard(i, list) {
   const T = TASKS[i], role = myRole(), rs = allRates();
   const c = el('div', 'mtask ' + role);
-  c.append(el('div', 'th', 'Kapitel ' + (i + 1) + ' · ' + bookShort.format(new Date(Date.UTC(2026, 10, 14 + i, 12))) + ' · Deine Aufgabe als ' + (role === 'fee' ? 'Fee' : 'Esel')));
+  c.append(el('div', 'th', 'Kapitel ' + (i + 1) + ' · ' + bookShort.format(new Date(Date.UTC(2026, 10, 15 + i, 12))) + ' · Deine Aufgabe als ' + (role === 'fee' ? 'Fee' : 'Esel')));
   c.append(el('div', 'tt', T.d), el('div', 'tx', role === 'fee' ? T.f : T.e));
   if (T.lead !== 'fee' && T.lead !== 'esel') return c;
   const ic = rateIcon(i), rater = T.lead, r = rs.find(x => x.day === i);
@@ -1286,7 +1318,7 @@ function renderMail() {
     const rm = realMails(list), st = rateStats();
     const bar = []; if (st.cm) bar.push('🥕 ' + st.cs + ' von ' + st.cm); if (st.sm) bar.push('⭐ ' + st.ss + ' von ' + st.sm);
     const last = rm[rm.length - 1];
-    const turn = !last ? 'Noch keine Mail, einer von uns macht den Anfang.' : last.mine ? 'Wir warten auf die Antwort von ' + mailOther() + '.' : 'Du bist dran, ' + last.who + ' hat zuletzt geschrieben.';
+    const turn = !last ? (myRole() === 'fee' ? 'Du bist dran: Die Fee eröffnet die Prüfung.' : 'Die Fee eröffnet die Prüfung. Wir warten auf Mafifee.') : last.mine ? 'Wir warten auf die Antwort von ' + mailOther() + '.' : 'Du bist dran, ' + last.who + ' hat zuletzt geschrieben.';
     body.append(el('div', 'mturn', (bar.length ? bar.join('   ') + '   ·   ' : '') + turn));
     const today = dayIdx(Date.now());
     if (v === 'tasks') { for (let i = today; i >= 0; i--) body.append(taskCard(i, list)); return; }
@@ -1313,13 +1345,14 @@ function renderMail() {
     const x = list.find(y => y.key === mailS.cur);
     if (!x) { mailS.view = 'list'; renderMail(); return; }
     mailSetHeader('Nachricht', '');
-    const box = el('div', 'mread' + (x.queen ? ' royal' : '')); box.append(el('h2', '', x.e.sub || '(ohne Betreff)'));
-    const f = el('div', 'from'); const who = el('div'); who.append(document.createTextNode(x.queen ? (x.to === 'fee' ? 'Die Feenkönigin an Mafifee, Kopie an Masüsel' : 'Die Feenkönigin an Fee und Esel') : (x.mine ? 'Ich' : x.who) + ' an ' + (x.mine ? mailOther() : 'mich')), el('small', '', bookLong.format(new Date(x.e.t)) + ' Uhr'));
-    f.append(avatar(x), who); box.append(f, el('div', 'txt', x.e.text));
+    const box = el('div', 'mread' + (x.queen ? ' royal' : '')); box.append(el('h2', '', x.e.sub || '(ohne Betreff)'), mailHead(x));
+    box.append(x.queen ? letterNode(x.e.text, 'txt let') : el('div', 'txt', x.e.text));
     if (!x.queen) {
       const acts = el('div', 'acts'); const rb = el('button', 'mbtn main', '↩ Antworten'); rb.type = 'button';
-      rb.addEventListener('click', () => { mailS.view = 'compose'; mailS.reply = 'AW: ' + (x.e.sub || '(ohne Betreff)').replace(/^(AW: )+/, ''); renderCompose(); });
+      rb.addEventListener('click', () => { mailS.view = 'compose'; mailS.reply = 'AW: ' + (x.e.sub || '(ohne Betreff)').replace(SUBRE, ''); renderCompose(); });
       acts.append(rb); box.append(acts);
+      const rmm = realMails(list), ix = rmm.findIndex(y => y.key === x.key);
+      rmm.slice(Math.max(0, ix - 3), Math.max(0, ix)).reverse().forEach(pm => box.append(quoteNode(pm)));
     }
     body.append(box);
   } else if (v === 'book') {
@@ -1331,11 +1364,11 @@ function renderMail() {
     items.forEach(it => {
       if (it.r) { b.append(el('div', 'rt', 'Bewertung ' + (it.r.mine ? 'von mir' : 'von ' + it.r.who) + ': ' + rateIcons(it.r.day, it.r.n) + (it.r.c ? ', „' + it.r.c + '“' : ''))); return; }
       const x = it.x;
-      if (x.queen) { const rb = el('div', 'royal'); rb.append(el('div', 'rh', x.to === 'fee' ? 'Brief der Feenkönigin an die Fee (Kopie an den Esel)' : 'Brief der Feenkönigin'), el('div', 'rs', x.e.sub), el('p', 'tx', x.e.text)); b.append(rb); return; }
+      if (x.queen) { const rb = el('div', 'royal'); rb.append(el('div', 'rh', x.to === 'fee' ? 'Brief der Feenkönigin an die Fee (Kopie an den Esel)' : 'Brief der Feenkönigin'), el('div', 'rs', x.e.sub), letterNode(x.e.text, 'tx')); b.append(rb); return; }
       const dk = berlinDay(x.e.t);
       if (dk !== lastDay) { lastDay = dk; n++; b.append(el('div', 'chap', 'Kapitel ' + n + ' · ' + bookFmt.format(new Date(x.e.t)))); }
-      if (prevT) { b.append(el('div', 'gap', bookGap(prevT, x.e.t))); b.append(el('div', 'lab', flip ? 'AW:' : 'RE:')); flip = !flip; }
-      else { flip = false; }
+      if (prevT) b.append(el('div', 'gap', bookGap(prevT, x.e.t)));
+      const lb = el('div', 'lab'); lb.append(el('b', '', x.mine ? 'Ich' : x.who), document.createTextNode(' · ' + (x.e.sub || '(ohne Betreff)'))); b.append(lb);
       b.append(el('p', 'tx', x.e.text)); prevT = x.e.t;
     });
     body.append(b);
@@ -1344,19 +1377,15 @@ function renderMail() {
 function renderCompose() {
   const list = allBook(), body = $('mBody'); mailSetHeader('Neue Mail', ''); body.textContent = '';
   const f = el('form', 'mform');
-  f.append(el('div', 'to', 'An: ' + mailOther()));
-  const sub = el('input'); sub.id = 'mSub2'; sub.type = 'text'; sub.maxLength = 80; sub.placeholder = 'Betreff, leer lassen für: ' + bookDefaultSub(list); sub.value = mailS.reply || ''; sub.setAttribute('aria-label', 'Betreff');
+  f.append(el('div', 'to', 'Von: ' + addrStr(ADDR[myRole()])), el('div', 'to', 'An: ' + addrStr(mailOther() === 'Mafifee' ? ADDR.fee : ADDR.esel)));
+  const sub = el('input'); sub.id = 'mSub2'; sub.type = 'text'; sub.maxLength = 80; sub.placeholder = 'Betreff'; sub.value = mailS.reply || (realMails(list).length ? bookDefaultSub(list) : ''); sub.setAttribute('aria-label', 'Betreff');
   const tx = el('textarea'); tx.id = 'mText'; tx.maxLength = 1500; tx.placeholder = 'Liebe/r ...'; tx.setAttribute('aria-label', 'Nachricht');
-  const hint = el('div', 'hint'); hint.id = 'mHint'; hint.setAttribute('aria-live', 'polite');
+  const hint = el('div', 'hint'); hint.id = 'mHint'; hint.setAttribute('aria-live', 'polite'); if (!realMails(list).length && myRole() === 'esel') hint.textContent = 'Die Fee eröffnet die Prüfung und ist zuerst dran.';
   const acts = el('div', 'acts'); const go = el('button', 'mbtn main', 'Senden'); go.type = 'submit'; const ca = el('button', 'mbtn', 'Abbrechen'); ca.type = 'button';
   ca.addEventListener('click', () => { mailS.view = 'list'; mailS.reply = null; renderMail(); });
   acts.append(go, ca); f.append(sub, tx, hint, acts); body.append(f);
-  const rm = realMails(list).slice().reverse().slice(0, 8);
-  if (rm.length) {
-    const th = el('div', 'mthread'); th.append(el('h3', '', 'Bisheriger Verlauf'));
-    rm.forEach(x => { const m = el('div', 'tm'); m.append(el('div', 'who', (x.mine ? 'Ich' : x.who) + ' · ' + bookLong.format(new Date(x.e.t)) + ' · ' + (x.e.sub || '(ohne Betreff)')), el('p', '', x.e.text)); th.append(m); });
-    body.append(th);
-  }
+  const rm = realMails(list).slice().reverse().slice(0, 3);
+  if (rm.length) { const th = el('div', 'mthread'); rm.forEach(x => th.append(quoteNode(x))); body.append(th); }
   f.addEventListener('submit', async ev => {
     ev.preventDefault();
     const text = tx.value.trim(); if (!text) { hint.textContent = 'Schreib erst etwas hinein.'; return; }
@@ -1385,10 +1414,10 @@ function renderTitleEdit() {
 function bookAsText() {
   const list = allBook(); let out = bookTitleNow() + '\n\n'; let last = '', n = 0;
   list.forEach(x => {
-    if (x.queen) { out += '--- Brief der Feenkönigin ---\n' + x.e.sub + '\n\n' + x.e.text + '\n\n'; return; }
+    if (x.queen) { out += '--- Brief der Feenkönigin ---\n' + headRows(x).map(r => r.join(' ')).join('\n') + '\nBetreff: ' + x.e.sub + '\n\n' + x.e.text + '\n\n'; return; }
     const dk = berlinDay(x.e.t);
     if (dk !== last) { last = dk; n++; out += '=== Kapitel ' + n + ' · ' + bookFmt.format(new Date(x.e.t)) + ' ===\n\n'; }
-    out += 'Von: ' + x.who + '\nBetreff: ' + (x.e.sub || '(ohne Betreff)') + '\n\n' + x.e.text + '\n\n';
+    out += headRows(x).map(r => r.join(' ')).join('\n') + '\nBetreff: ' + (x.e.sub || '(ohne Betreff)') + '\n\n' + x.e.text + '\n\n';
   });
   allRates().sort((a, b) => a.t - b.t).forEach(r => { out += 'Bewertung von ' + r.who + ' (' + TASKS[r.day].d + '): ' + rateIcons(r.day, r.n) + (r.c ? ', ' + r.c : '') + '\n'; });
   return out;
@@ -1396,17 +1425,20 @@ function bookAsText() {
 function buildPrintBook() {
   const box = $('printBook'); box.textContent = '';
   const list = allBook(), rs = allRates();
-  const cv = el('div', 'pcover'); cv.append(el('h1', '', bookTitleNow()), el('p', '', 'Ein Briefroman von Masüsel und Mafifee'), el('p', '', '14. November bis 6. Dezember 2026')); box.append(cv);
+  const cv = el('div', 'pcover'); cv.append(el('h1', '', bookTitleNow()), el('p', '', 'Ein Briefroman von Masüsel und Mafifee'), el('p', '', '15. November bis 6. Dezember 2026')); box.append(cv);
   const items = list.map(x => ({ t: x.e.t, x })).concat(rs.map(r => ({ t: r.t, r }))).sort((a, c) => a.t - c.t);
   let lastDay = '', n = 0, prevT = 0, flip = false;
   items.forEach(it => {
     if (it.r) { box.append(el('div', 'prt', 'Bewertung ' + (it.r.mine ? 'von mir' : 'von ' + it.r.who) + ': ' + rateIcons(it.r.day, it.r.n) + (it.r.c ? ', „' + it.r.c + '“' : ''))); return; }
     const x = it.x;
-    if (x.queen) { const rb = el('div', 'proyal'); rb.append(el('div', 'rh', x.to === 'fee' ? 'Brief der Feenkönigin an die Fee (Kopie an den Esel)' : 'Brief der Feenkönigin'), el('div', 'rs', x.e.sub), el('div', 'ptx', x.e.text)); box.append(rb); return; }
+    const blk = el('div', 'pmail' + (x.queen ? ' proyal' : '')), hd = el('div', 'phead');
+    headRows(x).forEach(r => hd.append(el('div', '', r[0] + ' ' + r[1]))); hd.append(el('div', 'psub', 'Betreff: ' + (x.e.sub || '(ohne Betreff)')));
+    blk.append(hd, x.queen ? letterNode(x.e.text, 'ptx') : el('div', 'ptx', x.e.text));
+    if (x.queen) { box.append(blk); return; }
     const dk = berlinDay(x.e.t);
     if (dk !== lastDay) { lastDay = dk; n++; box.append(el('div', 'pchap', 'Kapitel ' + n + ' · ' + bookFmt.format(new Date(x.e.t)))); }
-    if (prevT) { box.append(el('div', 'pgap', bookGap(prevT, x.e.t)), el('div', 'plab', flip ? 'AW:' : 'RE:')); flip = !flip; } else { flip = false; }
-    box.append(el('div', 'ptx', x.e.text)); prevT = x.e.t;
+    if (prevT) box.append(el('div', 'pgap', bookGap(prevT, x.e.t)));
+    box.append(blk); prevT = x.e.t;
   });
   const st = rateStats(), bits = []; if (st.cm) bits.push('Karotten: ' + st.cs + ' von ' + st.cm); if (st.sm) bits.push('Sterne: ' + st.ss + ' von ' + st.sm);
   if (bits.length) box.append(el('div', 'pend', bits.join('   ·   ')));
