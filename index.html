@@ -118,7 +118,20 @@ p { margin: 0; }
 .mbook .royal .rs { font-weight: 700; margin-bottom: 8px; }
 .mav.queen { background: #6b4fb3; }
 .mrow.queenrow { background: #f4effb; }
-.mrow.rate { cursor: default; background: #fff8ec; }
+.mrow.rate { cursor: pointer; background: #fff8ec; }
+.mseal { position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 50% 46% 52% 48% / 48% 52% 46% 50%; background: radial-gradient(circle at 35% 30%, #e0505f, #a3182c 55%, #6d0d1e); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35), inset 0 -3px 6px rgba(0, 0, 0, 0.35), inset 0 2px 4px rgba(255, 170, 170, 0.35); transform: rotate(-8deg); color: rgba(255, 226, 214, 0.95); font-size: 30px; font-weight: 700; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.55); }
+.mseal::before { content: ''; position: absolute; inset: 6px; border-radius: 50%; border: 2px solid rgba(255, 190, 190, 0.4); }
+.mseal.sm { width: 28px; height: 28px; font-size: 15px; vertical-align: middle; margin-left: 6px; }
+.mseal.sm::before { inset: 3px; border-width: 1.5px; }
+.mexam h3 { font-family: var(--body); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: #6a6f87; margin: 22px 0 8px; }
+.mexam .task { font-family: var(--display); font-size: 17px; line-height: 1.55; }
+.mexam .rl { font-size: 14px; color: #6a6f87; }
+.mexam .mquote .qt { color: #1d2030; font-size: 16px; }
+.mexam .score { font-size: 22px; }
+.mexam .cmt { font-family: var(--display); font-size: 17px; margin-top: 6px; }
+.mpass { display: flex; align-items: center; gap: 16px; margin-top: 18px; padding: 14px 16px; border: 1px solid #c9b88f; border-radius: 12px; background: #f4ecda; }
+.mpass b { display: block; font-family: var(--display); font-size: 20px; font-weight: 400; }
+.mpass span.s { font-size: 13px; color: #6a6f87; }
 .mrow.rate .mav { background: #f0a23a; font-size: 20px; }
 .mtask { margin: 10px 12px; padding: 14px 16px; background: #fff; border: 1px solid #dfe2ec; border-left: 5px solid #e0a93e; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; }
 .mtask.fee { border-left-color: #d9607f; }
@@ -336,6 +349,16 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .rx button { min-height: 40px; border: 1px solid var(--line); border-radius: 20px; padding: 0 12px; background: transparent; color: inherit; font: inherit; font-size: 14px; }
 .rx button.on { border-color: var(--gold); background: rgba(242, 196, 109, 0.16); }
 .rxpick button { font-size: 22px; padding: 0 10px; }
+.popbox { max-height: 92vh; overflow-y: auto; }
+.wcats { display: flex; flex-wrap: wrap; gap: 6px; }
+.wchip { min-height: 40px; border: 1px solid var(--line); border-radius: 20px; padding: 0 12px; background: transparent; color: inherit; font: inherit; font-size: 15px; cursor: pointer; }
+.wchip.on { border-color: var(--gold); background: rgba(242, 196, 109, 0.16); color: var(--gold); }
+.wnav { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.wnav .btn { min-width: 56px; }
+.entry img, .ocans img, .quote img { cursor: zoom-in; }
+.imgpop { z-index: 60; flex-direction: column; gap: 12px; padding: 12px; cursor: zoom-out; }
+.imgpop[hidden] { display: none; }
+.imgpop img { max-width: 100%; max-height: 86vh; object-fit: contain; border-radius: 12px; box-shadow: 0 0 40px rgba(0, 0, 0, 0.6); }
 .rchip { border: 1px solid var(--line); border-radius: 16px; padding: 5px 10px; font-size: 14px; background: rgba(255, 255, 255, 0.04); }
 .cms { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; padding-left: 10px; border-left: 2px solid var(--line); }
 .cms .cm { font-size: 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -489,15 +512,18 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
   <button class="mfab" id="mFab" type="button">&#9998; Neue Mail</button>
 </div>
 <div id="printBook" aria-hidden="true"></div>
+<div class="pop imgpop" id="imgPop" role="dialog" aria-modal="true" aria-label="Bild groß" hidden><img id="imgPopImg" alt="Bild im Tagebuch"><button class="btn" id="imgPopClose" type="button">Schließen</button></div>
 <div class="pop" id="wishPop" role="dialog" aria-modal="true" aria-labelledby="wishH" hidden>
   <div class="popbox">
     <span class="kind">Gefangen</span>
     <h3 id="wishH">Ein Wunsch ist frei</h3>
+    <div class="wcats" id="wishCats" role="group" aria-label="Kategorie"></div>
     <p id="wishTxt"></p>
+    <div class="wnav"><button class="btn" id="wishPrev" type="button" aria-label="Vorheriger Wunsch">←</button><span class="muted" id="wishPos" aria-live="polite"></span><button class="btn" id="wishNext" type="button" aria-label="Nächster Wunsch">→</button></div>
     <textarea id="wishOwn" maxlength="300" placeholder="Oder wünsch dir etwas ganz Eigenes ..." aria-label="Eigener Wunsch"></textarea>
     <div class="popbtns">
       <button class="btn solid" id="wishGo" type="button">Wünschen und ins Tagebuch</button>
-      <button class="btn" id="wishAgain" type="button">Anderer Wunsch</button>
+      <button class="btn" id="wishAgain" type="button">🎲 Zufälliger Wunsch</button>
       <button class="btn" id="wishClose" type="button">Schließen</button>
     </div>
   </div>
@@ -1233,28 +1259,49 @@ function spawnStar() {
 function scheduleStar(first) {
   setTimeout(() => { if (!reduce) spawnStar(); scheduleStar(false); }, first ? 9000 : 35000 + Math.random() * 35000);
 }
-const WISHES = [
-  'ein Foto von dem, was du gerade siehst',
-  'eine Sprachnachricht im Halbflüstern, in der du nur Gute Nacht sagst',
-  'eine Mini-Geschichte in drei Sätzen, in der wir beide vorkommen',
-  'ein Lied, das dich an uns erinnert',
-  'drei Dinge, auf die du dich beim Wiedersehen am meisten freust',
-  'ein Bild von deinem Kaffee oder Tee, als würden wir anstoßen',
-  'einen Satz, den du mir noch nie gesagt hast',
-  'eine kleine Zeichnung, egal wie schief',
-  'ein Selfie mit der albernsten Grimasse',
-  'dass du heute um 21 Uhr kurz zum Mond schaust und an mich denkst',
-  'eine Umarmung, die du vorab in die Luft schickst, mit Foto als Beweis',
-  'ein Geheimnis, das nur wir beide kennen sollen'
+const WISH_CATS = [['📸', 'Bilder'], ['🎙️', 'Stimme'], ['💌', 'Worte'], ['🌙', 'Sterne'], ['🥰', 'Zärtlich'], ['🎉', 'Frech'], ['🎒', 'Wiedersehen']];
+const WISH_TEXT = [
+  ['ein Foto von dem, was du gerade siehst', 'ein Selfie mit der albernsten Grimasse', 'ein Bild von deinem Kaffee oder Tee, als würden wir anstoßen', 'ein Foto von deinem Lieblingsplatz zu Hause', 'eine kleine Zeichnung, egal wie schief', 'ein Foto von etwas, das dich an mich erinnert'],
+  ['eine Sprachnachricht im Halbflüstern, in der du nur Gute Nacht sagst', 'ein Lied, das dich an uns erinnert', 'dass du mir drei Minuten etwas vorliest', 'eine Sprachnachricht, in der du mir deinen Lieblingsort beschreibst', 'eine Sprachnachricht mit einem Geräusch von dir zu Hause, etwa Regen oder die Kaffeemaschine', 'eine Sprachnachricht, in der du erzählst, wie dein Tag war'],
+  ['einen Satz, den du mir noch nie gesagt hast', 'eine Mini-Geschichte in drei Sätzen, in der wir beide vorkommen', 'ein Geheimnis, das nur wir beide kennen sollen', 'einen Reim über mich', 'ein Sprichwort oder Zitat, das gerade zu dir passt', 'ein Wort, das mich beschreibt, mit Begründung'],
+  ['dass du heute um 21 Uhr kurz zum Mond schaust und an mich denkst', 'ein Foto vom Himmel bei dir', 'einen Wunsch, den du heute Nacht einer Sternschnuppe mitgibst', 'ein Foto von einem Licht bei dir in der Dunkelheit, etwa eine Laterne oder Kerze', 'ein Foto vom Mond, so wie du ihn gerade siehst', 'dass du mir erzählst, was du dir als Kind unter den Sternen vorgestellt hast'],
+  ['eine Umarmung, die du vorab in die Luft schickst, mit Foto als Beweis', 'drei Dinge, auf die du dich beim Wiedersehen am meisten freust', 'dass du mir sagst, woran du bei mir zuerst denken musst', 'einen Moment, in dem du dich bei mir wohlfühlen würdest', 'dass du heute Nacht an mich denkst, bevor du einschläfst', 'drei Wörter, die dir einfallen, wenn du an meine Nähe denkst'],
+  ['ein Foto, wie du eine alberne Pose machst', 'ein Rätsel, das ich bis morgen lösen muss', 'ein Foto von etwas Verrücktem, das du heute gefunden hast', 'dass du mir ein Tier ausdenkst, das wir zusammen wären', 'eine Frage, auf die ich nur mit einem Emoji antworten darf', 'dass du mir einen Spitznamen für heute gibst'],
+  ['etwas, das wir unbedingt zusammen essen müssen', 'einen Ausflug, den du für uns planst', 'dass du mir sagst, was du als Erstes mit mir machen willst, wenn wir uns sehen', 'ein Spiel, das wir spielen sollen', 'ein Ding auf deiner Packliste, das nur für mich eingepackt wird', 'einen Ort, den ich dir zeigen soll']
 ];
-let wishIdx = -1;
+const WISHES = [];
+WISH_TEXT.forEach((arr, c) => arr.forEach(t => WISHES.push({ c, t })));
+let wishIdx = 0, wishCat = -1, wishPos = 0;
 function otherName() { return (state.db && state.uid) ? (state.owner ? 'Mafifee' : 'Masüsel') : null; }
-function pickWish() { let i; do { i = Math.floor(Math.random() * WISHES.length); } while (i === wishIdx); wishIdx = i; const o = otherName(); $('wishTxt').textContent = (o ? 'Du wünschst dir von ' + o + ': ' : 'Du wünschst dir: ') + WISHES[i] + '.'; }
+function wishList() { const r = []; WISHES.forEach((w, i) => { if (wishCat < 0 || w.c === wishCat) r.push(i); }); return r; }
+function showWish() {
+  const l = wishList();
+  if (wishPos < 0) wishPos = l.length - 1;
+  if (wishPos >= l.length) wishPos = 0;
+  wishIdx = l[wishPos];
+  const o = otherName();
+  $('wishTxt').textContent = (o ? 'Du wünschst dir von ' + o + ': ' : 'Du wünschst dir: ') + WISHES[wishIdx].t + '.';
+  $('wishPos').textContent = (wishPos + 1) + ' von ' + l.length;
+  const box = $('wishCats'), frag = document.createDocumentFragment();
+  [[-1, '✨ Alle']].concat(WISH_CATS.map((c, i) => [i, c[0] + ' ' + c[1]])).forEach(([id, label]) => {
+    const b = el('button', 'wchip' + (wishCat === id ? ' on' : ''), label); b.type = 'button'; b.setAttribute('aria-pressed', String(wishCat === id));
+    b.addEventListener('click', () => { wishCat = id; wishPos = 0; showWish(); });
+    frag.appendChild(b);
+  });
+  box.replaceChildren(frag);
+}
+function pickWish() { const l = wishList(); let p; do { p = Math.floor(Math.random() * l.length); } while (l.length > 1 && l[p] === wishIdx); wishPos = p; showWish(); }
 function openWish() { if (wishesToday() >= 2) { showToast('Gefangen, aber heute hattest du schon zwei Wünsche. Morgen darfst du wieder.'); return; } $('wishOwn').value = ''; pickWish(); $('wishPop').hidden = false; $('wishGo').focus(); }
 function closeWish() { $('wishPop').hidden = true; }
 $('wishAgain').addEventListener('click', pickWish);
+$('wishPrev').addEventListener('click', () => { wishPos--; showWish(); });
+$('wishNext').addEventListener('click', () => { wishPos++; showWish(); });
+let wishTx = null;
+$('wishPop').addEventListener('touchstart', e => { wishTx = e.target.tagName === 'TEXTAREA' ? null : e.touches[0].clientX; }, { passive: true });
+$('wishPop').addEventListener('touchend', e => { if (wishTx == null) return; const dx = e.changedTouches[0].clientX - wishTx; wishTx = null; if (Math.abs(dx) > 50) { wishPos += dx < 0 ? 1 : -1; showWish(); } });
+document.addEventListener('keydown', e => { if ($('wishPop').hidden || e.target.tagName === 'TEXTAREA') return; if (e.key === 'ArrowRight') { wishPos++; showWish(); } else if (e.key === 'ArrowLeft') { wishPos--; showWish(); } });
 $('wishClose').addEventListener('click', closeWish);
-$('wishGo').addEventListener('click', async () => { const own = $('wishOwn').value.trim(); const w = own || WISHES[wishIdx]; closeWish(); showToast('Dein Wunsch steht im Tagebuch.' + (otherName() ? ' ' + otherName() + ' erfährt davon.' : '')); await addEntry({ star: true, wish: w }); });
+$('wishGo').addEventListener('click', async () => { const own = $('wishOwn').value.trim(); const w = own || WISHES[wishIdx].t; closeWish(); showToast('Dein Wunsch steht im Tagebuch.' + (otherName() ? ' ' + otherName() + ' erfährt davon.' : '')); await addEntry({ star: true, wish: w }); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('wishPop').hidden) closeWish(); });
 
 let toastTimer = null;
@@ -1324,6 +1371,7 @@ function allRates() {
   });
   return out;
 }
+function passBadge() { const s = el('span', 'mseal sm', '✓'); s.setAttribute('role', 'img'); s.setAttribute('aria-label', 'bestanden'); s.title = 'bestanden'; return s; }
 function rateIcon(day) { return TASKS[day] && TASKS[day].lead === 'esel' ? '⭐' : '🥕'; }
 function rateIcons(day, n) { const ic = rateIcon(day); return n > 0 ? ic.repeat(n) + ' (' + n + ' von 5)' : 'keine ' + (ic === '🥕' ? 'Karotte' : 'Stern') + ' (0 von 5)'; }
 function rateStats() {
@@ -1411,7 +1459,7 @@ function taskCard(i, list) {
   c.append(el('div', 'tt', T.d), el('div', 'tx', role === 'fee' ? T.f : T.e));
   if (T.lead !== 'fee' && T.lead !== 'esel') return c;
   const ic = rateIcon(i), rater = T.lead, r = rs.find(x => x.day === i);
-  if (r) { const res = el('div', 'res', 'Bewertung von ' + (r.mine ? 'dir' : r.who) + ': ' + rateIcons(i, r.n) + (r.c ? ', „' + r.c + '“' : '')); c.append(res); return c; }
+  if (r) { const res = el('div', 'res', 'Bewertung von ' + (r.mine ? 'dir' : r.who) + ': ' + rateIcons(i, r.n) + (r.c ? ', „' + r.c + '“' : '')); if (r.n >= 3) res.append(passBadge()); c.append(res); return c; }
   if (rater !== role) { c.append(el('div', 'rl', 'Die Bewertung vergibt ' + (rater === 'fee' ? 'die Fee' : 'der Esel') + ' nach deiner Antwort.')); return c; }
   const has = realMails(list).some(x => !x.mine && berlinDay(x.e.t) === dayDate(i));
   if (!has) { c.append(el('div', 'rl', 'Sobald ' + mailOther() + ' an diesem Tag geschrieben hat, kannst du bewerten.')); return c; }
@@ -1456,7 +1504,12 @@ function renderMail() {
       if (it.kind === 'rate') {
         const r = it.r, row = el('div', 'mrow rate'); const av = el('div', 'mav', rateIcon(r.day)); av.setAttribute('aria-hidden', 'true');
         const c = el('div', 'mc'); const l1 = el('div', 'l1'); l1.append(el('span', 'nm', 'Bewertung ' + (r.mine ? 'von mir' : 'von ' + r.who)), el('span', 'tm', mailWhen(r.t)));
-        c.append(l1, el('div', 'sj', rateIcons(r.day, r.n)), el('div', 'pv', r.c || TASKS[r.day].d)); row.append(av, c); body.append(row); return;
+        const sj = el('div', 'sj', rateIcons(r.day, r.n)); if (r.n >= 3) sj.append(passBadge());
+        c.append(l1, sj, el('div', 'pv', (r.n >= 3 ? 'Bestanden. ' : '') + (r.c || TASKS[r.day].d))); row.append(av, c);
+        row.tabIndex = 0; row.setAttribute('role', 'button');
+        const openRate = () => { mailS.view = 'rate'; mailS.cur = 'rate|' + r.id + '|' + r.day; renderMail(); body.scrollTop = 0; };
+        row.addEventListener('click', openRate); row.addEventListener('keydown', ev => { if (ev.key === 'Enter') openRate(); });
+        body.append(row); return;
       }
       const x = it.x, unread = !x.mine && !rd.has(x.key);
       const row = el('div', 'mrow' + (unread ? ' unread' : '') + (x.queen ? ' queenrow' : '')); row.tabIndex = 0; row.setAttribute('role', 'button');
@@ -1487,6 +1540,27 @@ function renderMail() {
     if (!x.queen) {
       const rmm = realMails(list), ix = rmm.findIndex(y => y.key === x.key);
       rmm.slice(Math.max(0, ix - 3), Math.max(0, ix)).reverse().forEach(pm => box.append(quoteNode(pm)));
+    }
+    body.append(box);
+  } else if (v === 'rate') {
+    const r = allRates().find(y => ('rate|' + y.id + '|' + y.day) === mailS.cur);
+    if (!r) { mailS.view = 'list'; renderMail(); return; }
+    mailSetHeader('Prüfung', '');
+    const T = TASKS[r.day], answerer = T.lead === 'fee' ? 'esel' : 'fee', icn = rateIcon(r.day);
+    const box = el('div', 'mread mexam');
+    box.append(el('h2', '', T.d), el('div', 'rl', 'Kapitel ' + (r.day + 1) + ' · ' + bookShort.format(new Date(Date.UTC(2026, 10, 15 + r.day, 12))) + ' · geprüft hat ' + (T.lead === 'fee' ? 'die Fee' : 'der Esel')));
+    box.append(el('h3', '', 'Die Aufgabe für ' + (answerer === 'fee' ? 'die Fee' : 'den Esel')), el('div', 'task', answerer === 'fee' ? T.f : T.e));
+    const ms = realMails(list).filter(x => berlinDay(x.e.t) === dayDate(r.day) && x.e.t <= r.t);
+    box.append(el('h3', '', 'Frage und Antwort'));
+    if (!ms.length) box.append(el('div', 'rl', 'Zu diesem Tag gibt es noch keine Mails.'));
+    ms.forEach(x => { const q = el('div', 'mquote'); q.append(el('div', 'qh', (x.mine ? 'Ich' : x.who) + ' · ' + bookTime.format(new Date(x.e.t)) + ' Uhr · ' + (x.e.sub || '(ohne Betreff)')), el('div', 'qt', x.e.text)); box.append(q); });
+    box.append(el('h3', '', 'Bewertung von ' + (r.mine ? 'mir' : r.who)));
+    box.append(el('div', 'score', rateIcons(r.day, r.n)));
+    if (r.c) box.append(el('div', 'cmt', '„' + r.c + '“'));
+    if (r.n >= 3) {
+      const ps = el('div', 'mpass'); const sl = el('span', 'mseal', '✓'); sl.setAttribute('aria-hidden', 'true');
+      const tx = el('div'); tx.append(el('b', '', 'Prüfung bestanden'), el('span', 's', 'Ab 3 ' + (icn === '🥕' ? 'Möhren' : 'Sternen') + ' gilt die Prüfung als bestanden.'));
+      ps.append(sl, tx); box.append(ps);
     }
     body.append(box);
   } else if (v === 'book') {
@@ -1649,9 +1723,13 @@ function getAck(id, k) {
   if (id !== state.uid && state.myAck[key]) return { who: 'Du', me: true, d: state.myAck[key] };
   return null;
 }
+function openImg(src) { $('imgPopImg').src = src; $('imgPop').hidden = false; }
+function closeImg() { $('imgPop').hidden = true; $('imgPopImg').removeAttribute('src'); }
+$('imgPop').addEventListener('click', closeImg);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('imgPop').hidden) closeImg(); });
 function imgNode(imgId) {
   if (!imgId || !/^[A-Za-z0-9_-]+$/.test(imgId)) return null;
-  const im = document.createElement('img'); im.loading = 'lazy'; im.alt = 'Bild im Tagebuch';
+  const im = document.createElement('img'); im.loading = 'lazy'; im.alt = 'Bild im Tagebuch'; im.addEventListener('click', ev => { ev.preventDefault(); if (im.src) openImg(im.src); });
   if (state.fb) { fillImg(imgId, im); return im; }
   const a = document.createElement('a'); a.href = '/_blob/' + imgId; a.target = '_blank'; a.rel = 'noopener'; im.src = '/_blob/' + imgId; a.append(im); return a;
 }
@@ -1665,7 +1743,7 @@ async function sendFulfil(x, text, file, info, btn) {
   state.myAck[ackKey(x.id, x.k)] = d; state.fulfilKey = null;
   renderDiary(); writeOwn({ ack: Object.assign({}, state.myAck) });
 }
-const EMOS = ['❤️', '😂', '🥹', '😘', '👏', '🥕'];
+const EMOS = ['❤️', '😂', '🥹', '😘', '👏', '🥕', '🙂‍↕️', '🙂‍↔️', '🫠', '🥲', '🥰', '😍', '😭', '🤗', '🔥', '✨', '🌙', '💫', '🫶', '🤭', '💋', '🍀', '🦁', '🌊'];
 function allRe(id, k) {
   const rk = ackKey(id, k), out = [];
   const ids = Object.keys(state.notes); if (state.uid && ids.indexOf(state.uid) < 0) ids.push(state.uid);
