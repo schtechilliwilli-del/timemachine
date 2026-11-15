@@ -1246,7 +1246,7 @@ function spawnStar() {
   const tr = (x, y) => 'translate(' + (x - 110) + 'px,' + (y - 20) + 'px) rotate(' + rot + 'deg)';
   s.style.opacity = '0';
   document.body.appendChild(s);
-  const dur = reduce ? 5000 : 2500 + Math.random() * 900;
+  const dur = reduce ? 5000 : 2150 + Math.random() * 750;
   const anim = s.animate([
     { transform: tr(sx, sy), opacity: 0, offset: 0 },
     { opacity: 1, offset: 0.1 },
@@ -1257,7 +1257,7 @@ function spawnStar() {
   s.addEventListener('click', () => { anim.onfinish = null; anim.cancel(); s.remove(); catchBusy = false; openWish(); });
 }
 function scheduleStar(first) {
-  setTimeout(() => { if (!reduce) spawnStar(); scheduleStar(false); }, first ? 9000 : 35000 + Math.random() * 35000);
+  setTimeout(() => { if (!reduce && wishesToday() < 1) spawnStar(); scheduleStar(false); }, first ? 45000 : 150000 + Math.random() * 210000);
 }
 const WISH_CATS = [['📸', 'Bilder'], ['🎙️', 'Stimme'], ['💌', 'Worte'], ['🌙', 'Sterne'], ['🥰', 'Zärtlich'], ['🎉', 'Frech'], ['🎒', 'Wiedersehen']];
 const WISH_TEXT = [
@@ -1291,7 +1291,7 @@ function showWish() {
   box.replaceChildren(frag);
 }
 function pickWish() { const l = wishList(); let p; do { p = Math.floor(Math.random() * l.length); } while (l.length > 1 && l[p] === wishIdx); wishPos = p; showWish(); }
-function openWish() { if (wishesToday() >= 2) { showToast('Gefangen, aber heute hattest du schon zwei Wünsche. Morgen darfst du wieder.'); return; } $('wishOwn').value = ''; pickWish(); $('wishPop').hidden = false; $('wishGo').focus(); }
+function openWish() { if (wishesToday() >= 1) { showToast('Gefangen, aber heute hattest du schon deinen Wunsch. Eine Sternschnuppe pro Tag, morgen darfst du wieder.'); return; } $('wishOwn').value = ''; pickWish(); $('wishPop').hidden = false; $('wishGo').focus(); }
 function closeWish() { $('wishPop').hidden = true; }
 $('wishAgain').addEventListener('click', pickWish);
 $('wishPrev').addEventListener('click', () => { wishPos--; showWish(); });
