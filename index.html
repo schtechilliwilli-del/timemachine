@@ -97,6 +97,7 @@ body.done .arrived { display: block; }
 .ask { background: rgba(242, 196, 109, 0.12); border-left: 3px solid var(--gold); padding: 10px 12px; border-radius: 0 10px 10px 0; }
 .btn { appearance: none; border: 1px solid var(--gold); background: transparent; color: var(--gold); border-radius: 12px; padding: 10px 14px; min-height: 44px; cursor: pointer; font-family: var(--body); font-size: 16px; font-weight: 500; }
 .btn.solid { background: var(--gold); color: #1a1530; }
+.btn.heart { border-color: var(--rose); color: var(--rose); }
 .btn.heart.on { background: var(--rose); border-color: var(--rose); color: #2b0f19; }
 .btn:disabled { opacity: 0.5; cursor: default; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -272,6 +273,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
         <label class="btn" id="diaryAttach" for="diaryFile" hidden>Bild anhängen</label>
         <input type="file" id="diaryFile" accept="image/*">
         <button class="btn solid" id="diaryGo" type="submit">Eintragen</button>
+        <button class="btn heart" id="diaryHeart" type="button">♥ Herz schicken</button>
       </div>
       <p class="muted small" id="diaryInfo" aria-live="polite"></p>
     </form>
@@ -717,10 +719,7 @@ function renderPanel() {
       const row = el('div', 'row');
       const save = el('button', 'btn solid', 'Antwort speichern'); save.type = 'button';
       save.addEventListener('click', () => { const v = ta.value.trim(); if (v) { ta.value = ''; writeOwn({ ['d' + d.n]: { text: v, ts: Date.now() } }); } });
-      const hb = el('button', 'btn heart' + (mine.heart ? ' on' : ''), mine.heart ? 'Herz zurücknehmen' : 'Herz schicken'); hb.type = 'button';
-      hb.setAttribute('aria-pressed', mine.heart ? 'true' : 'false');
-      hb.addEventListener('click', () => writeOwn({ ['d' + d.n]: { heart: !mine.heart } }));
-      row.append(save, hb);
+      row.append(save);
       f.append(ta, row);
     } else if (state.canWrite === false) {
       f.append(el('p', 'muted', 'Zum Antworten braucht diese Seite eine Einladung als Bearbeiter. Frag, ob du eingeladen wirst.'));
@@ -930,7 +929,7 @@ function renderDiary() {
   entries.forEach(x => {
     const box = el('div', 'entry' + (x.kind === 'star' ? ' star' : ''));
     const meta = el('div', 'meta');
-    meta.append(el('span', 'badge', x.kind === 'star' ? 'Sternschnuppe' : x.kind === 'door' ? 'Türchen ' + x.d.n : 'Tagebuch'), el('span', '', x.who), el('span', '', entFmt.format(new Date(x.e.t))));
+    meta.append(el('span', 'badge', x.kind === 'star' ? 'Sternschnuppe' : x.e.heart ? 'Herz' : x.kind === 'door' ? 'Türchen ' + x.d.n : 'Tagebuch'), el('span', '', x.who), el('span', '', entFmt.format(new Date(x.e.t))));
     box.append(meta);
     if (x.kind === 'door') box.append(el('p', '', x.d.title + ': ' + x.e.text));
     else if (x.kind === 'star') {
@@ -962,7 +961,8 @@ function renderDiary() {
           }
         }
       }
-    } else if (x.e.text) box.append(el('p', '', x.e.text));
+    } else if (x.e.heart) box.append(el('p', '', '♥ ' + (x.who === 'Du' ? 'Du schickst' : x.who + ' schickt') + ' ein Herz'));
+    else if (x.e.text) box.append(el('p', '', x.e.text));
     const mainImg = imgNode(x.e.img); if (mainImg) box.append(mainImg);
     frag.append(box);
   });
@@ -985,6 +985,10 @@ function shrink(file) {
   });
 }
 function diaryMsg(m) { $('diaryInfo').dataset.msg = m; $('diaryInfo').textContent = m; }
+$('diaryHeart').addEventListener('click', () => {
+  const b = $('diaryHeart'); b.disabled = true; setTimeout(() => { b.disabled = false; }, 3000);
+  addEntry({ heart: true }); showToast(otherName() ? 'Dein Herz ist unterwegs zu ' + otherName() + '.' : 'Herz im Tagebuch.');
+});
 $('diaryFile').addEventListener('change', () => { const f = $('diaryFile').files[0]; diaryMsg(f ? 'Bild bereit: ' + f.name : ''); });
 $('diaryForm').addEventListener('submit', async ev => {
   ev.preventDefault();
@@ -1076,7 +1080,7 @@ function startNotes(db) {
     for (const id in m) {
       const v = m[id] || {};
       if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); continue; }
-      for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
+      for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       DOORS.forEach(d => { const x = v['d' + d.n]; if (x && x.text) { const key = id + '|d' + d.n + '|' + (x.ts || x.text.length); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat bei Türchen ' + d.n + ' geantwortet.'); } } });
       for (const k in (v.ack || {})) { const key = id + '|' + k; if (!state.seenA.has(key)) { state.seenA.add(key); if (state.seen && k.indexOf(ackKey(state.uid, '')) === 0) fresh.push(nameOf(id, v) + ' hat einen Wunsch von dir erfüllt' + ((v.ack[k] && v.ack[k].text) ? ': ' + (v.ack[k].text.length > 70 ? v.ack[k].text.slice(0, 70) + ' ...' : v.ack[k].text) : '.')); } }
     }
