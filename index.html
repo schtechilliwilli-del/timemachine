@@ -303,6 +303,23 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .entry p { white-space: pre-wrap; overflow-wrap: anywhere; }
 .entry img { max-width: 100%; border-radius: 12px; border: 1px solid var(--line); display: block; }
 .entry .done { color: var(--gold); font-family: var(--mono); font-size: 12px; }
+.rx { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
+.rx button { min-height: 40px; border: 1px solid var(--line); border-radius: 20px; padding: 0 12px; background: transparent; color: inherit; font: inherit; font-size: 14px; }
+.rx button.on { border-color: var(--gold); background: rgba(242, 196, 109, 0.16); }
+.rxpick button { font-size: 22px; padding: 0 10px; }
+.rchip { border: 1px solid var(--line); border-radius: 16px; padding: 5px 10px; font-size: 14px; background: rgba(255, 255, 255, 0.04); }
+.cms { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; padding-left: 10px; border-left: 2px solid var(--line); }
+.cms .cm { font-size: 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.cms .cm b { color: var(--gold); font-weight: 600; }
+.cms .cdel { margin-left: 8px; border: 0; background: transparent; color: var(--muted); font-size: 12px; text-decoration: underline; padding: 6px; min-height: 32px; }
+.cmform { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.sealbox { display: flex; align-items: center; gap: 14px; padding: 10px 0 2px; }
+.sealtx { display: flex; flex-direction: column; gap: 2px; }
+.sealtx b { font-family: var(--display); font-size: 18px; color: var(--gold); font-weight: 400; }
+.sealtx span { font-size: 13px; color: var(--muted); }
+.wax { position: relative; flex: none; width: 64px; height: 64px; border-radius: 50% 46% 52% 48% / 48% 52% 46% 50%; background: radial-gradient(circle at 35% 30%, #e0505f, #a3182c 55%, #6d0d1e); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5), inset 0 -3px 6px rgba(0, 0, 0, 0.35), inset 0 2px 4px rgba(255, 170, 170, 0.35); display: flex; align-items: center; justify-content: center; transform: rotate(-8deg); }
+.wax::before { content: ''; position: absolute; inset: 7px; border-radius: 50%; border: 2px solid rgba(255, 190, 190, 0.35); box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4); }
+.wax span { font-size: 28px; color: rgba(255, 214, 200, 0.88); text-shadow: 0 1px 1px rgba(0, 0, 0, 0.55), 0 -1px 0 rgba(255, 255, 255, 0.2); }
 
 /* Warp: Karten werden durchsichtiger, Inhalt bleibt lesbar */
 body.warping .card { background: rgba(21, 26, 58, 0.4); }
@@ -830,7 +847,7 @@ function endWarp() {
 $('warp').addEventListener('click', () => { if (warpHold) endWarp(); else startWarp(); });
 
 /* ---- Tuerchen und gemeinsame Daten ---- */
-const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
+const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRe: {}, mySeal: {}, commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
 let writeChain = Promise.resolve();
 function writeOwn(patch) {
   if (!state.db || !state.uid) return Promise.resolve();
@@ -1529,13 +1546,84 @@ async function sendFulfil(x, text, file, info, btn) {
   state.myAck[ackKey(x.id, x.k)] = d; state.fulfilKey = null;
   renderDiary(); writeOwn({ ack: Object.assign({}, state.myAck) });
 }
+const EMOS = ['❤️', '😂', '🥹', '😘', '👏', '🥕'];
+function allRe(id, k) {
+  const rk = ackKey(id, k), out = [];
+  const ids = Object.keys(state.notes); if (state.uid && ids.indexOf(state.uid) < 0) ids.push(state.uid);
+  ids.forEach(u => {
+    const v = state.notes[u] || {}, mine = u === state.uid, re = mine ? Object.assign({}, v.re || {}, state.myRe) : (v.re || {}), r = re[rk];
+    if (r) out.push({ u, mine, who: nameOf(u, v), e: r.e || '', cm: r.cm || {} });
+  });
+  return out;
+}
+function myReFor(x) { const rk = ackKey(x.id, x.k); return state.myRe[rk] || (state.myRe[rk] = {}); }
+function saveRe() { return writeOwn({ re: Object.assign({}, state.myRe) }); }
+function setReaction(x, emo) { const r = myReFor(x); r.e = r.e === emo ? '' : emo; r.t = Date.now(); state.pickKey = null; renderDiary(true); return saveRe(); }
+function addComment(x, text) { const r = myReFor(x); r.cm = Object.assign({}, r.cm); r.cm['c' + Date.now()] = { t: Date.now(), x: text }; state.commentKey = null; state.cdraft = ''; renderDiary(true); return saveRe(); }
+function delComment(x, cid) { const r = myReFor(x); r.cm = Object.assign({}, r.cm); r.cm[cid] = { t: Date.now(), x: '' }; renderDiary(true); return saveRe(); }
+function reactNode(x) {
+  const key = ackKey(x.id, x.k), reds = allRe(x.id, x.k), wrap = el('div', 'rxwrap'), row = el('div', 'rx');
+  const my = reds.find(r => r.mine), myE = my ? my.e : '';
+  reds.filter(r => r.e).forEach(r => row.append(el('span', 'rchip', r.e + ' ' + (r.mine ? 'Du' : r.who))));
+  const rb = el('button', '', '☺ Reagieren'); rb.type = 'button'; rb.setAttribute('aria-expanded', String(state.pickKey === key));
+  rb.addEventListener('click', () => { state.pickKey = state.pickKey === key ? null : key; renderDiary(true); });
+  const cb = el('button', '', '💬 Kommentieren'); cb.type = 'button';
+  cb.addEventListener('click', () => { state.commentKey = state.commentKey === key ? null : key; state.cdraft = ''; renderDiary(true); });
+  row.append(rb, cb); wrap.append(row);
+  if (state.pickKey === key) {
+    const pk = el('div', 'rx rxpick');
+    EMOS.forEach(e => { const b = el('button', e === myE ? 'on' : '', e); b.type = 'button'; b.setAttribute('aria-label', 'Reaktion ' + e); b.addEventListener('click', () => setReaction(x, e)); pk.append(b); });
+    wrap.append(pk);
+  }
+  const cms = [];
+  reds.forEach(r => { for (const c in r.cm) { const m = r.cm[c]; if (m && m.x) cms.push({ r, c, m }); } });
+  cms.sort((a, b) => a.m.t - b.m.t);
+  if (cms.length) {
+    const box = el('div', 'cms');
+    cms.forEach(o => {
+      const d = el('div', 'cm'); d.append(el('b', '', (o.r.mine ? 'Du' : o.r.who) + ': '), document.createTextNode(o.m.x));
+      if (o.r.mine) { const del = el('button', 'cdel', 'löschen'); del.type = 'button'; del.addEventListener('click', () => delComment(x, o.c)); d.append(del); }
+      box.append(d);
+    });
+    wrap.append(box);
+  }
+  if (state.commentKey === key) {
+    const f = el('div', 'cmform'), ta = el('textarea'); ta.maxLength = 300; ta.rows = 2; ta.placeholder = 'Kurzer Kommentar ...'; ta.setAttribute('aria-label', 'Kommentar'); ta.value = state.cdraft;
+    ta.addEventListener('input', () => { state.cdraft = ta.value; });
+    const act = el('div', 'row'), go = el('button', 'btn solid', 'Senden'), cn = el('button', 'btn', 'Abbrechen'); go.type = 'button'; cn.type = 'button';
+    go.addEventListener('click', () => { const t = ta.value.trim(); if (t) addComment(x, t); });
+    cn.addEventListener('click', () => { state.commentKey = null; state.cdraft = ''; renderDiary(true); });
+    act.append(go, cn); f.append(ta, act); wrap.append(f);
+  }
+  return wrap;
+}
+function getSeal(id, k) {
+  const key = ackKey(id, k), v = state.notes[id] || {};
+  return (id === state.uid && state.mySeal[key]) || (v.seal && v.seal[key]) || null;
+}
+function sealWish(x) {
+  state.mySeal[ackKey(x.id, x.k)] = { t: Date.now() }; renderDiary(true); showToast('Der Wunsch ist offiziell erfüllt. Das Siegel ist gesetzt.');
+  return writeOwn({ seal: Object.assign({}, state.mySeal) });
+}
+function sealNode(sl, who) {
+  const b = el('div', 'sealbox'), w = el('div', 'wax'), t = el('div', 'sealtx');
+  w.setAttribute('aria-hidden', 'true'); w.append(el('span', '', '♛'));
+  t.append(el('b', '', 'Wunsch offiziell erfüllt'), el('span', '', 'Besiegelt von ' + who + ' am ' + bookShort.format(new Date(sl.t || Date.now())) + ', im Namen des Feenreiches'));
+  b.append(w, t); return b;
+}
 function renderWishBanner() {
   const box = $('wishBanner'); const frag = document.createDocumentFragment(); let n = 0;
   allEntries().forEach(x => {
-    if (x.kind !== 'star' || x.id === 'local' || getAck(x.id, x.k)) return;
+    if (x.kind !== 'star' || x.id === 'local') return;
+    const ak0 = getAck(x.id, x.k);
+    if (ak0 && !(x.mine && !getSeal(x.id, x.k))) return;
     n++;
     const l = el('div', 'wl' + (x.mine ? ' mine' : ''));
-    if (x.mine) l.append(el('p', '', 'Dein Wunsch ist noch offen: ' + x.e.wish));
+    if (x.mine && ak0) {
+      l.append(el('p', '', ak0.who + ' hat deinen Wunsch erfüllt: ' + x.e.wish + ' Stimmt das?'));
+      if (canShare()) { const b = el('button', 'btn solid', 'Ja, Wunsch offiziell erfüllt'); b.type = 'button'; b.addEventListener('click', () => sealWish(x)); l.append(b); }
+    }
+    else if (x.mine) l.append(el('p', '', 'Dein Wunsch ist noch offen: ' + x.e.wish));
     else {
       l.append(el('p', '', x.who + ' wünscht sich: ' + x.e.wish));
       if (canShare()) {
@@ -1549,9 +1637,9 @@ function renderWishBanner() {
   if (n) frag.prepend(el('span', 'kind', n === 1 ? 'Ein Wunsch ist offen' : n + ' Wünsche sind offen'));
   box.replaceChildren(frag); box.hidden = !n;
 }
-function renderDiary() {
+function renderDiary(force) {
   renderWishBanner();
-  if (state.fulfilKey && $('diaryList').querySelector('textarea')) { state.pendingDiary = true; return; }
+  if (!force && (state.fulfilKey || state.commentKey) && $('diaryList').querySelector('textarea')) { state.pendingDiary = true; return; }
   state.pendingDiary = false;
   const list = $('diaryList'); const frag = document.createDocumentFragment();
   const allE = allEntries(); syncHeartStars(allE);
@@ -1572,6 +1660,9 @@ function renderDiary() {
           box.append(el('span', 'done', ak.me ? 'Du hast diesen Wunsch erfüllt' : 'Erfüllt von ' + ak.who));
           if (dd.text) box.append(el('p', '', dd.text));
           const n = imgNode(dd.img); if (n) box.append(n);
+          const sl = getSeal(x.id, x.k);
+          if (sl) box.append(sealNode(sl, x.mine ? nameOf(x.id, state.notes[x.id]) : x.who));
+          else if (x.mine && canShare()) { const sb = el('button', 'btn solid', 'Wunsch offiziell bestätigen'); sb.type = 'button'; sb.addEventListener('click', () => sealWish(x)); box.append(sb); }
         } else if (!x.mine && canShare()) {
           const key = ackKey(x.id, x.k);
           if (state.fulfilKey === key) {
@@ -1595,6 +1686,7 @@ function renderDiary() {
     } else if (x.e.heart) box.append(el('p', '', '♥ ' + (x.who === 'Du' ? 'Du schickst ein Herz, weil du an ' + (otherName() || 'jemand Besonderen') + ' denken musstest.' : x.who + ' schickt ein Herz, weil ' + pron(x.who) + ' an dich denken musste.')));
     else if (x.e.text) box.append(el('p', '', x.e.text));
     const mainImg = imgNode(x.e.img); if (mainImg) box.append(mainImg);
+    if (x.id !== 'local' && canShare()) box.append(reactNode(x));
     frag.append(box);
   });
   list.replaceChildren(frag);
@@ -1712,10 +1804,16 @@ function startNotes(db) {
     const fresh = [];
     for (const id in m) {
       const v = m[id] || {};
-      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
+      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
       for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz, weil ' + pron(nameOf(id, v)) + ' an dich denken musste ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       for (const k in (v.book || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.book[k]; if (state.seen && e && e.text) fresh.push(nameOf(id, v) + ' hat dir im Buch geschrieben: ' + (e.sub || '(ohne Betreff)')); } }
       for (const k in (v.rate || {})) { const key = id + '|r|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const r = v.rate[k], m = /^d(\d+)$/.exec(k); if (state.seen && r && m) fresh.push(nameOf(id, v) + ' hat dich bewertet: ' + rateIcons(Number(m[1]), r.n)); } }
+      for (const k in (v.re || {})) {
+        const r = v.re[k] || {}, rk = id + '|re|' + k + '|' + (r.e || '');
+        if (r.e && !state.seenE.has(rk)) { state.seenE.add(rk); if (state.seen) fresh.push(nameOf(id, v) + ' hat auf einen Tagebucheintrag reagiert: ' + r.e); }
+        for (const c in (r.cm || {})) { const ck = id + '|cm|' + k + '|' + c; if (!state.seenE.has(ck)) { state.seenE.add(ck); const tx = r.cm[c] && r.cm[c].x; if (state.seen && tx) fresh.push(nameOf(id, v) + ' hat kommentiert: ' + (tx.length > 70 ? tx.slice(0, 70) + ' ...' : tx)); } }
+      }
+      for (const k in (v.seal || {})) { const key = id + '|seal|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat einen erfüllten Wunsch offiziell besiegelt ✦'); } }
       DOORS.forEach(d => { const x = v['d' + d.n]; if (x && x.text) { const key = id + '|d' + d.n + '|' + (x.ts || x.text.length); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat bei Türchen ' + d.n + ' geantwortet.'); } } });
       for (const k in (v.ack || {})) { const key = id + '|' + k; if (!state.seenA.has(key)) { state.seenA.add(key); if (state.seen && k.indexOf(ackKey(state.uid, '')) === 0) fresh.push(nameOf(id, v) + ' hat einen Wunsch von dir erfüllt' + ((v.ack[k] && v.ack[k].text) ? ': ' + (v.ack[k].text.length > 70 ? v.ack[k].text.slice(0, 70) + ' ...' : v.ack[k].text) : '.')); } }
     }
