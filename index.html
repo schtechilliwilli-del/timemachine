@@ -308,6 +308,11 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .entry.wishing > p:first-of-type { font-family: var(--display); font-size: 19px; }
 .entry.sealed .badge { color: var(--gold); }
 .entry.sealed > p:first-of-type { font-family: var(--display); font-size: 19px; }
+.odone { margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.ostat { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.ochip { border: 1px solid var(--line); border-radius: 16px; padding: 5px 12px; font-size: 14px; color: var(--muted); }
+.ochip.ok { border-color: var(--gold); color: var(--gold); background: rgba(242, 196, 109, 0.12); }
+.oboth { color: var(--gold); font-family: var(--display); font-size: 18px; margin: 0; }
 .rx { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
 .rx button { min-height: 40px; border: 1px solid var(--line); border-radius: 20px; padding: 0 12px; background: transparent; color: inherit; font: inherit; font-size: 14px; }
 .rx button.on { border-color: var(--gold); background: rgba(242, 196, 109, 0.16); }
@@ -345,7 +350,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
       <h1>Feenstaub &amp;<br>Eselsohren</h1>
       <a class="bookbtn" id="bookBtn" href="#postfach" aria-label="Zum Postfach"><span class="bi" aria-hidden="true">✉️</span><span class="bl">Postfach</span><span class="env" id="bookEnv" hidden></span></a>
     </div>
-    <p class="lede">Masüsel und Mafifee: 500 Kilometer, ein Mond und dreizehn Türchen, bis zur Glückseligkeit und noch viel weiter. Diese Seite gehört nur uns beiden.</p>
+    <p class="lede">Masüsel und Mafifee: 500 Kilometer, ein Mond und zwölf Türchen, bis zur Glückseligkeit und noch viel weiter. Diese Seite gehört nur uns beiden.</p>
   </header>
 
   <div class="wishbar" id="wishBanner" role="status" aria-live="polite" hidden></div>
@@ -419,8 +424,8 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
   </section>
 
   <section class="card" aria-labelledby="dh">
-    <h2 id="dh">Dreizehn Türchen</h2>
-    <p class="muted" style="margin-bottom:12px">Heute gibt es eins vorab, ab morgen öffnet sich jeden Tag eins. Wir antworten einander und sehen beide alle Antworten.</p>
+    <h2 id="dh">Zwölf Türchen</h2>
+    <p class="muted" style="margin-bottom:12px">Das erste Türchen ist heute offen, ab morgen öffnet sich jeden Tag eins. Wir antworten einander und sehen beide alle Antworten.</p>
     <div class="doors" id="doors"></div>
     <div class="panel" id="panel" hidden></div>
   </section>
@@ -853,7 +858,7 @@ function endWarp() {
 $('warp').addEventListener('click', () => { if (warpHold) endWarp(); else startWarp(); });
 
 /* ---- Tuerchen und gemeinsame Daten ---- */
-const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRe: {}, mySeal: {}, commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
+const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRe: {}, mySeal: {}, myOdone: {}, commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
 let writeChain = Promise.resolve();
 function writeOwn(patch) {
   if (!state.db || !state.uid) return Promise.resolve();
@@ -876,6 +881,7 @@ function nameOf(id, data) {
 function renderDoors() {
   const box = $('doors'); const frag = document.createDocumentFragment();
   DOORS.forEach(d => {
+    if (d.n === 0) return;
     const open = isOpen(d.n);
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'door ' + (open ? 'open' : 'locked') + (state.sel === d.n ? ' sel' : '') + (d.n === 0 ? ' wide' : '');
@@ -979,9 +985,26 @@ const DAILY_DO = [
   'Jeder bereitet für morgen eine kleine Überraschung vor und verrät nur: Ich habe etwas vorbereitet. Mehr nicht.',
   'Heute zählt nur das Ankommen. Wenn die Tür aufgeht, lassen wir Handy, Mails und Aufgaben liegen und merken uns die ersten drei Sekunden.'
 ];
+function otherUid() { return Object.keys(state.notes).find(u => u !== state.uid) || null; }
+function odoneOf(u, day) { const v = state.notes[u] || {}, o = u === state.uid ? Object.assign({}, v.odone || {}, state.myOdone) : (v.odone || {}); return o['o' + day] || 0; }
+function toggleOdone(day) {
+  state.myOdone['o' + day] = odoneOf(state.uid, day) ? 0 : Date.now(); renderHoro(); renderPanel();
+  return writeOwn({ odone: Object.assign({}, state.myOdone) });
+}
+function odoneNode(day) {
+  const box = el('div', 'odone'), st = el('div', 'ostat'), ou = otherUid(), mine = odoneOf(state.uid, day), other = ou ? odoneOf(ou, day) : 0;
+  const me = nameOf(state.uid, state.notes[state.uid]), on = mailOther();
+  st.append(el('span', 'ochip' + (mine ? ' ok' : ''), me + (mine ? ' ✓' : ' offen')), el('span', 'ochip' + (other ? ' ok' : ''), on + (other ? ' ✓' : ' offen')));
+  const b = el('button', mine ? 'btn' : 'btn solid', mine ? 'Doch noch nicht erledigt' : 'Ich habe es erledigt'); b.type = 'button';
+  b.addEventListener('click', () => toggleOdone(day));
+  box.append(st, b);
+  if (mine && other) box.append(el('p', 'oboth', 'Beide haben es erledigt ✦'));
+  return box;
+}
 function cardNode(day) {
   const c = DECK[day][DECK_PICK[day]], box = el('div', 'ocard');
   const to = el('div', 'otask'); to.append(el('span', 'kind', 'Das tun wir heute beide'), el('p', '', DAILY_DO[day]));
+  if (canShare()) to.append(odoneNode(day));
   box.append(el('div', 'osym', c.s + '︎'), el('span', 'kind', c.k), el('h4', '', c.t), el('p', '', c.x), el('span', 'basis', 'Grundlage: ' + c.g), to);
   return box;
 }
@@ -1809,7 +1832,7 @@ function startNotes(db) {
     const fresh = [];
     for (const id in m) {
       const v = m[id] || {};
-      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
+      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
       for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz, weil ' + pron(nameOf(id, v)) + ' an dich denken musste ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       for (const k in (v.book || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.book[k]; if (state.seen && e && e.text) fresh.push(nameOf(id, v) + ' hat dir im Buch geschrieben: ' + (e.sub || '(ohne Betreff)')); } }
       for (const k in (v.rate || {})) { const key = id + '|r|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const r = v.rate[k], m = /^d(\d+)$/.exec(k); if (state.seen && r && m) fresh.push(nameOf(id, v) + ' hat dich bewertet: ' + rateIcons(Number(m[1]), r.n)); } }
@@ -1818,12 +1841,13 @@ function startNotes(db) {
         if (r.e && !state.seenE.has(rk)) { state.seenE.add(rk); if (state.seen) fresh.push(nameOf(id, v) + ' hat auf einen Tagebucheintrag reagiert: ' + r.e); }
         for (const c in (r.cm || {})) { const ck = id + '|cm|' + k + '|' + c; if (!state.seenE.has(ck)) { state.seenE.add(ck); const tx = r.cm[c] && r.cm[c].x; if (state.seen && tx) fresh.push(nameOf(id, v) + ' hat kommentiert: ' + (tx.length > 70 ? tx.slice(0, 70) + ' ...' : tx)); } }
       }
+      for (const k in (v.odone || {})) { const key = id + '|od|' + k + '|' + (v.odone[k] ? 1 : 0); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen && v.odone[k]) fresh.push(nameOf(id, v) + ' hat die Aufgabe der Orakelkarte erledigt.' + (state.myOdone[k] ? '' : ' Und du?')); } }
       for (const k in (v.seal || {})) { const key = id + '|seal|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat einen erfüllten Wunsch offiziell besiegelt ✦'); } }
       DOORS.forEach(d => { const x = v['d' + d.n]; if (x && x.text) { const key = id + '|d' + d.n + '|' + (x.ts || x.text.length); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat bei Türchen ' + d.n + ' geantwortet.'); } } });
       for (const k in (v.ack || {})) { const key = id + '|' + k; if (!state.seenA.has(key)) { state.seenA.add(key); if (state.seen && k.indexOf(ackKey(state.uid, '')) === 0) fresh.push(nameOf(id, v) + ' hat einen Wunsch von dir erfüllt' + ((v.ack[k] && v.ack[k].text) ? ': ' + (v.ack[k].text.length > 70 ? v.ack[k].text.slice(0, 70) + ' ...' : v.ack[k].text) : '.')); } }
     }
     state.notes = m; state.seen = true;
-    renderDoors(); renderPanel(); renderArriveVisibility(); renderDiary(); renderBook();
+    renderDoors(); renderPanel(); renderHoro(); renderArriveVisibility(); renderDiary(); renderBook();
     if (fresh.length) showToast(fresh[fresh.length - 1]);
   }, e => { clearTimeout(timer); state.db = null; state.connErr = (e && (e.code || e.message)) || 'unbekannt'; renderPanel(); renderDiary(); showToast('Keine Verbindung zum Speicher: ' + state.connErr); });
   renderPanel();
