@@ -13,8 +13,8 @@
   --night: #0b0e20;
   --deep: #151a3a;
   --line: #2a3066;
-  --ink: #ece9f7;
-  --muted: #a3a9d3;
+  --ink: #ffffff;
+  --muted: #d3d8f5;
   --gold: #f2c46d;
   --rose: #f08fa9;
   --display: "Gloock", Georgia, serif;
@@ -149,6 +149,7 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .popbtns { display: flex; flex-direction: column; gap: 8px; }
 .toast { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 45; width: calc(100% - 32px); max-width: 440px; background: #151a3a; border: 1px solid var(--rose); border-radius: 16px; padding: 12px 16px; font-size: 15px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5); cursor: pointer; }
 .toast[hidden] { display: none; }
+.flyheart { position: fixed; left: 0; top: 0; z-index: 30; font-size: 26px; pointer-events: none; text-shadow: 0 0 10px currentColor; }
 /* Orakelkarten */
 .ocard { border: 1px solid var(--gold); border-radius: 16px; padding: 16px; margin: 12px 0; text-align: center; background: linear-gradient(180deg, rgba(242, 196, 109, 0.12), rgba(11, 14, 32, 0.4)); display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .ocard .osym { font-size: 44px; line-height: 1; color: var(--gold); }
@@ -202,7 +203,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <svg class="route" viewBox="0 0 400 60" role="img" aria-label="Strecke von Penzing nach Simmern">
       <line x1="24" y1="26" x2="376" y2="26" stroke="#2a3066" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 9"/>
       <line id="routeDone" x1="24" y1="26" x2="24" y2="26" stroke="#f2c46d" stroke-width="4" stroke-linecap="round"/>
-      <circle cx="24" cy="26" r="7" fill="#151a3a" stroke="#a3a9d3" stroke-width="2"/>
+      <circle cx="24" cy="26" r="7" fill="#151a3a" stroke="#d3d8f5" stroke-width="2"/>
       <circle cx="376" cy="26" r="7" fill="#151a3a" stroke="#f2c46d" stroke-width="2"/>
       <circle id="routeDot" cx="24" cy="26" r="9" fill="#f2c46d"/>
       <text x="24" y="54" text-anchor="start">Penzing</text>
@@ -282,6 +283,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
         <button class="btn solid" id="diaryGo" type="submit">Eintragen</button>
         <button class="btn heart" id="diaryHeart" type="button">♥ Herz schicken</button>
       </div>
+      <p class="muted" id="heartCount" aria-live="polite"></p>
       <p class="muted small" id="diaryInfo" aria-live="polite"></p>
     </form>
     <div id="diaryList"></div>
@@ -424,8 +426,8 @@ function renderFigs() {
     f.pts.forEach((p, i) => add('circle', { cx: ox + p[0] * k, cy: oy + p[1] * k, r: i === 0 ? 4 : 2.8, fill: '#fff5da' }));
   }
   fig(FIG_AQR, 14, 10, 1.7, '#9ad8ff'); fig(FIG_LEO, 222, 10, 1.7, '#f2c46d');
-  add('text', { x: 100, y: 190, 'text-anchor': 'middle', fill: '#a3a9d3', 'font-size': 14, 'font-family': 'Karla, sans-serif' }, 'Mafifee, Wassermann');
-  add('text', { x: 300, y: 190, 'text-anchor': 'middle', fill: '#a3a9d3', 'font-size': 14, 'font-family': 'Karla, sans-serif' }, 'Masüsel, Löwe');
+  add('text', { x: 100, y: 190, 'text-anchor': 'middle', fill: '#d3d8f5', 'font-size': 14, 'font-family': 'Karla, sans-serif' }, 'Mafifee, Wassermann');
+  add('text', { x: 300, y: 190, 'text-anchor': 'middle', fill: '#d3d8f5', 'font-size': 14, 'font-family': 'Karla, sans-serif' }, 'Masüsel, Löwe');
   svg.replaceChildren(frag);
 }
 
@@ -535,9 +537,59 @@ function drawCalm(t) {
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   calm.forEach(s => { const a = s.a * (0.35 + 0.65 * Math.abs(Math.sin(t * s.sp + s.ph))); ctx.fillStyle = 'rgba(236,233,247,' + a.toFixed(3) + ')'; ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r, 0, 6.2832); ctx.fill(); });
   drawBgMoon(t);
+  drawHeartStars(t);
   const k = Math.max(1.5, Math.min(W * 0.0054, H * 0.0072));
   bgFig(FIG_AQR, 6 - 22 * k + Math.sin(t / 2600) * 9, H * 0.3 + Math.cos(t / 3300) * 8, k, '154,216,255', t, 0);
   bgFig(FIG_LEO, W - 6 - 90 * k + Math.sin(t / 2900 + 2) * 9, H * 0.17 + Math.cos(t / 3700 + 1) * 8, k, '242,196,109', t, 3);
+}
+const HS_COL = { gold: '242,196,109', rose: '240,143,169' };
+function hsHash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function drawHeartStars(t) {
+  const now = Date.now(), hs = state.hs || {};
+  for (const k in hs) {
+    const o = hs[k]; if (o.show > now) continue;
+    const x = o.x * W, y = o.y * H, age = now - o.show, rgb = o.rgb;
+    const pulse = 1 + 0.2 * Math.sin(t / 500 + o.x * 20), r = 5.5 * pulse;
+    ctx.save();
+    if (age < 1000) { ctx.strokeStyle = 'rgba(' + rgb + ',' + (0.8 * (1 - age / 1000)).toFixed(3) + ')'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 6 + age / 14, 0, 6.2832); ctx.stroke(); }
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r * 5); g.addColorStop(0, 'rgba(' + rgb + ',0.55)'); g.addColorStop(1, 'rgba(' + rgb + ',0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * 5, 0, 6.2832); ctx.fill();
+    ctx.shadowColor = 'rgba(' + rgb + ',1)'; ctx.shadowBlur = 14; ctx.fillStyle = '#fff';
+    const L = r * 2.4, w = r * 0.55;
+    ctx.beginPath(); ctx.moveTo(x, y - L); ctx.lineTo(x + w, y - w); ctx.lineTo(x + L, y); ctx.lineTo(x + w, y + w); ctx.lineTo(x, y + L); ctx.lineTo(x - w, y + w); ctx.lineTo(x - L, y); ctx.lineTo(x - w, y - w); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+}
+function syncHeartStars(entries) {
+  state.hs = state.hs || {};
+  if (state.connectDone && !state.db) state.hsReady = true;
+  const counts = { 'Masüsel': 0, 'Mafifee': 0 }; let changed = false;
+  entries.forEach(x => {
+    if (!x.e.heart) return;
+    if (x.who === 'Masüsel' || x.who === 'Mafifee') counts[x.who]++; else counts['Masüsel']++;
+    const key = x.id + '|' + x.k;
+    if (state.hs[key]) return;
+    const h = hsHash(key), tx = 0.06 + (h % 1000) / 1000 * 0.88, ty = 0.05 + ((h >>> 10) % 1000) / 1000 * 0.9;
+    const o = { x: tx, y: ty, rgb: x.who === 'Mafifee' ? HS_COL.rose : HS_COL.gold, show: 0 };
+    state.hs[key] = o; changed = true;
+    if (state.hsReady && !reduce) { o.show = Date.now() + 1400; flyHeart(x.mine, tx * window.innerWidth, ty * window.innerHeight, o.rgb); }
+  });
+  if (state.seen) state.hsReady = true;
+  const total = counts['Masüsel'] + counts['Mafifee'];
+  $('heartCount').textContent = total ? '♥ ' + total + (total === 1 ? ' Herz' : ' Herzen') + ' bisher: Masüsel ' + counts['Masüsel'] + ', Mafifee ' + counts['Mafifee'] : '';
+  if (changed && reduce && !warping) drawCalm(0);
+}
+function flyHeart(mine, tx, ty, rgb) {
+  const el0 = document.createElement('div'); el0.className = 'flyheart'; el0.textContent = '♥'; el0.style.color = 'rgb(' + rgb + ')';
+  const b = $('diaryHeart').getBoundingClientRect();
+  const sx = mine ? b.left + 20 : window.innerWidth / 2, sy = mine ? b.top : -20;
+  document.body.appendChild(el0);
+  const a = el0.animate([
+    { transform: 'translate(' + sx + 'px,' + sy + 'px) scale(1)', opacity: 1 },
+    { transform: 'translate(' + (sx + (tx - sx) * 0.5) + 'px,' + (Math.min(sy, ty) - 60) + 'px) scale(1.8)', opacity: 1, offset: 0.45 },
+    { transform: 'translate(' + tx + 'px,' + ty + 'px) scale(0.4)', opacity: 0.2 }
+  ], { duration: 1400, easing: 'ease-in-out' });
+  a.onfinish = () => el0.remove();
 }
 let moonImg = null, moonKey = '';
 function drawBgMoon(t) {
@@ -1010,7 +1062,8 @@ function renderDiary() {
   if (state.fulfilKey && $('diaryList').querySelector('textarea')) { state.pendingDiary = true; return; }
   state.pendingDiary = false;
   const list = $('diaryList'); const frag = document.createDocumentFragment();
-  const entries = allEntries().slice(0, 80);
+  const allE = allEntries(); syncHeartStars(allE);
+  const entries = allE.slice(0, 80);
   if (!entries.length) frag.append(el('p', 'muted', 'Noch keine Einträge. Der erste gehört uns.'));
   entries.forEach(x => {
     const box = el('div', 'entry' + (x.kind === 'star' ? ' star' : ''));
