@@ -149,6 +149,12 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .popbtns { display: flex; flex-direction: column; gap: 8px; }
 .toast { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 45; width: calc(100% - 32px); max-width: 440px; background: #151a3a; border: 1px solid var(--rose); border-radius: 16px; padding: 12px 16px; font-size: 15px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5); cursor: pointer; }
 .toast[hidden] { display: none; }
+/* Orakelkarten */
+.ocard { border: 1px solid var(--gold); border-radius: 16px; padding: 16px; margin: 12px 0; text-align: center; background: linear-gradient(180deg, rgba(242, 196, 109, 0.12), rgba(11, 14, 32, 0.4)); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ocard .osym { font-size: 44px; line-height: 1; color: var(--gold); }
+.ocard h4 { font-family: var(--display); font-size: 24px; line-height: 1.2; font-weight: 400; }
+.ocard p { font-size: 16px; }
+.hcard { margin-top: 14px; }
 /* Offene Wünsche */
 .wishbar { border: 1px solid var(--rose); background: rgba(240, 143, 169, 0.14); border-radius: 18px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; animation: wishglow 2.4s ease-in-out infinite alternate; }
 .wishbar[hidden] { display: none; }
@@ -246,6 +252,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
       <div class="hcol l"><h3>Masüsel</h3><span class="sign">Löwe</span><p id="hL"></p><span class="basis" id="hGL"></span></div>
     </div>
     <div class="hboth"><h3>Für uns beide</h3><p id="hB"></p><span class="basis" id="hGB"></span></div>
+    <div class="hcard"><button class="btn" id="hOracle" type="button">Orakelkarte des Tages ziehen</button><div id="hCard" aria-live="polite"></div></div>
   </section>
 
   <section class="card" id="arrive" aria-labelledby="ah" hidden>
@@ -372,7 +379,7 @@ const DOORS = [
   { n: 4, kind: 'Frage', title: 'Drei Dinge', text: 'Kleine Aufgabe für heute, ganz ohne Druck.', ask: 'Drei Dinge, die ich an dir mag.' },
   { n: 5, kind: 'Spaß', title: 'Das Gepäck', text: 'In 500 Kilometern Entfernung packt es sich leichter, wenn man weiß, was wirklich nötig ist.', ask: 'Was darf auf keinen Fall im Gepäck fehlen?' },
   { n: 6, kind: 'Himmel', title: 'Gleicher Himmel', text: 'Der Mond zieht heute am Saturn vorbei. Wenn es aufklart, schau am Abend nach oben. Über Penzing und über Simmern liegt derselbe Himmel.', ask: 'Was siehst du, wenn du hochschaust?' },
-  { n: 7, kind: 'Orakel', title: 'Das Sehnsuchtsorakel', text: 'Zieh eine Karte. Die Sterne sind nicht immer präzise, aber immer freundlich.', oracle: true },
+  { n: 7, kind: 'Orakel', title: 'Das Sehnsuchtsorakel', text: 'Zieh eine Karte aus dem Himmel dieses Tages. Jede Karte gehört zu dem, was heute wirklich am Himmel steht.', oracle: true },
   { n: 8, kind: 'Himmel', title: 'Aufbruch', text: 'Heute wechselt die Sonne vom Skorpion in den Schützen. Das Zeichen für Reiselust, Weite und das Gefühl, dass es bald losgeht.', ask: 'Wofür bist du gerade bereit aufzubrechen?' },
   { n: 9, kind: 'Frage', title: 'Dein Lied', text: 'Noch drei Nächte. Der Mond ist fast voll und wird ein bisschen ungeduldig.', ask: 'Welches Lied soll am Tag der Ankunft laufen?' },
   { n: 10, kind: 'Himmel', title: 'Supermond', text: 'Heute um 15:53 Uhr ist Vollmond, und er ist ein Supermond, nur 360.768 Kilometer von der Erde entfernt. Er geht am Abend auf. Wir können ihn zur gleichen Zeit anschauen, jeder an seinem Ort.', ask: 'Welchen Satz gibst du dem Mond mit?' },
@@ -663,6 +670,81 @@ function renderDoors() {
   box.replaceChildren(frag);
 }
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+/* Orakelkarten: jede Karte gehört zu dem, was an diesem Tag wirklich am Himmel steht (siehe HORO) */
+const DECK = [
+  [ // 14.11.
+    { s: '☽', t: 'Der Mond im Steinbock', k: 'Halt', x: 'Der Steinbock-Mond ordnet und trägt. Die Karte sagt: Der Weg steht, ihr müsst nur noch gehen.', g: 'Mond im Steinbock (19 Grad)' },
+    { s: '☉', t: 'Die Sonne im Skorpion', k: 'Tiefe', x: 'Die Skorpion-Sonne drückt kurz vor dem Quadrat zum Löwen. Die Karte sagt: Dichte Gefühle sind kein Hindernis, sie sind Treibstoff.', g: 'Sonne im Skorpion, 3,3 Grad vor dem Quadrat zur Löwe-Sonne' },
+    { s: '♀', t: 'Venus in der Waage', k: 'Ausgleich', x: 'Venus legt Löwe und Wassermann in dieselbe Waagschale. Die Karte sagt: Was zwischen euch liegt, wiegt leichter als das, was euch verbindet.', g: 'Venus in der Waage, Trigon zum Wassermann, Sextil zum Löwen' }
+  ],
+  [ // 15.11.
+    { s: '☽', t: 'Der Mond tritt in den Wassermann', k: 'Klarheit', x: 'Zweieinhalb Tage lang scheint der Mond durch Mafifees Zeichen. Die Karte sagt: Sprich aus, was du dir wünschst.', g: 'Mond wechselt in den Wassermann' },
+    { s: '♃', t: 'Jupiter und Mars im Löwen', k: 'Glück und Tatkraft', x: 'Zwei Kraftplaneten stehen auf Haaresbreite beieinander. Die Karte sagt: Heute gelingt, was du mit ganzem Herzen anstößt.', g: 'Jupiter und Mars im Löwen, nur 0,3 Grad auseinander' },
+    { s: '♌', t: 'Die Gegenpole', k: 'Funke', x: 'Löwe und Wassermann stehen sich im Tierkreis gegenüber, und genau dazwischen springt der Funke. Die Karte sagt: Gegensatz ist Anziehung.', g: 'Mond im Wassermann gegenüber dem Löwen' }
+  ],
+  [ // 16.11.
+    { s: '☽', t: 'Der Mond auf der Sonne', k: 'Einklang', x: 'Der Mond liegt fast genau auf Mafifees Sonne. Die Karte sagt: Gefühl und Wesen sind heute eins, vertrau dem, was du fühlst.', g: 'Mond, Konjunktion zur Wassermann-Sonne (0,5 Grad)' },
+    { s: '♃', t: 'Jupiter und Mars übereinander', k: 'Mut', x: 'Mut und Glück fallen im Löwen fast zusammen. Die Karte sagt: Tu heute das Mutige, es wird belohnt.', g: 'Jupiter und Mars im Löwen, Konjunktion (0,1 Grad)' },
+    { s: '✦', t: 'Ein Licht für zwei', k: 'Verbundenheit', x: 'Aus entgegengesetzten Richtungen schauen zwei Sonnen auf denselben Mond. Die Karte sagt: Dasselbe Licht kennt den Weg zu euch beiden.', g: 'Mond über der Wassermann-Sonne, gegenüber der Löwe-Sonne' }
+  ],
+  [ // 17.11.
+    { s: '☽', t: 'Das Erste Viertel', k: 'Entscheidung', x: 'Der Mond wird halb, und aus Plänen wird Gestalt. Die Karte sagt: Entscheide dich für das, was du dir wünschst.', g: 'Erstes Viertel 12:48 Uhr, Mond im Wassermann (25 Grad)' },
+    { s: '✦', t: 'Die Leoniden', k: 'Wunsch', x: 'In der Nacht fliegen Sternschnuppen aus dem Löwen. Die Karte sagt: Wünsch dir etwas, ihr seid beide wach genug dafür.', g: 'Leoniden-Maximum, 10 bis 15 Sternschnuppen pro Stunde' },
+    { s: '♒', t: 'Der Mond im Wassermann', k: 'Spiegel', x: 'Der Mond steht dem Löwen gegenüber und hält ihm einen Spiegel hin. Die Karte sagt: Frag dich, was du wirklich willst.', g: 'Mond im Wassermann gegenüber dem Löwen' }
+  ],
+  [ // 18.11.
+    { s: '☽', t: 'Der Mond in den Fischen', k: 'Traum', x: 'Der Tag wird weich und träumerisch. Die Karte sagt: Hör mehr auf dein Gefühl als auf jede Liste.', g: 'Mond in den Fischen (7 Grad)' },
+    { s: '♓', t: 'Das Nachbarzeichen', k: 'Nähe', x: 'Die Fische grenzen unmittelbar an den Wassermann. Die Karte sagt: Was ganz nah ist, liegt oft direkt neben dir.', g: 'Mond in den Fischen, Nachbarzeichen des Wassermanns' },
+    { s: '♌', t: 'Die weiche Mähne', k: 'Offenheit', x: 'Auch der Löwe darf sich heute weich zeigen. Die Karte sagt: Offenheit ist Stärke.', g: 'Mond in den Fischen' }
+  ],
+  [ // 19.11.
+    { s: '☽', t: 'Der Mond bleibt in den Fischen', k: 'Gefühl', x: 'Das Gefühl bleibt tief und beweglich. Die Karte sagt: Lass Worte holprig sein, sie meinen es gut.', g: 'Mond in den Fischen (20 Grad)' },
+    { s: '☿', t: 'Merkur im Skorpion', k: 'Tiefe Worte', x: 'Merkur macht Gespräche tief und manchmal scharf. Die Karte sagt: Frag nach, statt zu raten.', g: 'Merkur im Skorpion, Quadrat zu Löwe und Wassermann (Zeichenaspekt)' },
+    { s: '✦', t: 'Die Brücke', k: 'Verständigung', x: 'Was ihr einander erklärt, wird zur Brücke zwischen zwei Orten. Die Karte sagt: Sprecht, solange der Himmel zuhört.', g: 'Merkur im Skorpion, Mond in den Fischen' }
+  ],
+  [ // 20.11.
+    { s: '☽', t: 'Der Mond tritt in den Widder', k: 'Aufbruch', x: 'Der Mond wechselt ins Feuer und nimmt Schwung auf. Die Karte sagt: Fang an, bevor du dich überredest, zu warten.', g: 'Mond im Widder (3 Grad)' },
+    { s: '♄', t: 'Saturn im Widder', k: 'Verlässlichkeit', x: 'Am Abend erreicht der Mond Saturn und bekommt festen Boden. Die Karte sagt: Was ihr aufgebaut habt, trägt.', g: 'Saturn im Widder (8 Grad), Sextil zum Wassermann' },
+    { s: '♌', t: 'Feuer zu Feuer', k: 'Tatendrang', x: 'Der Widder-Mond steht im Trigon zum Löwen. Die Karte sagt: Teile deine Kraft gut ein, sie reicht bis zum Wiedersehen.', g: 'Mond im Widder, Trigon zum Löwen' }
+  ],
+  [ // 21.11.
+    { s: '☽', t: 'Der Mond im Widder', k: 'Schwung', x: 'Der Mond schaut beide Sonnen freundlich an. Die Karte sagt: Was du sagen willst, sag es heute.', g: 'Mond im Widder: Trigon zur Löwe-Sonne (2,4 Grad), Sextil zur Wassermann-Sonne (3,3 Grad)' },
+    { s: '♄', t: 'Saturn im Widder', k: 'Beständigkeit', x: 'Saturn steht fest, der Mond läuft an ihm vorbei. Die Karte sagt: Vertrau dem Weg, er hält.', g: 'Saturn im Widder' },
+    { s: '✦', t: 'Zwei Sonnen, ein Mond', k: 'Verbundenheit', x: 'Löwe und Wassermann bekommen heute dasselbe freundliche Licht. Die Karte sagt: Ihr müsst nichts beweisen.', g: 'Mond: Trigon zur Löwe-Sonne, Sextil zur Wassermann-Sonne' }
+  ],
+  [ // 22.11.
+    { s: '☉', t: 'Die Sonne tritt in den Schützen', k: 'Aufbruch', x: 'Um 8:23 Uhr wechselt die Sonne ins Reisezeichen. Die Karte sagt: Es geht los, zuerst im Herzen.', g: 'Sonne in den Schützen (8:23 Uhr), Sextil zum Wassermann, Trigon zum Löwen' },
+    { s: '☿', t: 'Merkur im Quadrat', k: 'Wortwahl', x: 'Merkur stellt sich quer zu Mafifees Sonne. Die Karte sagt: Wähle die weichen Worte.', g: 'Merkur im Quadrat zur Wassermann-Sonne (2,4 Grad)' },
+    { s: '♐', t: 'Der Feuerbruder', k: 'Lust auf Reise', x: 'Der Schütze ist dem Löwen im Trigon verbunden. Die Karte sagt: Lachen, Weite, Abenteuer liegen vor euch.', g: 'Sonne im Schützen, Trigon zum Löwen' }
+  ],
+  [ // 23.11.
+    { s: '☽', t: 'Der Mond im Stier', k: 'Eigensinn', x: 'Der Mond stellt sich quer zu beiden Sonnen. Die Karte sagt: Nimm nichts persönlich, es ist Vorfreude in Verkleidung.', g: 'Mond im Stier: Quadrat zur Wassermann-Sonne (1,9 Grad) und zur Löwe-Sonne (3,8 Grad)' },
+    { s: '☿', t: 'Merkur wird ungeduldig', k: 'Ungeduld', x: 'Merkur steht noch im Quadrat zu Mafifees Sonne. Die Karte sagt: Atme durch, das Warten hat ein Ende.', g: 'Merkur im Quadrat zur Wassermann-Sonne (1,3 Grad)' },
+    { s: '✦', t: 'Reibung ist Nähe', k: 'Genuss', x: 'Der Stier liebt das Schöne. Die Karte sagt: Gönn dir heute etwas Gutes, es macht das Warten leichter.', g: 'Mond im Stier' }
+  ],
+  [ // 24.11.
+    { s: '☽', t: 'Der Supermond', k: 'Fülle', x: 'Um 15:54 Uhr ist Vollmond, nur 360.768 Kilometer entfernt. Die Karte sagt: Alles, was voll ist, darf überlaufen.', g: 'Vollmond in den Zwillingen, 15:54 Uhr (Supermond)' },
+    { s: '☿', t: 'Merkur genau im Quadrat', k: 'Worte zweimal', x: 'Merkur trifft Mafifees Sonne auf den Punkt. Die Karte sagt: Sag es einmal im Kopf, einmal laut.', g: 'Merkur im Quadrat zur Wassermann-Sonne (0,1 Grad)' },
+    { s: '✦', t: 'Derselbe Mond', k: 'Gleichzeitig', x: 'Über Penzing und über Simmern geht heute derselbe Vollmond auf. Die Karte sagt: Schaut zusammen hin, er hört zu.', g: 'Vollmond, Sonne im Schützen im Trigon zum Löwen' }
+  ],
+  [ // 25.11.
+    { s: '♅', t: 'Uranus in Opposition', k: 'Überraschung', x: 'Uranus, der Planet des Wassermanns, steht der Sonne gegenüber. Die Karte sagt: Lass Unerwartetes herein.', g: 'Uranus in Opposition zur Sonne' },
+    { s: '☽', t: 'Der Mond in den Zwillingen', k: 'Leichtigkeit', x: 'Der Mond verbindet sich freundlich mit beiden Sonnen. Die Karte sagt: Heute fällt vieles leicht.', g: 'Mond in den Zwillingen: Trigon zur Wassermann-Sonne (1,8 Grad), Sextil zur Löwe-Sonne (3,8 Grad)' },
+    { s: '✦', t: 'Die letzte Nacht davor', k: 'Schwelle', x: 'Morgen wird aus Sehnsucht Gegenwart. Die Karte sagt: Schlaf gut, ihr habt es fast geschafft.', g: 'Uranus in Opposition, Mond im Trigon und Sextil zu beiden Sonnen' }
+  ],
+  [ // 26.11.
+    { s: '☽', t: 'Der Mond tritt in den Krebs', k: 'Geborgenheit', x: 'Es wird häuslich und herzlich. Die Karte sagt: Ihr seid zu Hause, wo ihr zusammen seid.', g: 'Mond tritt in den Krebs' },
+    { s: '♂', t: 'Mars zieht in die Jungfrau', k: 'Aufmerksamkeit', x: 'Mars verlässt den Löwen, Jupiter bleibt. Die Karte sagt: Aus Mut wird Zuwendung.', g: 'Mars in die Jungfrau, Jupiter im Löwen' },
+    { s: '✦', t: 'Die Ankunft', k: 'Beginn', x: 'Um 14:10 Uhr treffen sich zwei Gegenpole. Die Karte sagt: Alles, was ihr euch erhofft habt, darf jetzt beginnen.', g: 'Mond im Krebs, Venus in der Waage' }
+  ]
+];
+function cardNode(day, idx) {
+  const c = DECK[day][idx], box = el('div', 'ocard');
+  box.append(el('div', 'osym', c.s + '︎'), el('span', 'kind', c.k), el('h4', '', c.t), el('p', '', c.x), el('span', 'basis', 'Grundlage: ' + c.g));
+  return box;
+}
+function drawCard(day, prev) { let i; do { i = Math.floor(Math.random() * DECK[day].length); } while (i === prev && DECK[day].length > 1); return i; }
+
 function renderPanel() {
   const p = $('panel');
   if (state.sel == null) { p.hidden = true; p.replaceChildren(); return; }
@@ -674,10 +756,10 @@ function renderPanel() {
   const f = document.createDocumentFragment();
   f.append(el('span', 'kind', d.kind + ', ' + (14 + d.n) + '. November'), el('h3', '', d.title), el('p', '', d.text.replace('{v}', fmtSpeed(SPEED)).replace('{x}', String(Math.round(SPEED / 0.05)))));
   if (d.oracle) {
-    const o = el('p', 'oracle', state.oracleIdx >= 0 ? ORACLE[state.oracleIdx] : 'Noch keine Karte gezogen.');
+    const o = state.oracleIdx >= 0 ? cardNode(d.n, state.oracleIdx) : el('p', 'muted', 'Noch keine Karte gezogen.');
     o.setAttribute('aria-live', 'polite');
-    const b = el('button', 'btn solid', 'Karte ziehen'); b.type = 'button';
-    b.addEventListener('click', () => { let i; do { i = Math.floor(Math.random() * ORACLE.length); } while (i === state.oracleIdx); state.oracleIdx = i; renderPanel(); });
+    const b = el('button', 'btn solid', state.oracleIdx >= 0 ? 'Neue Karte ziehen' : 'Karte ziehen'); b.type = 'button';
+    b.addEventListener('click', () => { state.oracleIdx = drawCard(d.n, state.oracleIdx); renderPanel(); });
     f.append(o, b);
   }
   if (d.ask) f.append(el('p', 'ask', d.ask));
@@ -787,7 +869,10 @@ function renderHoro() {
   $('hDate').textContent = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(Date.UTC(2026, 10, 14 + i, 12)));
   $('hPrev').disabled = i <= 0; $('hNext').disabled = i >= maxI;
   $('hPrev').hidden = $('hNext').hidden = maxI === 0;
+  state.hShown = i;
+  if (state.hCardDay === i) $('hCard').replaceChildren(cardNode(i, state.hCardIdx)); else $('hCard').replaceChildren();
 }
+$('hOracle').addEventListener('click', () => { const i = state.hShown || 0; state.hCardIdx = drawCard(i, state.hCardDay === i ? state.hCardIdx : -1); state.hCardDay = i; renderHoro(); });
 $('hPrev').addEventListener('click', () => { const now = Date.now(); const cur = state.hday == null ? todayIdx(now) : state.hday; state.hday = Math.max(0, cur - 1); renderHoro(); });
 $('hNext').addEventListener('click', () => { const now = Date.now(); const cur = state.hday == null ? todayIdx(now) : state.hday; state.hday = cur + 1; renderHoro(); });
 
