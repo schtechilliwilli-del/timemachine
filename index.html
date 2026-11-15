@@ -992,10 +992,19 @@ const DAILY_DO = [
   'Heute zählt nur das Ankommen. Wenn die Tür aufgeht, lassen wir Handy, Mails und Aufgaben liegen und merken uns die ersten drei Sekunden.'
 ];
 function otherUid() { return Object.keys(state.notes).find(u => u !== state.uid) || null; }
+/* Einmalig: Antworten, die vor der Antwortfunktion als normaler Tagebucheintrag geschrieben wurden, gehoeren zur Orakelkarte */
+const LEGACY_OC = [{ who: 'Mafifee', day: 1, starts: 'Ich merke gerade, dass du es wirklich geschafft' }];
+function legacyOc(u, day) {
+  const v = state.notes[u] || {}, who = nameOf(u, v), dd = u === state.uid ? Object.assign({}, v.diary || {}, state.myDiary) : (v.diary || {});
+  for (const l of LEGACY_OC) { if (l.day !== day || l.who !== who) continue; for (const k in dd) { const e = dd[k]; if (e && e.text && e.text.trim().indexOf(l.starts) === 0) return { t: e.t, text: e.text, img: e.img }; } }
+  return null;
+}
+function isLegacyOc(who, e) { return !!(e && e.text && LEGACY_OC.some(l => l.who === who && e.text.trim().indexOf(l.starts) === 0)); }
 function ocRec(u, day) {
   const v = state.notes[u] || {}, mine = u === state.uid, k = 'o' + day;
   const oc = mine ? Object.assign({}, v.oc || {}, state.myOc) : (v.oc || {}), o = oc[k];
   if (o) return o.t ? o : null;
+  const lg = legacyOc(u, day); if (lg) return lg;
   const od = mine ? Object.assign({}, v.odone || {}, state.myOdone) : (v.odone || {});
   return od[k] ? { t: od[k], text: '' } : null;
 }
@@ -1582,13 +1591,14 @@ function allEntries() {
   ids.forEach(id => {
     const v = state.notes[id] || {}; const mine = id === state.uid; const who = nameOf(id, v);
     const dd = mine ? Object.assign({}, v.diary || {}, state.myDiary) : (v.diary || {});
-    for (const k in dd) { const e = dd[k]; if (e && typeof e.t === 'number') out.push({ id, k, who, mine, e, kind: e.star ? 'star' : 'note' }); }
+    for (const k in dd) { const e = dd[k]; if (e && typeof e.t === 'number' && !isLegacyOc(who, e)) out.push({ id, k, who, mine, e, kind: e.star ? 'star' : 'note' }); }
     DOORS.forEach(d => { const x = v['d' + d.n]; if (x && x.text) out.push({ id, k: 'd' + d.n, who, mine, kind: 'door', d, e: { t: typeof x.ts === 'number' ? x.ts : doorStart(d.n), text: x.text } }); });
   });
   const byDay = {};
   ids.forEach(id => {
     const v = state.notes[id] || {}, mine = id === state.uid, oc = mine ? Object.assign({}, v.oc || {}, state.myOc) : (v.oc || {}), who = nameOf(id, v);
     for (const k in oc) { if (/^o\d+$/.test(k) && oc[k] && oc[k].t) (byDay[k] = byDay[k] || []).push({ id, who, mine, r: oc[k] }); }
+    LEGACY_OC.forEach(l => { const k = 'o' + l.day; if (l.who === who && !oc[k]) { const r = legacyOc(id, l.day); if (r) (byDay[k] = byDay[k] || []).push({ id, who, mine, r }); } });
   });
   for (const k in byDay) {
     const L = byDay[k], day = Number(k.slice(1)); if (!DECK[day]) continue;
