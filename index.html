@@ -312,6 +312,14 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .ocans img { display: block; max-width: 100%; border-radius: 10px; margin-top: 6px; }
 .odone textarea { width: 100%; }
 .entry.oracle { border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin: 10px 0; background: rgba(120, 130, 255, 0.07); }
+.entry.sealed > p.otask2, .entry.oracle > p.otask2 { font-family: var(--body); font-size: 14px; }
+.ohead { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
+.ohead .otitle { margin: 0; }
+.osym2 { flex: none; font-size: 46px; line-height: 1; color: var(--gold); text-shadow: 0 0 14px rgba(242, 196, 109, 0.45); }
+.okind { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold); }
+.wax.moon { background: radial-gradient(circle at 35% 30%, #5560d8, #2a3070 55%, #12173f); border-radius: 50%; transform: rotate(6deg); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5), 0 0 12px rgba(242, 196, 109, 0.3), inset 0 -3px 6px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(170, 180, 255, 0.35); }
+.wax.moon::before { border: 2px solid rgba(242, 196, 109, 0.7); }
+.wax.moon span { color: var(--gold); font-size: 30px; text-shadow: 0 0 8px rgba(242, 196, 109, 0.6); }
 .entry .otitle { font-family: var(--display); font-size: 19px; margin: 6px 0 2px; }
 .entry .otask2 { color: var(--muted); font-size: 14px; margin: 0 0 4px; }
 .odone { margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
@@ -1690,9 +1698,9 @@ function sealWish(x) {
   state.mySeal[ackKey(x.id, x.k)] = { t: Date.now() }; renderDiary(true); showToast('Der Wunsch ist offiziell erfüllt. Das Siegel ist gesetzt.');
   return writeOwn({ seal: Object.assign({}, state.mySeal) });
 }
-function sealNode(sl, who, title, sub) {
-  const b = el('div', 'sealbox'), w = el('div', 'wax'), t = el('div', 'sealtx');
-  w.setAttribute('aria-hidden', 'true'); w.append(el('span', '', '♛'));
+function sealNode(sl, who, title, sub, sym) {
+  const b = el('div', 'sealbox'), w = el('div', 'wax' + (sym ? ' moon' : '')), t = el('div', 'sealtx');
+  w.setAttribute('aria-hidden', 'true'); w.append(el('span', '', sym ? sym + '︎' : '♛'));
   t.append(el('b', '', title || 'Wunsch offiziell erfüllt'), el('span', '', sub || ('Besiegelt von ' + who + ' am ' + bookShort.format(new Date(sl.t || Date.now())) + ', im Namen des Feenreiches')));
   b.append(w, t); return b;
 }
@@ -1726,9 +1734,12 @@ function oracleEntry(x) {
   const c = DECK[x.day][DECK_PICK[x.day]], two = x.kind === 'oracle2';
   const box = el('div', 'entry' + (two ? ' sealed' : ' oracle')), meta = el('div', 'meta');
   meta.append(el('span', 'badge', two ? 'Orakelkarte, von uns beiden erfüllt ✦' : 'Orakelkarte'), el('span', '', two ? 'Wir' : x.who), el('span', '', entFmt.format(new Date(x.e.t))));
-  box.append(meta, el('p', 'otitle', c.t + ' (' + (14 + x.day) + '.11.)'), el('p', 'otask2', 'Aufgabe: ' + DAILY_DO[x.day]));
+  const hd = el('div', 'ohead'), ht = el('div');
+  ht.append(el('p', 'otitle', c.t), el('span', 'okind', c.k + ', ' + (14 + x.day) + '. November'));
+  hd.append(el('span', 'osym2', c.s + '︎'), ht);
+  box.append(meta, hd, el('p', 'otask2', 'Aufgabe: ' + DAILY_DO[x.day]));
   const part = (who, text, img) => { const q = el('div', 'ocans'); q.append(el('b', '', who + ': '), document.createTextNode(text || '')); const im = imgNode(img); if (im) q.append(im); box.append(q); };
-  if (two) { x.parts.slice().sort((a, b) => a.r.t - b.r.t).forEach(z => part(z.who, z.r.text, z.r.img)); box.append(sealNode(null, '', 'Gütesiegel der Krone', 'Aufgabe von uns beiden erfüllt am ' + bookShort.format(new Date(x.e.t)))); }
+  if (two) { x.parts.slice().sort((a, b) => a.r.t - b.r.t).forEach(z => part(z.who, z.r.text, z.r.img)); box.append(sealNode(null, '', 'Gütesiegel der Krone', 'Aufgabe von uns beiden erfüllt am ' + bookShort.format(new Date(x.e.t)), c.s)); }
   else part(x.who, x.e.text, x.e.img);
   if (canShare()) box.append(reactNode(x));
   return box;
