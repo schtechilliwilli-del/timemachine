@@ -167,6 +167,18 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .diary form { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
 .diary .row { display: flex; gap: 8px; flex-wrap: wrap; }
 .diary input[type="file"] { display: none; }
+.book .btitle { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0 4px; }
+.book .btitle h3 { font-family: var(--serif, 'Gloock', serif); font-size: 20px; color: var(--gold); font-weight: 400; margin: 0; overflow-wrap: anywhere; }
+.book .btitle input { flex: 1; min-width: 160px; }
+.book .turn { font-family: var(--mono); font-size: 12px; color: var(--rose); margin: 4px 0 10px; }
+.book .chap { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; margin-top: 14px; }
+.mail { border-left: 3px solid var(--gold); padding: 8px 0 8px 12px; margin: 10px 0; display: flex; flex-direction: column; gap: 4px; }
+.mail.her { border-left-color: var(--rose); }
+.mail .mh { font-family: var(--mono); font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+.mail .ms { font-weight: 700; overflow-wrap: anywhere; }
+.mail p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.book .prompt { background: rgba(240, 143, 169, 0.1); border: 1px dashed var(--rose); border-radius: 12px; padding: 10px 12px; margin: 10px 0; }
+.book form { display: flex; flex-direction: column; gap: 10px; margin: 12px 0; }
 .entry { border-top: 1px solid var(--line); padding: 12px 0; display: flex; flex-direction: column; gap: 6px; }
 .entry .meta { font-family: var(--mono); font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
 .entry .badge { color: var(--gold); }
@@ -270,6 +282,24 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <label class="preview" id="previewBox"><input type="checkbox" id="previewAll"> Vorschau: alle Türchen öffnen (nur für dich als Besitzer)</label>
     <div class="doors" id="doors"></div>
     <div class="panel" id="panel" hidden></div>
+  </section>
+
+  <section class="card book" aria-labelledby="bk">
+    <h2 id="bk">Unser Briefroman</h2>
+    <p class="muted">Wir schreiben abwechselnd, wie Mails oder Chatnachrichten, und am Ende ist es unser eigenes Buch. Jeder Tag ist ein Kapitel.</p>
+    <div class="btitle"><h3 id="bookTitle"></h3><button class="btn" id="bookTitleBtn" type="button">Titel ändern</button></div>
+    <p class="turn" id="bookTurn" aria-live="polite"></p>
+    <div id="bookList"></div>
+    <div class="prompt"><span class="muted small">Schreibimpuls für heute</span><br><span id="bookPrompt"></span></div>
+    <form id="bookForm">
+      <input type="text" id="bookSub" maxlength="80" aria-label="Betreff" placeholder="Betreff">
+      <textarea id="bookText" maxlength="1500" placeholder="Liebe/r ..." aria-label="Neue Nachricht im Buch"></textarea>
+      <div class="row">
+        <button class="btn solid" id="bookGo" type="submit">Abschicken</button>
+        <button class="btn" id="bookSave" type="button">Als Textdatei speichern</button>
+      </div>
+      <p class="muted small" id="bookInfo" aria-live="polite"></p>
+    </form>
   </section>
 
   <section class="card diary" aria-labelledby="th">
@@ -992,6 +1022,105 @@ let toastTimer = null;
 function showToast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 9000); }
 $('toast').addEventListener('click', () => { $('toast').hidden = true; });
 
+/* ---- Briefroman ---- */
+const bookS = { my: {}, local: {}, myTitle: null, editing: false };
+const BOOK_PROMPTS = [
+  'Wie hat alles angefangen? Erzähl es aus deiner Sicht.',
+  'Beschreib den Moment, in dem du zum ersten Mal an mich gedacht hast.',
+  'Was würdest du mir gern sagen, wenn die 500 Kilometer nicht wären?',
+  'Schreib über einen Ort, an dem wir zusammen sein könnten.',
+  'Welches Geräusch erinnert dich an mich?',
+  'Erzähl mir von deinem Tag, als wäre ich unsichtbar dabei gewesen.',
+  'Was ist ein Geheimnis, das nur der Mond von dir kennt?',
+  'Schreib einen Brief an uns beide in einem Jahr.',
+  'Wovor hast du ein bisschen Angst, wenn wir uns sehen?',
+  'Beschreib, wie du dir unser erstes Wiedersehen vorstellst.',
+  'Was soll auf jeden Fall in unserem Buch stehen?',
+  'Schreib über das, was du nie sagst, aber oft denkst.',
+  'Schreib die erste Mail danach.'
+];
+function allBook() {
+  const out = [];
+  const ids = Object.keys(state.notes); if (state.uid && ids.indexOf(state.uid) < 0) ids.push(state.uid);
+  ids.forEach(id => {
+    const v = state.notes[id] || {}; const mine = id === state.uid; const who = nameOf(id, v);
+    const bb = mine ? Object.assign({}, v.book || {}, bookS.my) : (v.book || {});
+    for (const k in bb) { const e = bb[k]; if (e && typeof e.t === 'number' && e.text) out.push({ id, k, who, mine, e }); }
+  });
+  for (const k in bookS.local) { const e = bookS.local[k]; out.push({ id: 'local', k, who: 'Du', mine: true, e }); }
+  return out.sort((a, b) => a.e.t - b.e.t);
+}
+function bookTitleNow() {
+  let best = bookS.myTitle;
+  for (const id in state.notes) { const x = (state.notes[id] || {}).bookTitle; if (x && x.v && (!best || x.t > best.t)) best = x; }
+  return best && best.v ? best.v : 'Unser Buch (noch ohne Titel)';
+}
+const bookFmt = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', day: 'numeric', month: 'long' });
+const bookTime = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' });
+function bookDefaultSub(list) {
+  if (!list.length) return '(ohne Betreff)';
+  const last = (list[list.length - 1].e.sub || '(ohne Betreff)').replace(/^(AW: )+/, '');
+  return 'AW: ' + last;
+}
+function renderBook() {
+  const list = allBook(), box = $('bookList'); if (!box) return;
+  if (!bookS.editing) $('bookTitle').textContent = bookTitleNow();
+  const tn = $('bookTurn');
+  if (!list.length) tn.textContent = 'Das Buch ist noch leer. Einer von uns macht den Anfang.';
+  else { const l = list[list.length - 1]; tn.textContent = l.mine ? 'Wir warten auf die Antwort von ' + bookOther() + '.' : 'Du bist dran, ' + l.who + ' hat zuletzt geschrieben.'; }
+  $('bookPrompt').textContent = BOOK_PROMPTS[todayIdx(Date.now())];
+  $('bookSub').placeholder = 'Betreff, leer lassen für: ' + bookDefaultSub(list);
+  box.textContent = '';
+  const days = []; 
+  list.forEach(x => {
+    const dk = berlinDay(x.e.t);
+    if (days.indexOf(dk) < 0) { days.push(dk); const h = document.createElement('div'); h.className = 'chap'; h.textContent = 'Kapitel ' + days.length + ' · ' + bookFmt.format(new Date(x.e.t)); box.append(h); }
+    const m = document.createElement('div'); m.className = 'mail' + (x.who === 'Mafifee' ? ' her' : '');
+    const mh = document.createElement('div'); mh.className = 'mh'; mh.textContent = 'Von ' + (x.mine && x.id === 'local' ? 'Dir' : x.who) + ' · ' + bookTime.format(new Date(x.e.t)) + ' Uhr';
+    const ms = document.createElement('div'); ms.className = 'ms'; ms.textContent = x.e.sub || '(ohne Betreff)';
+    const mp = document.createElement('p'); mp.textContent = x.e.text;
+    m.append(mh, ms, mp); box.append(m);
+  });
+}
+function bookOther() { return nameOf(state.uid, state.notes[state.uid]) === 'Masüsel' ? 'Mafifee' : 'Masüsel'; }
+function bookAsText() {
+  const list = allBook(); let out = bookTitleNow() + '\n\n'; let last = '', n = 0;
+  list.forEach(x => {
+    const dk = berlinDay(x.e.t);
+    if (dk !== last) { last = dk; n++; out += '=== Kapitel ' + n + ' · ' + bookFmt.format(new Date(x.e.t)) + ' ===\n\n'; }
+    out += 'Von: ' + x.who + '\nBetreff: ' + (x.e.sub || '(ohne Betreff)') + '\n\n' + x.e.text + '\n\n';
+  });
+  return out;
+}
+$('bookForm').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const text = $('bookText').value.trim(); if (!text) return;
+  const list = allBook(); const sub = $('bookSub').value.trim() || bookDefaultSub(list);
+  const t = Date.now(), id = 'b' + t, entry = { t, text, sub };
+  $('bookGo').disabled = true;
+  if (canShare()) { bookS.my[id] = entry; renderBook(); $('bookText').value = ''; $('bookSub').value = ''; await writeOwn({ book: Object.assign({}, bookS.my) }); }
+  else { bookS.local[id] = entry; renderBook(); $('bookText').value = ''; $('bookSub').value = ''; }
+  $('bookInfo').textContent = state.err || '';
+  $('bookGo').disabled = false;
+});
+$('bookSave').addEventListener('click', () => {
+  const b = new Blob([bookAsText()], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'unser-buch.txt';
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+$('bookTitleBtn').addEventListener('click', async () => {
+  const h = $('bookTitle'), btn = $('bookTitleBtn');
+  if (!bookS.editing) {
+    bookS.editing = true; const cur = bookTitleNow();
+    const inp = document.createElement('input'); inp.type = 'text'; inp.maxLength = 60; inp.id = 'bookTitleIn'; inp.value = cur.indexOf('noch ohne Titel') > 0 ? '' : cur; inp.setAttribute('aria-label', 'Buchtitel');
+    h.textContent = ''; h.append(inp); btn.textContent = 'Speichern'; inp.focus(); return;
+  }
+  const v = ($('bookTitleIn').value || '').trim().slice(0, 60);
+  bookS.editing = false; btn.textContent = 'Titel ändern';
+  if (v) { bookS.myTitle = { v, t: Date.now() }; if (canShare()) await writeOwn({ bookTitle: bookS.myTitle }); }
+  renderBook();
+});
+
 /* ---- Tagebuch ---- */
 function canShare() { return state.db && state.uid && state.canWrite !== false; }
 function ackKey(ownerId, eid) { return ('a_' + ownerId + '_' + eid).replace(/[^A-Za-z0-9_]/g, '_'); }
@@ -1150,6 +1279,7 @@ $('diaryForm').addEventListener('submit', async ev => {
 renderFigs();
 sizeSky();
 renderDiary();
+renderBook();
 let lastDraw = 0;
 function skyLoop(t) { requestAnimationFrame(skyLoop); if ((warping && !warpHold) || reduce || document.hidden || t - lastDraw < 40) return; lastDraw = t; drawCalm(t); }
 if (!reduce) requestAnimationFrame(skyLoop);
@@ -1218,13 +1348,14 @@ function startNotes(db) {
     const fresh = [];
     for (const id in m) {
       const v = m[id] || {};
-      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); continue; }
+      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
       for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz, weil ' + pron(nameOf(id, v)) + ' an dich denken musste ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
+      for (const k in (v.book || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.book[k]; if (state.seen && e && e.text) fresh.push(nameOf(id, v) + ' hat dir im Buch geschrieben: ' + (e.sub || '(ohne Betreff)')); } }
       DOORS.forEach(d => { const x = v['d' + d.n]; if (x && x.text) { const key = id + '|d' + d.n + '|' + (x.ts || x.text.length); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat bei Türchen ' + d.n + ' geantwortet.'); } } });
       for (const k in (v.ack || {})) { const key = id + '|' + k; if (!state.seenA.has(key)) { state.seenA.add(key); if (state.seen && k.indexOf(ackKey(state.uid, '')) === 0) fresh.push(nameOf(id, v) + ' hat einen Wunsch von dir erfüllt' + ((v.ack[k] && v.ack[k].text) ? ': ' + (v.ack[k].text.length > 70 ? v.ack[k].text.slice(0, 70) + ' ...' : v.ack[k].text) : '.')); } }
     }
     state.notes = m; state.seen = true;
-    renderDoors(); renderPanel(); renderArriveVisibility(); renderDiary();
+    renderDoors(); renderPanel(); renderArriveVisibility(); renderDiary(); renderBook();
     if (fresh.length) showToast(fresh[fresh.length - 1]);
   }, e => { clearTimeout(timer); state.db = null; state.connErr = (e && (e.code || e.message)) || 'unbekannt'; renderPanel(); renderDiary(); showToast('Keine Verbindung zum Speicher: ' + state.connErr); });
   renderPanel();
