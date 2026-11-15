@@ -146,6 +146,13 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .popbtns { display: flex; flex-direction: column; gap: 8px; }
 .toast { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 45; width: calc(100% - 32px); max-width: 440px; background: #151a3a; border: 1px solid var(--rose); border-radius: 16px; padding: 12px 16px; font-size: 15px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5); cursor: pointer; }
 .toast[hidden] { display: none; }
+/* Offene Wünsche */
+.wishbar { border: 1px solid var(--rose); background: rgba(240, 143, 169, 0.14); border-radius: 18px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; animation: wishglow 2.4s ease-in-out infinite alternate; }
+.wishbar[hidden] { display: none; }
+.wishbar .wl { display: flex; flex-direction: column; gap: 6px; }
+.wishbar .wl p { font-size: 16px; }
+.wishbar .wl.mine p { color: var(--muted); font-size: 14px; }
+@keyframes wishglow { from { box-shadow: 0 0 0 rgba(240, 143, 169, 0); } to { box-shadow: 0 0 18px rgba(240, 143, 169, 0.35); } }
 /* Tagebuch */
 .diary form { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
 .diary .row { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -162,6 +169,7 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 body.warping .card { background: rgba(21, 26, 58, 0.4); }
 
 @media (prefers-reduced-motion: reduce) {
+  .wishbar { animation: none; }
   .cstar .head { animation: none; }
   .warp { animation: none; }
 }
@@ -175,6 +183,8 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <h1>Penzing <span aria-hidden="true">&rarr;</span><span class="sr" style="position:absolute;left:-9999px"> nach </span> Simmern</h1>
     <p class="lede">Masüsel und Mafifee: 500 Kilometer, ein Mond und dreizehn Türchen, bis zur Glückseligkeit und noch viel weiter. Diese Seite gehört nur uns beiden.</p>
   </header>
+
+  <div class="wishbar" id="wishBanner" role="status" aria-live="polite" hidden></div>
 
   <section class="card" id="journey" aria-labelledby="jh">
     <h2 id="jh">Noch unterwegs</h2>
@@ -860,7 +870,28 @@ async function sendFulfil(x, text, file, info, btn) {
   state.myAck[ackKey(x.id, x.k)] = d; state.fulfilKey = null;
   renderDiary(); writeOwn({ ack: Object.assign({}, state.myAck) });
 }
+function renderWishBanner() {
+  const box = $('wishBanner'); const frag = document.createDocumentFragment(); let n = 0;
+  allEntries().forEach(x => {
+    if (x.kind !== 'star' || x.id === 'local' || getAck(x.id, x.k)) return;
+    n++;
+    const l = el('div', 'wl' + (x.mine ? ' mine' : ''));
+    if (x.mine) l.append(el('p', '', 'Dein Wunsch ist noch offen: ' + x.e.wish));
+    else {
+      l.append(el('p', '', x.who + ' wünscht sich: ' + x.e.wish));
+      if (canShare()) {
+        const b = el('button', 'btn solid', 'Wunsch erfüllen'); b.type = 'button';
+        b.addEventListener('click', () => { state.fulfilKey = ackKey(x.id, x.k); state.pendingDiary = false; renderDiary(); $('diaryList').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); const t = $('diaryList').querySelector('textarea'); if (t) t.focus({ preventScroll: true }); });
+        l.append(b);
+      }
+    }
+    frag.append(l);
+  });
+  if (n) frag.prepend(el('span', 'kind', n === 1 ? 'Ein Wunsch ist offen' : n + ' Wünsche sind offen'));
+  box.replaceChildren(frag); box.hidden = !n;
+}
 function renderDiary() {
+  renderWishBanner();
   if (state.fulfilKey && $('diaryList').querySelector('textarea')) { state.pendingDiary = true; return; }
   state.pendingDiary = false;
   const list = $('diaryList'); const frag = document.createDocumentFragment();
