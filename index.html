@@ -949,6 +949,7 @@ async function addEntry(entry) {
   else { state.localDiary[id] = entry; renderDiary(); }
 }
 function doorStart(n) { return Date.UTC(2026, 10, 14 + n, 0, 0) - 3600000; }
+function pron(who) { return who === 'Masüsel' ? 'er' : 'sie'; }
 function allEntries() {
   const out = [];
   const ids = Object.keys(state.notes); if (state.uid && ids.indexOf(state.uid) < 0) ids.push(state.uid);
@@ -1046,7 +1047,7 @@ function renderDiary() {
           }
         }
       }
-    } else if (x.e.heart) box.append(el('p', '', '♥ ' + (x.who === 'Du' ? 'Du schickst' : x.who + ' schickt') + ' ein Herz'));
+    } else if (x.e.heart) box.append(el('p', '', '♥ ' + (x.who === 'Du' ? 'Du schickst ein Herz, weil du an ' + (otherName() || 'jemand Besonderen') + ' denken musstest.' : x.who + ' schickt ein Herz, weil ' + pron(x.who) + ' an dich denken musste.')));
     else if (x.e.text) box.append(el('p', '', x.e.text));
     const mainImg = imgNode(x.e.img); if (mainImg) box.append(mainImg);
     frag.append(box);
@@ -1165,7 +1166,7 @@ function startNotes(db) {
     for (const id in m) {
       const v = m[id] || {};
       if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); continue; }
-      for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
+      for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz, weil ' + pron(nameOf(id, v)) + ' an dich denken musste ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       DOORS.forEach(d => { const x = v['d' + d.n]; if (x && x.text) { const key = id + '|d' + d.n + '|' + (x.ts || x.text.length); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat bei Türchen ' + d.n + ' geantwortet.'); } } });
       for (const k in (v.ack || {})) { const key = id + '|' + k; if (!state.seenA.has(key)) { state.seenA.add(key); if (state.seen && k.indexOf(ackKey(state.uid, '')) === 0) fresh.push(nameOf(id, v) + ' hat einen Wunsch von dir erfüllt' + ((v.ack[k] && v.ack[k].text) ? ': ' + (v.ack[k].text.length > 70 ? v.ack[k].text.slice(0, 70) + ' ...' : v.ack[k].text) : '.')); } }
     }
