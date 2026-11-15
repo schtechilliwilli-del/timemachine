@@ -416,7 +416,6 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
   <section class="card" aria-labelledby="dh">
     <h2 id="dh">Dreizehn Türchen</h2>
     <p class="muted" style="margin-bottom:12px">Heute gibt es eins vorab, ab morgen öffnet sich jeden Tag eins. Wir antworten einander und sehen beide alle Antworten.</p>
-    <label class="preview" id="previewBox"><input type="checkbox" id="previewAll"> Vorschau: alle Türchen öffnen (nur für dich als Besitzer)</label>
     <div class="doors" id="doors"></div>
     <div class="panel" id="panel" hidden></div>
   </section>
@@ -731,12 +730,14 @@ function syncHeartStars(entries) {
   state.hs = state.hs || {};
   if (state.connectDone && !state.db) state.hsReady = true;
   const counts = { 'Masüsel': 0, 'Mafifee': 0 }; let changed = false;
+  const order = {}; entries.filter(x => x.e.heart).sort((a, b) => (a.e.t - b.e.t) || (a.id + a.k < b.id + b.k ? -1 : 1)).forEach((x, i) => { order[x.id + '|' + x.k] = i + 1; });
+  const fr = v => v - Math.floor(v);
   entries.forEach(x => {
     if (!x.e.heart) return;
     if (x.who === 'Masüsel' || x.who === 'Mafifee') counts[x.who]++; else counts['Masüsel']++;
     const key = x.id + '|' + x.k;
     if (state.hs[key]) return;
-    const h = hsHash(key), tx = 0.06 + (h % 1000) / 1000 * 0.88, ty = 0.05 + ((h >>> 10) % 1000) / 1000 * 0.9;
+    const n = order[key] || 1, tx = 0.06 + fr(0.5 + 0.7548776662 * n) * 0.88, ty = 0.05 + fr(0.5 + 0.5698402910 * n) * 0.9;
     const o = { x: tx, y: ty, rgb: x.who === 'Mafifee' ? HS_COL.rose : HS_COL.gold, show: 0 };
     state.hs[key] = o; changed = true;
     if (state.hsReady && !reduce) { o.show = Date.now() + 1400; flyHeart(x.mine, tx * window.innerWidth, ty * window.innerHeight, o.rgb); }
@@ -1068,7 +1069,6 @@ $('goBtn').addEventListener('click', () => {
   writeOwn({ departed: typeof mine.departed === 'number' ? false : Date.now() });
 });
 
-$('previewAll').addEventListener('change', e => { state.preview = e.target.checked; renderAll(true); renderPanel(); });
 
 /* ---- Horoskop ---- */
 const HORO = [
@@ -1771,7 +1771,6 @@ async function connectFirebase() {
   let who = null; try { who = localStorage.getItem('zm_who'); } catch (e) { }
   if (who !== 'masuesel' && who !== 'mafifee') who = await askWho();
   state.uid = who; state.owner = who === 'masuesel'; state.canWrite = true;
-  if (state.owner) $('previewBox').classList.add('show');
   showWhoLine();
   const base = 'https://www.gstatic.com/firebasejs/10.14.1/';
   const [appM, fsM] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-firestore.js')]);
@@ -1830,7 +1829,6 @@ function startNotes(db) {
     const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
     if (user) {
       state.owner = !!user.isOwner();
-      if (state.owner) $('previewBox').classList.add('show');
       try { state.uid = await user.id(); } catch (e) { state.uid = null; }
       try { state.canWrite = user.can ? user.can('data.write') : null; if (state.canWrite && typeof state.canWrite.then === 'function') state.canWrite = await state.canWrite; } catch (e) { state.canWrite = null; }
     }
