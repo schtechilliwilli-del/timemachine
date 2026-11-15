@@ -303,6 +303,9 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .entry p { white-space: pre-wrap; overflow-wrap: anywhere; }
 .entry img { max-width: 100%; border-radius: 12px; border: 1px solid var(--line); display: block; }
 .entry .done { color: var(--gold); font-family: var(--mono); font-size: 12px; }
+.entry.sealed { border: 1px solid var(--gold); border-radius: 16px; padding: 14px 14px 12px; margin: 10px 0; background: linear-gradient(135deg, rgba(242, 196, 109, 0.16), rgba(240, 143, 169, 0.08)); box-shadow: 0 0 22px rgba(242, 196, 109, 0.2); }
+.entry.sealed .badge { color: var(--gold); }
+.entry.sealed > p:first-of-type { font-family: var(--display); font-size: 19px; }
 .rx { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
 .rx button { min-height: 40px; border: 1px solid var(--line); border-radius: 20px; padding: 0 12px; background: transparent; color: inherit; font: inherit; font-size: 14px; }
 .rx button.on { border-color: var(--gold); background: rgba(242, 196, 109, 0.16); }
@@ -1646,9 +1649,10 @@ function renderDiary(force) {
   const entries = allE.slice(0, 80);
   if (!entries.length) frag.append(el('p', 'muted', 'Noch keine Einträge. Der erste gehört uns.'));
   entries.forEach(x => {
-    const box = el('div', 'entry' + (x.kind === 'star' ? ' star' : ''));
+    const sealedW = x.kind === 'star' && x.id !== 'local' && getAck(x.id, x.k) && getSeal(x.id, x.k);
+    const box = el('div', 'entry' + (x.kind === 'star' ? ' star' : '') + (sealedW ? ' sealed' : ''));
     const meta = el('div', 'meta');
-    meta.append(el('span', 'badge', x.kind === 'star' ? 'Sternschnuppe' : x.e.heart ? 'Herz' : x.kind === 'door' ? 'Türchen ' + x.d.n : 'Tagebuch'), el('span', '', x.who), el('span', '', entFmt.format(new Date(x.e.t))));
+    meta.append(el('span', 'badge', x.kind === 'star' ? (sealedW ? 'Erfüllter Wunsch ✦' : 'Sternschnuppe') : x.e.heart ? 'Herz' : x.kind === 'door' ? 'Türchen ' + x.d.n : 'Tagebuch'), el('span', '', x.who), el('span', '', entFmt.format(new Date(x.e.t))));
     box.append(meta);
     if (x.kind === 'door') box.append(el('p', '', x.d.title + ': ' + x.e.text));
     else if (x.kind === 'star') {
