@@ -41,9 +41,11 @@ p { margin: 0; }
 .hrow { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .bookbtn { position: relative; flex: none; margin-top: 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 14px 12px; border: 1px solid var(--gold); border-radius: 18px; background: rgba(11, 14, 32, 0.55); color: var(--gold); text-decoration: none; font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; }
 .bookbtn .bi { font-size: 28px; line-height: 1; }
-.bookbtn .env { position: absolute; right: -8px; bottom: -14px; font-size: 24px; transform-origin: 50% 80%; animation: wiggle 1.3s ease-in-out infinite; }
+.bookbtn .bi { display: inline-block; transform-origin: 50% 80%; }
+.bookbtn.new .bi { animation: wiggle 1.3s ease-in-out infinite; }
+.bookbtn .env { position: absolute; top: 6px; right: 8px; width: 12px; height: 12px; border-radius: 50%; background: var(--rose); box-shadow: 0 0 8px var(--rose); }
 @keyframes wiggle { 0%, 60%, 100% { transform: rotate(0); } 10% { transform: rotate(-16deg); } 20% { transform: rotate(14deg); } 30% { transform: rotate(-12deg); } 40% { transform: rotate(10deg); } 50% { transform: rotate(-6deg); } }
-@media (prefers-reduced-motion: reduce) { .bookbtn .env { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .bookbtn.new .bi { animation: none; } }
 .eyebrow { font-family: var(--mono); font-size: 13px; letter-spacing: 0.04em; color: var(--gold); margin-bottom: 8px; }
 .lede { color: var(--muted); margin-top: 10px; }
 .card { background: rgba(21, 26, 58, 0.56); border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
@@ -210,7 +212,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <p class="eyebrow">Wiedersehen am 26.11.2026 um 14:10 Uhr</p>
     <div class="hrow">
       <h1>Feenstaub &amp;<br>Eselsohren</h1>
-      <a class="bookbtn" id="bookBtn" href="#bk" aria-label="Zum Buch"><span class="bi" aria-hidden="true">📖</span><span class="bl">Buch</span><span class="env" id="bookEnv" aria-hidden="true" hidden>✉️</span></a>
+      <a class="bookbtn" id="bookBtn" href="#bk" aria-label="Zum Postfach, Briefroman"><span class="bi" aria-hidden="true">✉️</span><span class="bl">Postfach</span><span class="env" id="bookEnv" aria-hidden="true" hidden></span></a>
     </div>
     <p class="lede">Masüsel und Mafifee: 500 Kilometer, ein Mond und dreizehn Türchen, bis zur Glückseligkeit und noch viel weiter. Diese Seite gehört nur uns beiden.</p>
   </header>
@@ -1074,10 +1076,11 @@ function bookDefaultSub(list) {
 function bookSeenGet() { try { return Number(localStorage.getItem('zm_bookseen')) || 0; } catch (e) { return 0; } }
 function bookSeenSet(t) { try { localStorage.setItem('zm_bookseen', String(t)); } catch (e) { /* egal */ } }
 function bookLatestOther(list) { let m = 0; list.forEach(x => { if (!x.mine && x.e.t > m) m = x.e.t; }); return m; }
-function bookMarkSeen() { const m = bookLatestOther(allBook()); if (m > bookSeenGet()) bookSeenSet(m); $('bookEnv').hidden = true; }
+function bookEnvSet(on) { $('bookEnv').hidden = !on; $('bookBtn').classList.toggle('new', !!on); }
+function bookMarkSeen() { const m = bookLatestOther(allBook()); if (m > bookSeenGet()) bookSeenSet(m); bookEnvSet(false); }
 function renderBook() {
   const list = allBook(), box = $('bookList'); if (!box) return;
-  $('bookEnv').hidden = !(bookLatestOther(list) > bookSeenGet());
+  bookEnvSet(bookLatestOther(list) > bookSeenGet());
   if (!bookS.editing) $('bookTitle').textContent = bookTitleNow();
   const tn = $('bookTurn');
   if (!list.length) tn.textContent = 'Das Buch ist noch leer. Einer von uns macht den Anfang.';
