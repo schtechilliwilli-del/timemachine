@@ -63,6 +63,8 @@ body.done .arrived { display: block; }
 .ladder { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .ladder li { display: flex; justify-content: space-between; padding: 7px 12px; border-radius: 10px; color: var(--muted); font-size: 15px; }
 .ladder li .num { font-size: 14px; }
+.ladder li[data-k] { cursor: pointer; }
+.ladder li.detail { display: block; background: rgba(242, 196, 109, 0.1); border: 1px dashed var(--gold); color: var(--ink); font-size: 14px; line-height: 1.4; }
 .ladder li.you { background: var(--gold); color: #1a1530; font-weight: 700; }
 
 /* Knopf */
@@ -212,6 +214,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <h2 id="sh">Tempo</h2>
     <div class="speed"><span class="big num" id="speed">1,8 km/h</span><span class="muted">so schnell nähern wir uns</span></div>
     <ul class="ladder" id="ladder"></ul>
+    <p class="muted small">Tipp: Tipp auf eine Zeile, dann siehst du, wann du mit diesem Tempo da wärst.</p>
   </section>
 
   <section aria-label="Zeitmaschine" style="display:flex;flex-direction:column;gap:10px">
@@ -445,23 +448,50 @@ function renderRoute(frac) {
   $('routeDot').setAttribute('cx', x.toFixed(1));
   $('routeDone').setAttribute('x2', x.toFixed(1));
 }
+function durStr(h, dat) {
+  const sec = h * 3600, f = (x, d) => x.toLocaleString('de-DE', { maximumFractionDigits: d });
+  if (sec < 0.001) return f(sec * 1e6, 1) + ' Mikrosekunden';
+  if (sec < 1) return f(sec * 1000, sec < 0.01 ? 1 : 0) + ' Millisekunden';
+  if (sec < 60) return f(sec, 0) + ' Sekunden';
+  const min = Math.round(sec / 60);
+  if (min < 60) return min + ' Minuten';
+  if (h < 48) { const hh = Math.floor(h), mm = Math.round((h - hh) * 60); return hh + ' Stunden' + (mm ? ' und ' + mm + ' Minuten' : ''); }
+  const d = Math.floor(h / 24), rest = Math.round(h - d * 24);
+  return d + (dat ? ' Tagen' : ' Tage') + (rest ? ' und ' + rest + ' Stunden' : '') + (d >= 365 ? ' (über ein Jahr)' : '');
+}
+let ladderV = 0;
+function ladderDetail(label, v) {
+  const o = otherName(), dur = durStr(TOTAL_KM / v), durDat = durStr(TOTAL_KM / v, true);
+  if (label === 'Wir beide') return 'In unserem Tempo dauern die 500 Kilometer ' + dur + '.';
+  return 'Mit ' + label + ' (' + fmtSpeed(v) + ' km/h) wärst du nach ' + durDat + ' bei ' + (o || 'uns') + '.';
+}
 function renderLadder(v) {
+  ladderV = v;
   const ul = $('ladder'); const frag = document.createDocumentFragment(); let placed = false;
-  const you = document.createElement('li'); you.className = 'you';
-  const a = document.createElement('span'); a.textContent = 'Wir beide';
-  const b = document.createElement('span'); b.className = 'num'; b.textContent = fmtSpeed(v) + ' km/h';
-  you.append(a, b);
+  function row(label, val, cls) {
+    const li = document.createElement('li'); if (cls) li.className = cls; li.dataset.k = label; li.tabIndex = 0; li.setAttribute('role', 'button'); li.setAttribute('aria-expanded', state.ladderSel === label ? 'true' : 'false');
+    const a = document.createElement('span'); a.textContent = label;
+    const b = document.createElement('span'); b.className = 'num'; b.textContent = fmtSpeed(val) + ' km/h';
+    li.append(a, b); frag.appendChild(li);
+    if (state.ladderSel === label) { const d = document.createElement('li'); d.className = 'detail'; d.textContent = ladderDetail(label, val); frag.appendChild(d); }
+  }
   SPEEDS.forEach(s => {
-    if (!placed && v >= s.v) { frag.appendChild(you); placed = true; }
-    const li = document.createElement('li');
-    const n = document.createElement('span'); n.textContent = s.n;
-    const m = document.createElement('span'); m.className = 'num'; m.textContent = fmtSpeed(s.v) + ' km/h';
-    li.append(n, m); frag.appendChild(li);
+    if (!placed && v >= s.v) { row('Wir beide', v, 'you'); placed = true; }
+    row(s.n, s.v);
   });
-  if (!placed) frag.appendChild(you);
+  if (!placed) row('Wir beide', v, 'you');
   ul.replaceChildren(frag);
   $('speed').textContent = fmtSpeed(v) + ' km/h';
 }
+function ladderPick(ev) {
+  if (ev.type === 'keydown' && ev.key !== 'Enter' && ev.key !== ' ') return;
+  const li = ev.target.closest('li[data-k]'); if (!li) return;
+  ev.preventDefault();
+  state.ladderSel = state.ladderSel === li.dataset.k ? null : li.dataset.k;
+  renderLadder(ladderV);
+}
+$('ladder').addEventListener('click', ladderPick);
+$('ladder').addEventListener('keydown', ladderPick);
 let lastKey = '';
 function renderAll(force) {
   if (warping) return;
