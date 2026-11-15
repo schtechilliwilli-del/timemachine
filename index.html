@@ -71,6 +71,8 @@ p { margin: 0; }
 .mrow .tm { flex: none; font-size: 12px; color: #6a6f87; }
 .mrow .sj { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mrow .pv { font-size: 14px; color: #6a6f87; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rc { color: #9aa0b8; font-weight: 700; }
+.rc.ok { color: #2f8f5b; }
 .mrow.unread .nm, .mrow.unread .sj { font-weight: 700; }
 .mrow.unread .tm { color: #c2305a; font-weight: 700; }
 .mrow.unread::before { content: ''; align-self: center; flex: none; width: 9px; height: 9px; border-radius: 50%; background: #c2305a; margin-right: -4px; }
@@ -876,7 +878,7 @@ function endWarp() {
 $('warp').addEventListener('click', () => { if (warpHold) endWarp(); else startWarp(); });
 
 /* ---- Tuerchen und gemeinsame Daten ---- */
-const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRe: {}, mySeal: {}, myOdone: {}, myOc: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
+const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRe: {}, mySeal: {}, myOdone: {}, myOc: {}, myRead: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
 let writeChain = Promise.resolve();
 function writeOwn(patch) {
   if (!state.db || !state.uid) return Promise.resolve();
@@ -1338,6 +1340,17 @@ function bookTitleNow() {
   for (const id in state.notes) { const x = (state.notes[id] || {}).bookTitle; if (x && x.v && (!best || x.t > best.t)) best = x; }
   return best && best.v ? best.v : 'Feenstaub und Eselsohren';
 }
+function shareRead(x) {
+  if (!canShare() || x.mine || x.queen || x.id === 'local') return;
+  const k = ackKey(x.id, x.k); if (state.myRead[k]) return;
+  state.myRead[k] = Date.now(); writeOwn({ mread: Object.assign({}, state.myRead) });
+}
+function readAtOf(x) {
+  if (!x.mine || x.id === 'local' || x.queen) return 0;
+  const k = ackKey(x.id, x.k);
+  for (const o in state.notes) { if (o !== x.id && state.notes[o] && state.notes[o].mread && state.notes[o].mread[k]) return state.notes[o].mread[k]; }
+  return 0;
+}
 function mailReadSet() { try { return new Set(JSON.parse(localStorage.getItem('zm_mailread') || '[]')); } catch (e) { return new Set(); } }
 function mailMarkRead(key) { const r = mailReadSet(); if (r.has(key)) return; r.add(key); try { localStorage.setItem('zm_mailread', JSON.stringify(Array.from(r))); } catch (e) { /* egal */ } }
 function mailMarkUnread(key) { const r = mailReadSet(); if (!r.has(key)) return; r.delete(key); try { localStorage.setItem('zm_mailread', JSON.stringify(Array.from(r))); } catch (e) { /* egal */ } }
@@ -1375,7 +1388,12 @@ function headRows(x) {
   const cc = ccOf(x); if (cc.length) r.push(['Kopie:', cc.map(addrStr).join(', ')]);
   r.push(['Datum:', bookLong.format(new Date(x.e.t)) + ' Uhr']); return r;
 }
-function mailHead(x) { const h = el('div', 'mhead'); headRows(x).forEach(a => { const r = el('div', 'hr'); r.append(el('span', 'hl', a[0]), el('span', 'hv', a[1])); h.append(r); }); return h; }
+function mailHead(x) {
+  const h = el('div', 'mhead'), rows = headRows(x);
+  if (x.mine && x.id !== 'local') { const ra = readAtOf(x); rows.push(['Gelesen:', ra ? (ra > 0 ? 'Ja, am ' + bookLong.format(new Date(ra)) + ' Uhr' : 'Ja, der Zeitpunkt ist unbekannt') : 'Noch nicht gelesen']); }
+  rows.forEach(a => { const r = el('div', 'hr'); r.append(el('span', 'hl', a[0]), el('span', 'hv', a[1])); h.append(r); });
+  return h;
+}
 function letterNode(text, cls) {
   const d = el('div', cls);
   text.split('\n\n').forEach(t => { const m = /^(§ \d+ [^.]+\.)\s+([\s\S]*)$/.exec(t), n = el('p'); if (m) n.append(el('b', '', m[1]), document.createTextNode(' ' + m[2])); else n.textContent = t; d.append(n); });
@@ -1432,6 +1450,8 @@ function renderMail() {
     body.append(taskCard(today, list));
     const items = list.map(x => ({ kind: 'mail', t: x.e.t, x })).concat(allRates().map(r => ({ kind: 'rate', t: r.t, r }))).sort((a, b) => b.t - a.t);
     const rd = mailReadSet();
+    let bf = false; list.forEach(x => { if (canShare() && !x.mine && !x.queen && x.id !== 'local' && rd.has(x.key) && !state.myRead[ackKey(x.id, x.k)]) { state.myRead[ackKey(x.id, x.k)] = -Date.now(); bf = true; } });
+    if (bf) writeOwn({ mread: Object.assign({}, state.myRead) });
     items.forEach(it => {
       if (it.kind === 'rate') {
         const r = it.r, row = el('div', 'mrow rate'); const av = el('div', 'mav', rateIcon(r.day)); av.setAttribute('aria-hidden', 'true');
@@ -1441,10 +1461,12 @@ function renderMail() {
       const x = it.x, unread = !x.mine && !rd.has(x.key);
       const row = el('div', 'mrow' + (unread ? ' unread' : '') + (x.queen ? ' queenrow' : '')); row.tabIndex = 0; row.setAttribute('role', 'button');
       const c = el('div', 'mc'); const l1 = el('div', 'l1');
-      l1.append(el('span', 'nm', x.mine ? 'Ich' : x.who), el('span', 'tm', mailWhen(x.e.t)));
+      const tmS = el('span', 'tm', mailWhen(x.e.t));
+      if (x.mine && x.id !== 'local') { const ra = readAtOf(x); tmS.append(el('span', 'rc' + (ra ? ' ok' : ''), ra ? ' ✓✓' : ' ✓')); }
+      l1.append(el('span', 'nm', x.mine ? 'Ich' : x.who), tmS);
       c.append(l1, el('div', 'sj', x.e.sub || '(ohne Betreff)'), el('div', 'pv', x.e.text.replace(/\s+/g, ' ').slice(0, 100)));
       row.append(avatar(x), c);
-      const open = () => { mailS.view = 'read'; mailS.cur = x.key; mailMarkRead(x.key); renderBook(); body.scrollTop = 0; };
+      const open = () => { mailS.view = 'read'; mailS.cur = x.key; mailMarkRead(x.key); shareRead(x); renderBook(); body.scrollTop = 0; };
       row.addEventListener('click', open); row.addEventListener('keydown', ev => { if (ev.key === 'Enter') open(); });
       body.append(row);
     });
@@ -1937,7 +1959,7 @@ function startNotes(db) {
     const fresh = [];
     for (const id in m) {
       const v = m[id] || {};
-      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
+      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
       for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz, weil ' + pron(nameOf(id, v)) + ' an dich denken musste ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       for (const k in (v.book || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.book[k]; if (state.seen && e && e.text) fresh.push(nameOf(id, v) + ' hat dir im Buch geschrieben: ' + (e.sub || '(ohne Betreff)')); } }
       for (const k in (v.rate || {})) { const key = id + '|r|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const r = v.rate[k], m = /^d(\d+)$/.exec(k); if (state.seen && r && m) fresh.push(nameOf(id, v) + ' hat dich bewertet: ' + rateIcons(Number(m[1]), r.n)); } }
@@ -1948,6 +1970,7 @@ function startNotes(db) {
       }
       for (const k in (v.odone || {})) { const key = id + '|od|' + k + '|' + (v.odone[k] ? 1 : 0); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen && v.odone[k] && !(v.oc && v.oc[k])) fresh.push(nameOf(id, v) + ' hat die Aufgabe der Orakelkarte erledigt.' + (state.myOc[k] ? '' : ' Und du?')); } }
       for (const k in (v.oc || {})) { const r = v.oc[k] || {}, key = id + '|oc|' + k + '|' + (r.t || 0); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen && r.t) fresh.push(nameOf(id, v) + ' hat die Aufgabe der Orakelkarte erledigt' + (r.text ? ': ' + (r.text.length > 60 ? r.text.slice(0, 60) + ' ...' : r.text) : '.') + (state.myOc[k] && state.myOc[k].t ? '' : ' Und du?')); } }
+      for (const k in (v.mread || {})) { const key = id + '|rd|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat deine Mail gelesen.'); } }
       for (const k in (v.seal || {})) { const key = id + '|seal|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat einen erfüllten Wunsch offiziell besiegelt ✦'); } }
       DOORS.forEach(d => { const x = v['d' + d.n]; if (x && x.text) { const key = id + '|d' + d.n + '|' + (x.ts || x.text.length); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat bei Türchen ' + d.n + ' geantwortet.'); } } });
       for (const k in (v.ack || {})) { const key = id + '|' + k; if (!state.seenA.has(key)) { state.seenA.add(key); if (state.seen && k.indexOf(ackKey(state.uid, '')) === 0) fresh.push(nameOf(id, v) + ' hat einen Wunsch von dir erfüllt' + ((v.ack[k] && v.ack[k].text) ? ': ' + (v.ack[k].text.length > 70 ? v.ack[k].text.slice(0, 70) + ' ...' : v.ack[k].text) : '.')); } }
