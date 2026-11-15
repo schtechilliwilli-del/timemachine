@@ -313,6 +313,9 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .odone textarea { width: 100%; }
 .entry.oracle { border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin: 10px 0; background: rgba(120, 130, 255, 0.07); }
 .entry.sealed > p.otask2, .entry.oracle > p.otask2 { font-family: var(--body); font-size: 14px; }
+.dfilter { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 10px; }
+.dfilter button { min-height: 40px; border: 1px solid var(--line); border-radius: 20px; padding: 0 14px; background: transparent; color: var(--muted); font: inherit; font-size: 14px; cursor: pointer; }
+.dfilter button.on { border-color: var(--gold); color: #1a1530; background: var(--gold); font-weight: 600; }
 .ohead { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
 .ohead .otitle { margin: 0; }
 .osym2 { flex: none; font-size: 46px; line-height: 1; color: var(--gold); text-shadow: 0 0 14px rgba(242, 196, 109, 0.45); }
@@ -458,6 +461,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
       <p class="muted" id="heartCount" aria-live="polite"></p>
       <p class="muted small" id="diaryInfo" aria-live="polite"></p>
     </form>
+    <div class="dfilter" id="diaryFilter" role="group" aria-label="Tagebuch filtern"></div>
     <div id="diaryList"></div>
   </section>
 
@@ -1744,14 +1748,35 @@ function oracleEntry(x) {
   if (canShare()) box.append(reactNode(x));
   return box;
 }
+const DFILTERS = [
+  ['note', 'Einträge', x => x.kind === 'note' && !x.e.heart],
+  ['heart', 'Herzen', x => !!x.e.heart],
+  ['star', 'Wünsche', x => x.kind === 'star'],
+  ['oracle', 'Orakelkarten', x => x.kind === 'oracle' || x.kind === 'oracle2'],
+  ['door', 'Türchen', x => x.kind === 'door'],
+  ['comment', 'Kommentare', x => x.id !== 'local' && allRe(x.id, x.k).some(r => Object.keys(r.cm).some(c => r.cm[c] && r.cm[c].x))]
+];
+const dfSel = new Set((() => { try { return JSON.parse(localStorage.getItem('zm_dfilter') || '[]'); } catch (e) { return []; } })());
+function dfSave() { try { localStorage.setItem('zm_dfilter', JSON.stringify(Array.from(dfSel))); } catch (e) { /* egal */ } }
+function renderDiaryFilter(allE) {
+  const box = $('diaryFilter'); box.replaceChildren();
+  const mk = (label, on, fn) => { const b = el('button', on ? 'on' : '', label); b.type = 'button'; b.setAttribute('aria-pressed', String(on)); b.addEventListener('click', fn); box.append(b); };
+  mk('Alle ' + allE.length, !dfSel.size, () => { dfSel.clear(); dfSave(); renderDiary(true); });
+  DFILTERS.forEach(f => {
+    const n = allE.filter(f[2]).length;
+    mk(f[1] + ' ' + n, dfSel.has(f[0]), () => { if (dfSel.has(f[0])) dfSel.delete(f[0]); else dfSel.add(f[0]); dfSave(); renderDiary(true); });
+  });
+}
 function renderDiary(force) {
   renderWishBanner();
   if (!force && (state.fulfilKey || state.commentKey) && $('diaryList').querySelector('textarea')) { state.pendingDiary = true; return; }
   state.pendingDiary = false;
   const list = $('diaryList'); const frag = document.createDocumentFragment();
   const allE = allEntries(); syncHeartStars(allE);
-  const entries = allE.slice(0, 80);
-  if (!entries.length) frag.append(el('p', 'muted', 'Noch keine Einträge. Der erste gehört uns.'));
+  renderDiaryFilter(allE);
+  const act = DFILTERS.filter(f => dfSel.has(f[0])), shown = act.length ? allE.filter(x => act.some(f => f[2](x))) : allE;
+  const entries = shown.slice(0, 80);
+  if (!entries.length) frag.append(el('p', 'muted', allE.length ? 'Dazu gibt es noch nichts. Wähle oben einen anderen Filter.' : 'Noch keine Einträge. Der erste gehört uns.'));
   entries.forEach(x => {
     if (x.kind === 'oracle' || x.kind === 'oracle2') { frag.append(oracleEntry(x)); return; }
     const isW = x.kind === 'star' && x.id !== 'local', ackW = isW && getAck(x.id, x.k), sealedW = ackW && getSeal(x.id, x.k);
