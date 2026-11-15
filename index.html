@@ -40,12 +40,67 @@ h3 { font-size: 22px; line-height: 1.2; }
 p { margin: 0; }
 .hrow { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .bookbtn { position: relative; flex: none; margin-top: 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 14px 12px; border: 1px solid var(--gold); border-radius: 18px; background: rgba(11, 14, 32, 0.55); color: var(--gold); text-decoration: none; font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; }
-.bookbtn .bi { font-size: 28px; line-height: 1; }
+.bookbtn .bi { font-size: 44px; line-height: 1; }
 .bookbtn .bi { display: inline-block; transform-origin: 50% 80%; }
 .bookbtn.new .bi { animation: wiggle 1.3s ease-in-out infinite; }
-.bookbtn .env { position: absolute; top: 6px; right: 8px; width: 12px; height: 12px; border-radius: 50%; background: var(--rose); box-shadow: 0 0 8px var(--rose); }
+.bookbtn .env { position: absolute; top: -8px; right: -8px; min-width: 24px; height: 24px; padding: 0 6px; box-sizing: border-box; border-radius: 12px; background: var(--rose); color: #2b0f19; font-family: var(--mono); font-size: 13px; font-weight: 700; line-height: 24px; text-align: center; box-shadow: 0 0 10px var(--rose); }
 @keyframes wiggle { 0%, 60%, 100% { transform: rotate(0); } 10% { transform: rotate(-16deg); } 20% { transform: rotate(14deg); } 30% { transform: rotate(-12deg); } 40% { transform: rotate(10deg); } 50% { transform: rotate(-6deg); } }
 @media (prefers-reduced-motion: reduce) { .bookbtn.new .bi { animation: none; } }
+.mailapp { position: fixed; inset: 0; z-index: 35; background: #f3f4f8; color: #1d2030; font-family: var(--body); display: flex; flex-direction: column; }
+.mailapp[hidden] { display: none; }
+.mailapp button { font: inherit; cursor: pointer; }
+.mtop { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #fff; border-bottom: 1px solid #dfe2ec; }
+.mtop .ib { flex: none; width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: #1d2030; font-size: 22px; }
+.mtop .ib:hover { background: #eef0f6; }
+.mtt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mtt strong { font-size: 18px; }
+.mtt span { font-size: 13px; color: #6a6f87; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mmenu { position: absolute; top: 58px; right: 10px; z-index: 2; background: #fff; border: 1px solid #dfe2ec; border-radius: 12px; box-shadow: 0 8px 24px rgba(20, 24, 50, 0.18); display: flex; flex-direction: column; min-width: 220px; overflow: hidden; }
+.mmenu[hidden] { display: none; }
+.mmenu button { text-align: left; padding: 14px 16px; border: 0; background: #fff; color: #1d2030; font-size: 16px; }
+.mmenu button:hover { background: #f0f2f8; }
+.mbody { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 96px; }
+.mrow { display: flex; gap: 12px; padding: 12px 14px; background: #fff; border-bottom: 1px solid #e6e8f0; cursor: pointer; }
+.mrow:hover { background: #f8f9fd; }
+.mav { flex: none; width: 42px; height: 42px; border-radius: 50%; background: #e0a93e; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
+.mav.her { background: #d9607f; }
+.mav.queen { background: #6b4fb3; }
+.mrow .mc { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mrow .l1 { display: flex; gap: 8px; align-items: baseline; justify-content: space-between; }
+.mrow .nm { font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mrow .tm { flex: none; font-size: 12px; color: #6a6f87; }
+.mrow .sj { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mrow .pv { font-size: 14px; color: #6a6f87; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mrow.unread .nm, .mrow.unread .sj { font-weight: 700; }
+.mrow.unread .tm { color: #c2305a; font-weight: 700; }
+.mrow.unread::before { content: ''; align-self: center; flex: none; width: 9px; height: 9px; border-radius: 50%; background: #c2305a; margin-right: -4px; }
+.mempty { padding: 40px 24px; text-align: center; color: #6a6f87; }
+.mturn { padding: 10px 16px; font-size: 14px; color: #6a6f87; background: #eceef6; }
+.mread { background: #fff; min-height: 100%; padding: 18px 18px 30px; }
+.mread h2 { font-family: var(--body); font-size: 22px; font-weight: 700; margin: 0 0 14px; overflow-wrap: anywhere; text-wrap: wrap; }
+.mread .from { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; }
+.mread .from small { display: block; color: #6a6f87; font-size: 13px; }
+.mread .txt { font-family: var(--display); font-size: 18px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mread .acts { margin-top: 22px; display: flex; gap: 10px; }
+.mbtn { border: 1px solid #c9cde0; background: #fff; color: #1d2030; border-radius: 22px; padding: 10px 18px; min-height: 44px; font-size: 15px; }
+.mbtn.main { background: #1d2030; color: #fff; border-color: #1d2030; }
+.mform { background: #fff; min-height: 100%; padding: 14px 16px 30px; display: flex; flex-direction: column; gap: 4px; }
+.mform .to { padding: 10px 0; border-bottom: 1px solid #e6e8f0; font-size: 15px; color: #6a6f87; }
+.mform input, .mform textarea { width: 100%; box-sizing: border-box; border: 0; border-bottom: 1px solid #e6e8f0; border-radius: 0; background: transparent; color: #1d2030; font: inherit; font-size: 16px; padding: 12px 0; outline: none; }
+.mform textarea { min-height: 260px; border-bottom: 0; font-family: var(--display); font-size: 18px; line-height: 1.55; resize: vertical; }
+.mform .hint { font-size: 13px; color: #6a6f87; min-height: 18px; }
+.mform .acts { display: flex; gap: 10px; margin-top: 10px; }
+.mfab { position: absolute; right: 18px; bottom: 22px; border: 0; border-radius: 28px; padding: 0 22px; min-height: 56px; background: #1d2030; color: #fff; font-size: 16px; box-shadow: 0 6px 18px rgba(20, 24, 50, 0.3); }
+.mfab[hidden] { display: none; }
+.mbook { background: #fbf7ef; min-height: 100%; padding: 22px 22px 60px; font-family: var(--display); color: #231f1a; }
+.mbook .cover { text-align: center; padding: 30px 0 24px; }
+.mbook .cover h1 { font-size: 34px; line-height: 1.1; color: #231f1a; }
+.mbook .cover p { margin: 8px 0 0; font-family: var(--body); font-size: 14px; color: #7a7061; }
+.mbook .chap { font-family: var(--body); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #8a7e6c; border-top: 1px solid #e3dac8; padding-top: 14px; margin-top: 30px; }
+.mbook .gap { font-style: italic; margin-top: 24px; color: #5b5346; }
+.mbook .lab { font-weight: 700; margin-top: 2px; }
+.mbook .tx { font-size: 18px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; margin: 2px 0 0; }
+.mbook .royal { border: 1px solid #c9b88f; border-radius: 6px; padding: 14px 16px; margin: 24px 0; background: #f4ecda; }
 .eyebrow { font-family: var(--mono); font-size: 13px; letter-spacing: 0.04em; color: var(--gold); margin-bottom: 8px; }
 .lede { color: var(--muted); margin-top: 10px; }
 .card { background: rgba(21, 26, 58, 0.56); border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
@@ -175,18 +230,6 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .diary form { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
 .diary .row { display: flex; gap: 8px; flex-wrap: wrap; }
 .diary input[type="file"] { display: none; }
-.book .btitle { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0 4px; }
-.book .btitle h3 { font-family: var(--serif, 'Gloock', serif); font-size: 20px; color: var(--gold); font-weight: 400; margin: 0; overflow-wrap: anywhere; }
-.book .btitle input { flex: 1; min-width: 160px; }
-.book .turn { font-family: var(--mono); font-size: 12px; color: var(--rose); margin: 4px 0 10px; }
-.book .chap { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; margin-top: 14px; }
-.mail { border-left: 3px solid var(--gold); padding: 8px 0 8px 12px; margin: 10px 0; display: flex; flex-direction: column; gap: 4px; }
-.mail.her { border-left-color: var(--rose); }
-.mail .mh { font-family: var(--mono); font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
-.mail .ms { font-weight: 700; overflow-wrap: anywhere; }
-.mail p { white-space: pre-wrap; overflow-wrap: anywhere; }
-.book .prompt { background: rgba(240, 143, 169, 0.1); border: 1px dashed var(--rose); border-radius: 12px; padding: 10px 12px; margin: 10px 0; }
-.book form { display: flex; flex-direction: column; gap: 10px; margin: 12px 0; }
 .entry { border-top: 1px solid var(--line); padding: 12px 0; display: flex; flex-direction: column; gap: 6px; }
 .entry .meta { font-family: var(--mono); font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
 .entry .badge { color: var(--gold); }
@@ -212,7 +255,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <p class="eyebrow">Wiedersehen am 26.11.2026 um 14:10 Uhr</p>
     <div class="hrow">
       <h1>Feenstaub &amp;<br>Eselsohren</h1>
-      <a class="bookbtn" id="bookBtn" href="#bk" aria-label="Zum Postfach, Briefroman"><span class="bi" aria-hidden="true">✉️</span><span class="bl">Postfach</span><span class="env" id="bookEnv" aria-hidden="true" hidden></span></a>
+      <a class="bookbtn" id="bookBtn" href="#postfach" aria-label="Zum Postfach"><span class="bi" aria-hidden="true">✉️</span><span class="bl">Postfach</span><span class="env" id="bookEnv" hidden></span></a>
     </div>
     <p class="lede">Masüsel und Mafifee: 500 Kilometer, ein Mond und dreizehn Türchen, bis zur Glückseligkeit und noch viel weiter. Diese Seite gehört nur uns beiden.</p>
   </header>
@@ -295,24 +338,6 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <div class="panel" id="panel" hidden></div>
   </section>
 
-  <section class="card book" aria-labelledby="bk">
-    <h2 id="bk">Unser Briefroman</h2>
-    <p class="muted">Wir schreiben abwechselnd, wie Mails oder Chatnachrichten, und am Ende ist es unser eigenes Buch. Jeder Tag ist ein Kapitel.</p>
-    <div class="btitle"><h3 id="bookTitle"></h3><button class="btn" id="bookTitleBtn" type="button">Titel ändern</button></div>
-    <p class="turn" id="bookTurn" aria-live="polite"></p>
-    <div id="bookList"></div>
-    <div class="prompt"><span class="muted small">Schreibimpuls für heute</span><br><span id="bookPrompt"></span></div>
-    <form id="bookForm">
-      <input type="text" id="bookSub" maxlength="80" aria-label="Betreff" placeholder="Betreff">
-      <textarea id="bookText" maxlength="1500" placeholder="Liebe/r ..." aria-label="Neue Nachricht im Buch"></textarea>
-      <div class="row">
-        <button class="btn solid" id="bookGo" type="submit">Abschicken</button>
-        <button class="btn" id="bookSave" type="button">Als Textdatei speichern</button>
-      </div>
-      <p class="muted small" id="bookInfo" aria-live="polite"></p>
-    </form>
-  </section>
-
   <section class="card diary" aria-labelledby="th">
     <h2 id="th">Tagebuch</h2>
     <p class="muted">Hier landen Antworten, Wünsche von gefangenen Sternschnuppen und so weiter.</p>
@@ -334,6 +359,21 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
 
   <footer>Masüsel und Mafifee unter demselben Mond.</footer>
 </main>
+<div class="mailapp" id="mailApp" role="dialog" aria-label="Postfach" hidden>
+  <header class="mtop">
+    <button class="ib" id="mBack" type="button" aria-label="Zurück">&larr;</button>
+    <div class="mtt"><strong id="mTitle">Postfach</strong><span id="mSub"></span></div>
+    <button class="ib" id="mMenu" type="button" aria-label="Mehr">&#8942;</button>
+  </header>
+  <div class="mmenu" id="mMenuBox" hidden>
+    <button type="button" data-act="inbox">Posteingang</button>
+    <button type="button" data-act="book">Als Buch lesen</button>
+    <button type="button" data-act="title">Titel ändern</button>
+    <button type="button" data-act="txt">Als Textdatei speichern</button>
+  </div>
+  <div class="mbody" id="mBody"></div>
+  <button class="mfab" id="mFab" type="button">&#9998; Neue Mail</button>
+</div>
 <div class="pop" id="wishPop" role="dialog" aria-modal="true" aria-labelledby="wishH" hidden>
   <div class="popbox">
     <span class="kind">Gefangen</span>
@@ -1033,32 +1073,18 @@ let toastTimer = null;
 function showToast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 9000); }
 $('toast').addEventListener('click', () => { $('toast').hidden = true; });
 
-/* ---- Briefroman ---- */
-const bookS = { my: {}, local: {}, myTitle: null, editing: false };
-const BOOK_PROMPTS = [
-  'Wie hat alles angefangen? Erzähl es aus deiner Sicht.',
-  'Beschreib den Moment, in dem du zum ersten Mal an mich gedacht hast.',
-  'Was würdest du mir gern sagen, wenn die 500 Kilometer nicht wären?',
-  'Schreib über einen Ort, an dem wir zusammen sein könnten.',
-  'Welches Geräusch erinnert dich an mich?',
-  'Erzähl mir von deinem Tag, als wäre ich unsichtbar dabei gewesen.',
-  'Was ist ein Geheimnis, das nur der Mond von dir kennt?',
-  'Schreib einen Brief an uns beide in einem Jahr.',
-  'Wovor hast du ein bisschen Angst, wenn wir uns sehen?',
-  'Beschreib, wie du dir unser erstes Wiedersehen vorstellst.',
-  'Was soll auf jeden Fall in unserem Buch stehen?',
-  'Schreib über das, was du nie sagst, aber oft denkst.',
-  'Schreib die erste Mail danach.'
-];
+/* ---- Postfach (Briefroman) ---- */
+const bookS = { my: {}, local: {}, myTitle: null };
+const mailS = { view: 'list', cur: null, reply: null };
 function allBook() {
   const out = [];
   const ids = Object.keys(state.notes); if (state.uid && ids.indexOf(state.uid) < 0) ids.push(state.uid);
   ids.forEach(id => {
     const v = state.notes[id] || {}; const mine = id === state.uid; const who = nameOf(id, v);
     const bb = mine ? Object.assign({}, v.book || {}, bookS.my) : (v.book || {});
-    for (const k in bb) { const e = bb[k]; if (e && typeof e.t === 'number' && e.text) out.push({ id, k, who, mine, e }); }
+    for (const k in bb) { const e = bb[k]; if (e && typeof e.t === 'number' && e.text) out.push({ id, k, key: id + '|' + k, who, mine, e }); }
   });
-  for (const k in bookS.local) { const e = bookS.local[k]; out.push({ id: 'local', k, who: 'Du', mine: true, e }); }
+  for (const k in bookS.local) { const e = bookS.local[k]; out.push({ id: 'local', k, key: 'local|' + k, who: 'Du', mine: true, e }); }
   return out.sort((a, b) => a.e.t - b.e.t);
 }
 function bookTitleNow() {
@@ -1066,40 +1092,118 @@ function bookTitleNow() {
   for (const id in state.notes) { const x = (state.notes[id] || {}).bookTitle; if (x && x.v && (!best || x.t > best.t)) best = x; }
   return best && best.v ? best.v : 'Feenstaub und Eselsohren';
 }
+function mailReadSet() { try { return new Set(JSON.parse(localStorage.getItem('zm_mailread') || '[]')); } catch (e) { return new Set(); } }
+function mailMarkRead(key) { const r = mailReadSet(); if (r.has(key)) return; r.add(key); try { localStorage.setItem('zm_mailread', JSON.stringify(Array.from(r))); } catch (e) { /* egal */ } }
+function bookUnread(list) { const r = mailReadSet(); return list.filter(x => !x.mine && !r.has(x.key)).length; }
+function bookEnvSet(n) { const el = $('bookEnv'); el.hidden = !n; el.textContent = n > 9 ? '9+' : String(n); $('bookBtn').classList.toggle('new', n > 0); }
 const bookFmt = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', day: 'numeric', month: 'long' });
 const bookTime = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' });
+const bookLong = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+const bookShort = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', day: 'numeric', month: 'short' });
+const bookHour = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', hour: 'numeric', hour12: false });
+function mailWhen(t) { return berlinDay(t) === berlinDay(Date.now()) ? bookTime.format(new Date(t)) : bookShort.format(new Date(t)); }
 function bookDefaultSub(list) {
   if (!list.length) return '(ohne Betreff)';
-  const last = (list[list.length - 1].e.sub || '(ohne Betreff)').replace(/^(AW: )+/, '');
-  return 'AW: ' + last;
+  return 'AW: ' + (list[list.length - 1].e.sub || '(ohne Betreff)').replace(/^(AW: )+/, '');
 }
-function bookSeenGet() { try { return Number(localStorage.getItem('zm_bookseen')) || 0; } catch (e) { return 0; } }
-function bookSeenSet(t) { try { localStorage.setItem('zm_bookseen', String(t)); } catch (e) { /* egal */ } }
-function bookLatestOther(list) { let m = 0; list.forEach(x => { if (!x.mine && x.e.t > m) m = x.e.t; }); return m; }
-function bookEnvSet(on) { $('bookEnv').hidden = !on; $('bookBtn').classList.toggle('new', !!on); }
-function bookMarkSeen() { const m = bookLatestOther(allBook()); if (m > bookSeenGet()) bookSeenSet(m); bookEnvSet(false); }
-function renderBook() {
-  const list = allBook(), box = $('bookList'); if (!box) return;
-  bookEnvSet(bookLatestOther(list) > bookSeenGet());
-  if (!bookS.editing) $('bookTitle').textContent = bookTitleNow();
-  const tn = $('bookTurn');
-  if (!list.length) tn.textContent = 'Das Buch ist noch leer. Einer von uns macht den Anfang.';
-  else { const l = list[list.length - 1]; tn.textContent = l.mine ? 'Wir warten auf die Antwort von ' + bookOther() + '.' : 'Du bist dran, ' + l.who + ' hat zuletzt geschrieben.'; }
-  $('bookPrompt').textContent = BOOK_PROMPTS[todayIdx(Date.now())];
-  $('bookSub').placeholder = 'Betreff, leer lassen für: ' + bookDefaultSub(list);
-  box.textContent = '';
-  const days = []; 
-  list.forEach(x => {
-    const dk = berlinDay(x.e.t);
-    if (days.indexOf(dk) < 0) { days.push(dk); const h = document.createElement('div'); h.className = 'chap'; h.textContent = 'Kapitel ' + days.length + ' · ' + bookFmt.format(new Date(x.e.t)); box.append(h); }
-    const m = document.createElement('div'); m.className = 'mail' + (x.who === 'Mafifee' ? ' her' : '');
-    const mh = document.createElement('div'); mh.className = 'mh'; mh.textContent = 'Von ' + (x.mine && x.id === 'local' ? 'Dir' : x.who) + ' · ' + bookTime.format(new Date(x.e.t)) + ' Uhr';
-    const ms = document.createElement('div'); ms.className = 'ms'; ms.textContent = x.e.sub || '(ohne Betreff)';
-    const mp = document.createElement('p'); mp.textContent = x.e.text;
-    m.append(mh, ms, mp); box.append(m);
+const NUMW = ['Null', 'Eine', 'Zwei', 'Drei', 'Vier', 'Fünf', 'Sechs', 'Sieben', 'Acht', 'Neun', 'Zehn', 'Elf', 'Zwölf'];
+function numW(n, one) { return n <= 12 ? (n === 1 ? one : NUMW[n]) : String(n); }
+function bookGap(prev, t) {
+  const d = t - prev, min = Math.round(d / 60000);
+  if (d < 60000) return 'Kurz darauf';
+  if (min < 60) return numW(min, 'Eine') + (min === 1 ? ' Minute später' : ' Minuten später');
+  const dayDiff = Math.round((Date.parse(berlinDay(t) + 'T12:00:00Z') - Date.parse(berlinDay(prev) + 'T12:00:00Z')) / 86400000);
+  if (dayDiff === 0) { const h = Math.round(min / 60); return numW(h, 'Eine') + (h === 1 ? ' Stunde später' : ' Stunden später'); }
+  if (dayDiff === 1) { const hr = Number(bookHour.format(new Date(t))); return hr < 11 ? 'Am nächsten Morgen' : hr < 17 ? 'Am nächsten Tag' : 'Am nächsten Abend'; }
+  return numW(dayDiff, 'Ein') + (dayDiff === 1 ? ' Tag später' : ' Tage später');
+}
+function el(tag, cls, txt) { const n = document.createElement(tag); if (cls) n.className = cls; if (txt != null) n.textContent = txt; return n; }
+function avatar(x) { const a = el('div', 'mav' + (x.who === 'Mafifee' ? ' her' : ''), (x.who || '?').charAt(0).toUpperCase()); a.setAttribute('aria-hidden', 'true'); return a; }
+function mailOther() { return nameOf(state.uid, state.notes[state.uid]) === 'Masüsel' ? 'Mafifee' : 'Masüsel'; }
+function mailSetHeader(title, sub, back) { $('mTitle').textContent = title; $('mSub').textContent = sub || ''; $('mFab').hidden = mailS.view !== 'list'; }
+function renderMail() {
+  const app = $('mailApp'); if (app.hidden) return;
+  const list = allBook(), body = $('mBody');
+  const v = mailS.view;
+  if (v === 'compose' || v === 'title') return;
+  body.textContent = '';
+  if (v === 'list') {
+    mailSetHeader('Postfach', bookTitleNow());
+    if (!list.length) { body.append(el('div', 'mempty', 'Noch keine Post. Schreib die erste Mail, einer von uns macht den Anfang.')); return; }
+    const last = list[list.length - 1];
+    body.append(el('div', 'mturn', last.mine ? 'Wir warten auf die Antwort von ' + mailOther() + '.' : 'Du bist dran, ' + last.who + ' hat zuletzt geschrieben.'));
+    const rd = mailReadSet();
+    list.slice().reverse().forEach(x => {
+      const unread = !x.mine && !rd.has(x.key);
+      const row = el('div', 'mrow' + (unread ? ' unread' : '')); row.tabIndex = 0; row.setAttribute('role', 'button');
+      const c = el('div', 'mc'); const l1 = el('div', 'l1');
+      l1.append(el('span', 'nm', x.mine ? 'Ich' : x.who), el('span', 'tm', mailWhen(x.e.t)));
+      c.append(l1, el('div', 'sj', x.e.sub || '(ohne Betreff)'), el('div', 'pv', x.e.text.replace(/\s+/g, ' ').slice(0, 100)));
+      row.append(avatar(x), c);
+      const open = () => { mailS.view = 'read'; mailS.cur = x.key; mailMarkRead(x.key); renderBook(); body.scrollTop = 0; };
+      row.addEventListener('click', open); row.addEventListener('keydown', ev => { if (ev.key === 'Enter') open(); });
+      body.append(row);
+    });
+  } else if (v === 'read') {
+    const x = list.find(y => y.key === mailS.cur);
+    if (!x) { mailS.view = 'list'; renderMail(); return; }
+    mailSetHeader('Nachricht', '');
+    const box = el('div', 'mread'); box.append(el('h2', '', x.e.sub || '(ohne Betreff)'));
+    const f = el('div', 'from'); const who = el('div'); who.append(document.createTextNode((x.mine ? 'Ich' : x.who) + ' an ' + (x.mine ? mailOther() : 'mich')), el('small', '', bookLong.format(new Date(x.e.t)) + ' Uhr'));
+    f.append(avatar(x), who); box.append(f, el('div', 'txt', x.e.text));
+    const acts = el('div', 'acts'); const rb = el('button', 'mbtn main', '↩ Antworten'); rb.type = 'button';
+    rb.addEventListener('click', () => { mailS.view = 'compose'; mailS.reply = 'AW: ' + (x.e.sub || '(ohne Betreff)').replace(/^(AW: )+/, ''); renderCompose(); });
+    acts.append(rb); box.append(acts); body.append(box);
+  } else if (v === 'book') {
+    mailSetHeader('Als Buch lesen', '');
+    const b = el('div', 'mbook'); const cv = el('div', 'cover'); cv.append(el('h1', '', bookTitleNow()), el('p', '', 'Ein Briefroman von Masüsel und Mafifee')); b.append(cv);
+    let lastDay = '', n = 0, prevT = 0, flip = false;
+    list.forEach(x => {
+      const dk = berlinDay(x.e.t);
+      if (dk !== lastDay) { lastDay = dk; n++; b.append(el('div', 'chap', 'Kapitel ' + n + ' · ' + bookFmt.format(new Date(x.e.t)))); }
+      if (prevT) { b.append(el('div', 'gap', bookGap(prevT, x.e.t))); b.append(el('div', 'lab', flip ? 'AW:' : 'RE:')); flip = !flip; }
+      else { flip = false; }
+      b.append(el('p', 'tx', x.e.text)); prevT = x.e.t;
+    });
+    if (!list.length) b.append(el('div', 'mempty', 'Das Buch ist noch leer.'));
+    body.append(b);
+  }
+}
+function renderCompose() {
+  const list = allBook(), body = $('mBody'); mailSetHeader('Neue Mail', ''); body.textContent = '';
+  const f = el('form', 'mform');
+  f.append(el('div', 'to', 'An: ' + mailOther()));
+  const sub = el('input'); sub.id = 'mSub2'; sub.type = 'text'; sub.maxLength = 80; sub.placeholder = 'Betreff'; sub.value = mailS.reply || ''; sub.setAttribute('aria-label', 'Betreff');
+  const tx = el('textarea'); tx.id = 'mText'; tx.maxLength = 1500; tx.placeholder = 'Liebe/r ...'; tx.setAttribute('aria-label', 'Nachricht');
+  const hint = el('div', 'hint'); hint.id = 'mHint'; hint.setAttribute('aria-live', 'polite');
+  const acts = el('div', 'acts'); const go = el('button', 'mbtn main', 'Senden'); go.type = 'submit'; const ca = el('button', 'mbtn', 'Abbrechen'); ca.type = 'button';
+  ca.addEventListener('click', () => { mailS.view = 'list'; mailS.reply = null; renderMail(); });
+  acts.append(go, ca); f.append(sub, tx, hint, acts); body.append(f);
+  f.addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const text = tx.value.trim(); if (!text) { hint.textContent = 'Schreib erst etwas hinein.'; return; }
+    const t = Date.now(), id = 'b' + t, entry = { t, text, sub: sub.value.trim() || bookDefaultSub(allBook()) };
+    go.disabled = true;
+    if (canShare()) { bookS.my[id] = entry; await writeOwn({ book: Object.assign({}, bookS.my) }); } else { bookS.local[id] = entry; }
+    mailMarkRead((canShare() ? state.uid : 'local') + '|' + id);
+    mailS.view = 'list'; mailS.reply = null; renderBook();
+    if (state.err) showToast(state.err);
   });
+  setTimeout(() => tx.focus(), 50);
 }
-function bookOther() { return nameOf(state.uid, state.notes[state.uid]) === 'Masüsel' ? 'Mafifee' : 'Masüsel'; }
+function renderTitleEdit() {
+  const body = $('mBody'); mailSetHeader('Titel ändern', ''); body.textContent = '';
+  const f = el('form', 'mform'); const inp = el('input'); inp.type = 'text'; inp.maxLength = 60; inp.value = bookTitleNow(); inp.setAttribute('aria-label', 'Buchtitel');
+  const acts = el('div', 'acts'); const go = el('button', 'mbtn main', 'Speichern'); go.type = 'submit'; const ca = el('button', 'mbtn', 'Abbrechen'); ca.type = 'button';
+  ca.addEventListener('click', () => { mailS.view = 'list'; renderMail(); });
+  acts.append(go, ca); f.append(el('div', 'to', 'Titel des Buchs'), inp, acts); body.append(f);
+  f.addEventListener('submit', async ev => {
+    ev.preventDefault(); const v = inp.value.trim().slice(0, 60);
+    if (v) { bookS.myTitle = { v, t: Date.now() }; if (canShare()) await writeOwn({ bookTitle: bookS.myTitle }); }
+    mailS.view = 'list'; renderBook();
+  });
+  setTimeout(() => inp.focus(), 50);
+}
 function bookAsText() {
   const list = allBook(); let out = bookTitleNow() + '\n\n'; let last = '', n = 0;
   list.forEach(x => {
@@ -1109,36 +1213,33 @@ function bookAsText() {
   });
   return out;
 }
-$('bookBtn').addEventListener('click', ev => { ev.preventDefault(); const c = $('bk'); c.scrollIntoView({ behavior: 'smooth', block: 'start' }); bookMarkSeen(); });
-if ('IntersectionObserver' in window) new IntersectionObserver(es => { if (es[0].isIntersecting) bookMarkSeen(); }, { threshold: 0.5 }).observe($('bk').closest('.card'));
-$('bookForm').addEventListener('submit', async ev => {
-  ev.preventDefault();
-  const text = $('bookText').value.trim(); if (!text) return;
-  const list = allBook(); const sub = $('bookSub').value.trim() || bookDefaultSub(list);
-  const t = Date.now(), id = 'b' + t, entry = { t, text, sub };
-  $('bookGo').disabled = true;
-  if (canShare()) { bookS.my[id] = entry; renderBook(); $('bookText').value = ''; $('bookSub').value = ''; await writeOwn({ book: Object.assign({}, bookS.my) }); }
-  else { bookS.local[id] = entry; renderBook(); $('bookText').value = ''; $('bookSub').value = ''; }
-  $('bookInfo').textContent = state.err || '';
-  $('bookGo').disabled = false;
+function mailOpen() {
+  $('mailApp').hidden = false; document.body.style.overflow = 'hidden';
+  mailS.view = 'list'; mailS.reply = null; $('mMenuBox').hidden = true; renderMail();
+}
+function mailClose() { $('mailApp').hidden = true; document.body.style.overflow = ''; $('mMenuBox').hidden = true; }
+function mailSyncHash() { if (location.hash === '#postfach') { if ($('mailApp').hidden) mailOpen(); } else if (!$('mailApp').hidden) mailClose(); }
+window.addEventListener('hashchange', mailSyncHash);
+$('mBack').addEventListener('click', () => {
+  if (mailS.view === 'list') { location.hash = ''; mailClose(); }
+  else { mailS.view = 'list'; mailS.reply = null; renderMail(); }
 });
-$('bookSave').addEventListener('click', () => {
-  const b = new Blob([bookAsText()], { type: 'text/plain;charset=utf-8' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'unser-buch.txt';
-  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-});
-$('bookTitleBtn').addEventListener('click', async () => {
-  const h = $('bookTitle'), btn = $('bookTitleBtn');
-  if (!bookS.editing) {
-    bookS.editing = true; const cur = bookTitleNow();
-    const inp = document.createElement('input'); inp.type = 'text'; inp.maxLength = 60; inp.id = 'bookTitleIn'; inp.value = cur; inp.setAttribute('aria-label', 'Buchtitel');
-    h.textContent = ''; h.append(inp); btn.textContent = 'Speichern'; inp.focus(); return;
+$('mFab').addEventListener('click', () => { mailS.view = 'compose'; mailS.reply = null; renderCompose(); });
+$('mMenu').addEventListener('click', () => { $('mMenuBox').hidden = !$('mMenuBox').hidden; });
+$('mMenuBox').addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b) return; $('mMenuBox').hidden = true;
+  const a = b.getAttribute('data-act');
+  if (a === 'inbox') { mailS.view = 'list'; renderMail(); }
+  else if (a === 'book') { mailS.view = 'book'; renderMail(); $('mBody').scrollTop = 0; }
+  else if (a === 'title') { mailS.view = 'title'; renderTitleEdit(); }
+  else if (a === 'txt') {
+    const bl = new Blob([bookAsText()], { type: 'text/plain;charset=utf-8' });
+    const an = document.createElement('a'); an.href = URL.createObjectURL(bl); an.download = 'unser-buch.txt';
+    document.body.append(an); an.click(); an.remove(); setTimeout(() => URL.revokeObjectURL(an.href), 2000);
   }
-  const v = ($('bookTitleIn').value || '').trim().slice(0, 60);
-  bookS.editing = false; btn.textContent = 'Titel ändern';
-  if (v) { bookS.myTitle = { v, t: Date.now() }; if (canShare()) await writeOwn({ bookTitle: bookS.myTitle }); }
-  renderBook();
 });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !$('mailApp').hidden) $('mBack').click(); });
+function renderBook() { bookEnvSet(bookUnread(allBook())); renderMail(); }
 
 /* ---- Tagebuch ---- */
 function canShare() { return state.db && state.uid && state.canWrite !== false; }
@@ -1299,6 +1400,7 @@ renderFigs();
 sizeSky();
 renderDiary();
 renderBook();
+mailSyncHash();
 let lastDraw = 0;
 function skyLoop(t) { requestAnimationFrame(skyLoop); if ((warping && !warpHold) || reduce || document.hidden || t - lastDraw < 40) return; lastDraw = t; drawCalm(t); }
 if (!reduce) requestAnimationFrame(skyLoop);
