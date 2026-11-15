@@ -308,6 +308,13 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .entry.wishing > p:first-of-type { font-family: var(--display); font-size: 19px; }
 .entry.sealed .badge { color: var(--gold); }
 .entry.sealed > p:first-of-type { font-family: var(--display); font-size: 19px; }
+.ocans { text-align: left; margin-top: 8px; font-size: 16px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ocans b { color: var(--gold); font-weight: 600; }
+.ocans img { display: block; max-width: 100%; border-radius: 10px; margin-top: 6px; }
+.odone textarea { width: 100%; }
+.entry.oracle { border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin: 10px 0; background: rgba(120, 130, 255, 0.07); }
+.entry .otitle { font-family: var(--display); font-size: 19px; margin: 6px 0 2px; }
+.entry .otask2 { color: var(--muted); font-size: 14px; margin: 0 0 4px; }
 .odone { margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .ostat { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .ochip { border: 1px solid var(--line); border-radius: 16px; padding: 5px 12px; font-size: 14px; color: var(--muted); }
@@ -858,7 +865,7 @@ function endWarp() {
 $('warp').addEventListener('click', () => { if (warpHold) endWarp(); else startWarp(); });
 
 /* ---- Tuerchen und gemeinsame Daten ---- */
-const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRe: {}, mySeal: {}, myOdone: {}, commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
+const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRe: {}, mySeal: {}, myOdone: {}, myOc: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
 let writeChain = Promise.resolve();
 function writeOwn(patch) {
   if (!state.db || !state.uid) return Promise.resolve();
@@ -986,25 +993,53 @@ const DAILY_DO = [
   'Heute zählt nur das Ankommen. Wenn die Tür aufgeht, lassen wir Handy, Mails und Aufgaben liegen und merken uns die ersten drei Sekunden.'
 ];
 function otherUid() { return Object.keys(state.notes).find(u => u !== state.uid) || null; }
-function odoneOf(u, day) { const v = state.notes[u] || {}, o = u === state.uid ? Object.assign({}, v.odone || {}, state.myOdone) : (v.odone || {}); return o['o' + day] || 0; }
-function toggleOdone(day) {
-  state.myOdone['o' + day] = odoneOf(state.uid, day) ? 0 : Date.now(); renderHoro(); renderPanel();
-  return writeOwn({ odone: Object.assign({}, state.myOdone) });
+function ocRec(u, day) {
+  const v = state.notes[u] || {}, mine = u === state.uid, k = 'o' + day;
+  const oc = mine ? Object.assign({}, v.oc || {}, state.myOc) : (v.oc || {}), o = oc[k];
+  if (o) return o.t ? o : null;
+  const od = mine ? Object.assign({}, v.odone || {}, state.myOdone) : (v.odone || {});
+  return od[k] ? { t: od[k], text: '' } : null;
 }
-function odoneNode(day) {
-  const box = el('div', 'odone'), st = el('div', 'ostat'), ou = otherUid(), mine = odoneOf(state.uid, day), other = ou ? odoneOf(ou, day) : 0;
+async function sendOc(day, text, file, info, btn) {
+  const d = { t: Date.now() }; if (text) d.text = text; btn.disabled = true;
+  try { if (file && state.assets) { info.textContent = 'Bild wird hochgeladen ...'; d.img = (await state.assets.upload(await shrink(file))).id; } }
+  catch (e) { info.textContent = 'Das Bild konnte nicht hochgeladen werden. Versuch es noch einmal oder schreib nur Text.'; btn.disabled = false; return; }
+  state.myOc['o' + day] = d; delete state.ocDraft[day]; state.ocFile = null;
+  renderHoro(true); renderPanel(); renderDiary(true);
+  return writeOwn({ oc: Object.assign({}, state.myOc) });
+}
+function undoOc(day) { state.myOc['o' + day] = { t: 0 }; renderHoro(true); renderPanel(); renderDiary(true); return writeOwn({ oc: Object.assign({}, state.myOc) }); }
+function ocNode(day) {
+  const box = el('div', 'odone'), st = el('div', 'ostat'), ou = otherUid(), mine = ocRec(state.uid, day), other = ou ? ocRec(ou, day) : null;
   const me = nameOf(state.uid, state.notes[state.uid]), on = mailOther();
   st.append(el('span', 'ochip' + (mine ? ' ok' : ''), me + (mine ? ' ✓' : ' offen')), el('span', 'ochip' + (other ? ' ok' : ''), on + (other ? ' ✓' : ' offen')));
-  const b = el('button', mine ? 'btn' : 'btn solid', mine ? 'Doch noch nicht erledigt' : 'Ich habe es erledigt'); b.type = 'button';
-  b.addEventListener('click', () => toggleOdone(day));
-  box.append(st, b);
-  if (mine && other) box.append(el('p', 'oboth', 'Beide haben es erledigt ✦'));
+  box.append(st);
+  [[me, mine], [on, other]].forEach(a => {
+    const r = a[1]; if (!r || !(r.text || r.img)) return;
+    const q = el('div', 'ocans'); q.append(el('b', '', a[0] + ': '), document.createTextNode(r.text || ''));
+    const im = imgNode(r.img); if (im) q.append(im); box.append(q);
+  });
+  if (!mine) {
+    const ta = el('textarea'); ta.maxLength = 600; ta.rows = 3; ta.placeholder = 'Deine Antwort auf die Aufgabe ...'; ta.setAttribute('aria-label', 'Deine Antwort auf die Aufgabe'); ta.value = state.ocDraft[day] || '';
+    ta.addEventListener('input', () => { state.ocDraft[day] = ta.value; });
+    const fid = 'ocf' + day, row = el('div', 'row'), info = el('p', 'muted small');
+    const fl = el('label', 'btn', 'Foto anhängen'); fl.setAttribute('for', fid); fl.hidden = !state.assets;
+    const fi = document.createElement('input'); fi.type = 'file'; fi.accept = 'image/*'; fi.id = fid;
+    if (state.ocFile) info.textContent = 'Foto bereit: ' + state.ocFile.name;
+    fi.addEventListener('change', () => { state.ocFile = fi.files[0] || null; info.textContent = state.ocFile ? 'Foto bereit: ' + state.ocFile.name : ''; });
+    const go = el('button', 'btn solid', 'Abschicken'); go.type = 'button';
+    go.addEventListener('click', () => { const t = ta.value.trim(); if (!t && !state.ocFile) { info.textContent = 'Schreib etwas oder hänge ein Foto an.'; return; } sendOc(day, t, state.ocFile, info, go); });
+    row.append(fl, fi, go); box.append(ta, row, info);
+  } else {
+    const ub = el('button', 'cdel', 'Meine Antwort zurücknehmen'); ub.type = 'button'; ub.addEventListener('click', () => undoOc(day)); box.append(ub);
+    if (other) box.append(el('p', 'oboth', 'Beide haben es erledigt ✦'));
+  }
   return box;
 }
 function cardNode(day) {
   const c = DECK[day][DECK_PICK[day]], box = el('div', 'ocard');
   const to = el('div', 'otask'); to.append(el('span', 'kind', 'Das tun wir heute beide'), el('p', '', DAILY_DO[day]));
-  if (canShare()) to.append(odoneNode(day));
+  if (canShare()) to.append(ocNode(day));
   box.append(el('div', 'osym', c.s + '︎'), el('span', 'kind', c.k), el('h4', '', c.t), el('p', '', c.x), el('span', 'basis', 'Grundlage: ' + c.g), to);
   return box;
 }
@@ -1120,7 +1155,7 @@ function todayIdx(now) {
   if (d > '2026-11-26') return 12;
   return Number(d.slice(8)) - 14;
 }
-function renderHoro() {
+function renderHoro(force) {
   const now = Date.now(), maxI = state.preview ? 12 : todayIdx(now);
   const i = Math.min(state.hday == null ? todayIdx(now) : state.hday, maxI);
   const h = HORO[i];
@@ -1130,10 +1165,13 @@ function renderHoro() {
   $('hPrev').disabled = i <= 0; $('hNext').disabled = i >= maxI;
   $('hPrev').hidden = $('hNext').hidden = maxI === 0;
   state.hShown = i;
-  if (state.hCardDay === i) $('hCard').replaceChildren(cardNode(i)); else $('hCard').replaceChildren();
+  if (state.hCardDay === i) {
+    const sg = i + '|' + canShare() + '|' + JSON.stringify([ocRec(state.uid, i), state.uid && otherUid() ? ocRec(otherUid(), i) : null]);
+    if (force === true || sg !== state.hCardSig || !$('hCard').firstChild) { state.hCardSig = sg; $('hCard').replaceChildren(cardNode(i)); }
+  } else { state.hCardSig = ''; $('hCard').replaceChildren(); }
   $('hOracle').hidden = state.hCardDay === i;
 }
-$('hOracle').addEventListener('click', () => { state.hCardDay = state.hShown || 0; renderHoro(); });
+$('hOracle').addEventListener('click', () => { state.hCardDay = state.hShown || 0; renderHoro(true); });
 $('hPrev').addEventListener('click', () => { const now = Date.now(); const cur = state.hday == null ? todayIdx(now) : state.hday; state.hday = Math.max(0, cur - 1); renderHoro(); });
 $('hNext').addEventListener('click', () => { const now = Date.now(); const cur = state.hday == null ? todayIdx(now) : state.hday; state.hday = cur + 1; renderHoro(); });
 
@@ -1548,6 +1586,16 @@ function allEntries() {
     for (const k in dd) { const e = dd[k]; if (e && typeof e.t === 'number') out.push({ id, k, who, mine, e, kind: e.star ? 'star' : 'note' }); }
     DOORS.forEach(d => { const x = v['d' + d.n]; if (x && x.text) out.push({ id, k: 'd' + d.n, who, mine, kind: 'door', d, e: { t: typeof x.ts === 'number' ? x.ts : doorStart(d.n), text: x.text } }); });
   });
+  const byDay = {};
+  ids.forEach(id => {
+    const v = state.notes[id] || {}, mine = id === state.uid, oc = mine ? Object.assign({}, v.oc || {}, state.myOc) : (v.oc || {}), who = nameOf(id, v);
+    for (const k in oc) { if (/^o\d+$/.test(k) && oc[k] && oc[k].t) (byDay[k] = byDay[k] || []).push({ id, who, mine, r: oc[k] }); }
+  });
+  for (const k in byDay) {
+    const L = byDay[k], day = Number(k.slice(1)); if (!DECK[day]) continue;
+    if (L.length >= 2) out.push({ id: 'both', k, who: 'Wir', mine: false, kind: 'oracle2', day, parts: L, e: { t: Math.max.apply(null, L.map(z => z.r.t)) } });
+    else L.forEach(z => out.push({ id: z.id, k, who: z.who, mine: z.mine, kind: 'oracle', day, e: { t: z.r.t, text: z.r.text, img: z.r.img } }));
+  }
   for (const k in state.localDiary) { const e = state.localDiary[k]; out.push({ id: 'local', k, who: 'Du', mine: true, e, kind: e.star ? 'star' : 'note' }); }
   return out.sort((a, b) => b.e.t - a.e.t);
 }
@@ -1633,10 +1681,10 @@ function sealWish(x) {
   state.mySeal[ackKey(x.id, x.k)] = { t: Date.now() }; renderDiary(true); showToast('Der Wunsch ist offiziell erfüllt. Das Siegel ist gesetzt.');
   return writeOwn({ seal: Object.assign({}, state.mySeal) });
 }
-function sealNode(sl, who) {
+function sealNode(sl, who, title, sub) {
   const b = el('div', 'sealbox'), w = el('div', 'wax'), t = el('div', 'sealtx');
   w.setAttribute('aria-hidden', 'true'); w.append(el('span', '', '♛'));
-  t.append(el('b', '', 'Wunsch offiziell erfüllt'), el('span', '', 'Besiegelt von ' + who + ' am ' + bookShort.format(new Date(sl.t || Date.now())) + ', im Namen des Feenreiches'));
+  t.append(el('b', '', title || 'Wunsch offiziell erfüllt'), el('span', '', sub || ('Besiegelt von ' + who + ' am ' + bookShort.format(new Date(sl.t || Date.now())) + ', im Namen des Feenreiches')));
   b.append(w, t); return b;
 }
 function renderWishBanner() {
@@ -1665,6 +1713,17 @@ function renderWishBanner() {
   if (n) frag.prepend(el('span', 'kind', n === 1 ? 'Ein Wunsch ist offen' : n + ' Wünsche sind offen'));
   box.replaceChildren(frag); box.hidden = !n;
 }
+function oracleEntry(x) {
+  const c = DECK[x.day][DECK_PICK[x.day]], two = x.kind === 'oracle2';
+  const box = el('div', 'entry' + (two ? ' sealed' : ' oracle')), meta = el('div', 'meta');
+  meta.append(el('span', 'badge', two ? 'Orakelkarte, von uns beiden erfüllt ✦' : 'Orakelkarte'), el('span', '', two ? 'Wir' : x.who), el('span', '', entFmt.format(new Date(x.e.t))));
+  box.append(meta, el('p', 'otitle', c.t + ' (' + (14 + x.day) + '.11.)'), el('p', 'otask2', 'Aufgabe: ' + DAILY_DO[x.day]));
+  const part = (who, text, img) => { const q = el('div', 'ocans'); q.append(el('b', '', who + ': '), document.createTextNode(text || '')); const im = imgNode(img); if (im) q.append(im); box.append(q); };
+  if (two) { x.parts.slice().sort((a, b) => a.r.t - b.r.t).forEach(z => part(z.who, z.r.text, z.r.img)); box.append(sealNode(null, '', 'Gütesiegel der Krone', 'Aufgabe von uns beiden erfüllt am ' + bookShort.format(new Date(x.e.t)))); }
+  else part(x.who, x.e.text, x.e.img);
+  if (canShare()) box.append(reactNode(x));
+  return box;
+}
 function renderDiary(force) {
   renderWishBanner();
   if (!force && (state.fulfilKey || state.commentKey) && $('diaryList').querySelector('textarea')) { state.pendingDiary = true; return; }
@@ -1674,6 +1733,7 @@ function renderDiary(force) {
   const entries = allE.slice(0, 80);
   if (!entries.length) frag.append(el('p', 'muted', 'Noch keine Einträge. Der erste gehört uns.'));
   entries.forEach(x => {
+    if (x.kind === 'oracle' || x.kind === 'oracle2') { frag.append(oracleEntry(x)); return; }
     const isW = x.kind === 'star' && x.id !== 'local', ackW = isW && getAck(x.id, x.k), sealedW = ackW && getSeal(x.id, x.k);
     const box = el('div', 'entry' + (x.kind === 'star' ? ' star' : '') + (sealedW ? ' sealed' : isW ? ' wishing' : ''));
     const meta = el('div', 'meta');
@@ -1832,7 +1892,7 @@ function startNotes(db) {
     const fresh = [];
     for (const id in m) {
       const v = m[id] || {};
-      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
+      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
       for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz, weil ' + pron(nameOf(id, v)) + ' an dich denken musste ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       for (const k in (v.book || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.book[k]; if (state.seen && e && e.text) fresh.push(nameOf(id, v) + ' hat dir im Buch geschrieben: ' + (e.sub || '(ohne Betreff)')); } }
       for (const k in (v.rate || {})) { const key = id + '|r|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const r = v.rate[k], m = /^d(\d+)$/.exec(k); if (state.seen && r && m) fresh.push(nameOf(id, v) + ' hat dich bewertet: ' + rateIcons(Number(m[1]), r.n)); } }
@@ -1841,7 +1901,8 @@ function startNotes(db) {
         if (r.e && !state.seenE.has(rk)) { state.seenE.add(rk); if (state.seen) fresh.push(nameOf(id, v) + ' hat auf einen Tagebucheintrag reagiert: ' + r.e); }
         for (const c in (r.cm || {})) { const ck = id + '|cm|' + k + '|' + c; if (!state.seenE.has(ck)) { state.seenE.add(ck); const tx = r.cm[c] && r.cm[c].x; if (state.seen && tx) fresh.push(nameOf(id, v) + ' hat kommentiert: ' + (tx.length > 70 ? tx.slice(0, 70) + ' ...' : tx)); } }
       }
-      for (const k in (v.odone || {})) { const key = id + '|od|' + k + '|' + (v.odone[k] ? 1 : 0); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen && v.odone[k]) fresh.push(nameOf(id, v) + ' hat die Aufgabe der Orakelkarte erledigt.' + (state.myOdone[k] ? '' : ' Und du?')); } }
+      for (const k in (v.odone || {})) { const key = id + '|od|' + k + '|' + (v.odone[k] ? 1 : 0); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen && v.odone[k] && !(v.oc && v.oc[k])) fresh.push(nameOf(id, v) + ' hat die Aufgabe der Orakelkarte erledigt.' + (state.myOc[k] ? '' : ' Und du?')); } }
+      for (const k in (v.oc || {})) { const r = v.oc[k] || {}, key = id + '|oc|' + k + '|' + (r.t || 0); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen && r.t) fresh.push(nameOf(id, v) + ' hat die Aufgabe der Orakelkarte erledigt' + (r.text ? ': ' + (r.text.length > 60 ? r.text.slice(0, 60) + ' ...' : r.text) : '.') + (state.myOc[k] && state.myOc[k].t ? '' : ' Und du?')); } }
       for (const k in (v.seal || {})) { const key = id + '|seal|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat einen erfüllten Wunsch offiziell besiegelt ✦'); } }
       DOORS.forEach(d => { const x = v['d' + d.n]; if (x && x.text) { const key = id + '|d' + d.n + '|' + (x.ts || x.text.length); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat bei Türchen ' + d.n + ' geantwortet.'); } } });
       for (const k in (v.ack || {})) { const key = id + '|' + k; if (!state.seenA.has(key)) { state.seenA.add(key); if (state.seen && k.indexOf(ackKey(state.uid, '')) === 0) fresh.push(nameOf(id, v) + ' hat einen Wunsch von dir erfüllt' + ((v.ack[k] && v.ack[k].text) ? ': ' + (v.ack[k].text.length > 70 ? v.ack[k].text.slice(0, 70) + ' ...' : v.ack[k].text) : '.')); } }
