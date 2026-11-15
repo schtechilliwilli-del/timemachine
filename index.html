@@ -838,12 +838,31 @@ function allEntries() {
   return out.sort((a, b) => b.e.t - a.e.t);
 }
 const entFmt = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
-function ackedBy(id, k) {
+function getAck(id, k) {
   const key = ackKey(id, k);
-  for (const o in state.notes) { if (o !== id && state.notes[o] && state.notes[o].ack && state.notes[o].ack[key]) return true; }
-  return !!(id !== state.uid && state.myAck[key]);
+  for (const o in state.notes) { if (o !== id && state.notes[o] && state.notes[o].ack && state.notes[o].ack[key]) return { who: nameOf(o, state.notes[o]), me: o === state.uid, d: state.notes[o].ack[key] }; }
+  if (id !== state.uid && state.myAck[key]) return { who: 'Du', me: true, d: state.myAck[key] };
+  return null;
+}
+function imgNode(imgId) {
+  if (!imgId || !/^[A-Za-z0-9_-]+$/.test(imgId)) return null;
+  const im = document.createElement('img'); im.loading = 'lazy'; im.alt = 'Bild im Tagebuch';
+  if (state.fb) { fillImg(imgId, im); return im; }
+  const a = document.createElement('a'); a.href = '/_blob/' + imgId; a.target = '_blank'; a.rel = 'noopener'; im.src = '/_blob/' + imgId; a.append(im); return a;
+}
+async function sendFulfil(x, text, file, info, btn) {
+  const d = { t: Date.now() };
+  if (text) d.text = text;
+  btn.disabled = true;
+  try {
+    if (file && state.assets) { info.textContent = 'Bild wird hochgeladen ...'; d.img = (await state.assets.upload(await shrink(file))).id; }
+  } catch (e) { info.textContent = 'Das Bild konnte nicht hochgeladen werden. Versuch es noch einmal oder schreib nur Text.'; btn.disabled = false; return; }
+  state.myAck[ackKey(x.id, x.k)] = d; state.fulfilKey = null;
+  renderDiary(); writeOwn({ ack: Object.assign({}, state.myAck) });
 }
 function renderDiary() {
+  if (state.fulfilKey && $('diaryList').querySelector('textarea')) { state.pendingDiary = true; return; }
+  state.pendingDiary = false;
   const list = $('diaryList'); const frag = document.createDocumentFragment();
   const entries = allEntries().slice(0, 80);
   if (!entries.length) frag.append(el('p', 'muted', 'Noch keine Einträge. Der erste gehört uns.'));
@@ -856,19 +875,34 @@ function renderDiary() {
     else if (x.kind === 'star') {
       box.append(el('p', '', (x.who === 'Du' ? 'Du wünschst dir: ' : x.who + ' wünscht sich: ') + x.e.wish));
       if (x.id !== 'local') {
-        if (ackedBy(x.id, x.k)) box.append(el('span', 'done', 'Erfüllt'));
-        else if (!x.mine && canShare()) {
-          const b = el('button', 'btn', 'Erfüllt'); b.type = 'button';
-          b.addEventListener('click', () => { state.myAck[ackKey(x.id, x.k)] = Date.now(); renderDiary(); writeOwn({ ack: Object.assign({}, state.myAck) }); });
-          box.append(b);
+        const ak = getAck(x.id, x.k);
+        if (ak) {
+          const dd = typeof ak.d === 'object' ? ak.d : { t: ak.d };
+          box.append(el('span', 'done', ak.me ? 'Du hast diesen Wunsch erfüllt' : 'Erfüllt von ' + ak.who));
+          if (dd.text) box.append(el('p', '', dd.text));
+          const n = imgNode(dd.img); if (n) box.append(n);
+        } else if (!x.mine && canShare()) {
+          const key = ackKey(x.id, x.k);
+          if (state.fulfilKey === key) {
+            const ta = el('textarea'); ta.maxLength = 600; ta.placeholder = 'Wie hast du den Wunsch erfüllt?'; ta.setAttribute('aria-label', 'Text zum erfüllten Wunsch');
+            const fid = 'ff' + key, row = el('div', 'row'), info = el('p', 'muted small');
+            const fl = el('label', 'btn', 'Foto anhängen'); fl.setAttribute('for', fid); fl.hidden = !state.assets;
+            const fi = document.createElement('input'); fi.type = 'file'; fi.accept = 'image/*'; fi.id = fid;
+            fi.addEventListener('change', () => { info.textContent = fi.files[0] ? 'Foto bereit: ' + fi.files[0].name : ''; });
+            const go = el('button', 'btn solid', 'Abschicken'); go.type = 'button';
+            go.addEventListener('click', () => { const t = ta.value.trim(); if (!t && !fi.files[0]) { info.textContent = 'Schreib etwas oder hänge ein Foto an.'; return; } sendFulfil(x, t, fi.files[0], info, go); });
+            const cn = el('button', 'btn', 'Abbrechen'); cn.type = 'button';
+            cn.addEventListener('click', () => { state.fulfilKey = null; renderDiary(); });
+            row.append(fl, fi, go, cn); box.append(ta, row, info);
+          } else {
+            const b = el('button', 'btn', 'Wunsch erfüllen'); b.type = 'button';
+            b.addEventListener('click', () => { state.fulfilKey = key; renderDiary(); });
+            box.append(b);
+          }
         }
       }
     } else if (x.e.text) box.append(el('p', '', x.e.text));
-    if (x.e.img && /^[A-Za-z0-9_-]+$/.test(x.e.img)) {
-      const im = document.createElement('img'); im.loading = 'lazy'; im.alt = 'Bild im Tagebuch';
-      if (state.fb) { fillImg(x.e.img, im); box.append(im); }
-      else { const a = document.createElement('a'); a.href = '/_blob/' + x.e.img; a.target = '_blank'; a.rel = 'noopener'; im.src = '/_blob/' + x.e.img; a.append(im); box.append(a); }
-    }
+    const mainImg = imgNode(x.e.img); if (mainImg) box.append(mainImg);
     frag.append(box);
   });
   list.replaceChildren(frag);
@@ -983,7 +1017,7 @@ function startNotes(db) {
       if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); continue; }
       for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       DOORS.forEach(d => { const x = v['d' + d.n]; if (x && x.text) { const key = id + '|d' + d.n + '|' + (x.ts || x.text.length); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat bei Türchen ' + d.n + ' geantwortet.'); } } });
-      for (const k in (v.ack || {})) { const key = id + '|' + k; if (!state.seenA.has(key)) { state.seenA.add(key); if (state.seen && k.indexOf(ackKey(state.uid, '')) === 0) fresh.push(nameOf(id, v) + ' hat einen Wunsch von dir erfüllt.'); } }
+      for (const k in (v.ack || {})) { const key = id + '|' + k; if (!state.seenA.has(key)) { state.seenA.add(key); if (state.seen && k.indexOf(ackKey(state.uid, '')) === 0) fresh.push(nameOf(id, v) + ' hat einen Wunsch von dir erfüllt' + ((v.ack[k] && v.ack[k].text) ? ': ' + (v.ack[k].text.length > 70 ? v.ack[k].text.slice(0, 70) + ' ...' : v.ack[k].text) : '.')); } }
     }
     state.notes = m; state.seen = true;
     renderDoors(); renderPanel(); renderArriveVisibility(); renderDiary();
