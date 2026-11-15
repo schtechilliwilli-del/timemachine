@@ -132,7 +132,10 @@ p { margin: 0; }
 .mrate .ic .zero { font-size: 13px; opacity: 1; color: #6a6f87; border: 1px solid #c9cde0; border-radius: 14px; padding: 6px 10px; }
 .mrate .ic .zero.on { background: #1d2030; color: #fff; }
 .mailapp .mrate input[type="text"] { width: 100%; box-sizing: border-box; border: 1px solid #dfe2ec; border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 15px; color: #1d2030; background: #fff; }
-.mthread { padding: 0 16px 40px; background: #fff; }
+.mthread { border: 1px solid #e6e8f0; border-radius: 10px; background: #f8f9fd; margin: 6px 0 4px; }
+.mthread summary { padding: 10px 12px; font-size: 14px; color: #6a6f87; cursor: pointer; }
+.mthread .mctx { max-height: 34vh; overflow-y: auto; padding: 0 12px 12px; -webkit-overflow-scrolling: touch; }
+.mthread .mquote:first-child { margin-top: 0; }
 .mthread h3 { font-family: var(--body); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: #6a6f87; margin: 14px 0 8px; }
 .mthread .tm { background: #fff; border: 1px solid #e6e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
 .mthread .tm .who { font-size: 13px; color: #6a6f87; margin-bottom: 4px; }
@@ -1383,9 +1386,10 @@ function renderCompose() {
   const hint = el('div', 'hint'); hint.id = 'mHint'; hint.setAttribute('aria-live', 'polite'); if (!realMails(list).length && myRole() === 'esel') hint.textContent = 'Die Fee eröffnet die Prüfung und ist zuerst dran.';
   const acts = el('div', 'acts'); const go = el('button', 'mbtn main', 'Senden'); go.type = 'submit'; const ca = el('button', 'mbtn', 'Abbrechen'); ca.type = 'button';
   ca.addEventListener('click', () => { mailS.view = 'list'; mailS.reply = null; renderMail(); });
-  acts.append(go, ca); f.append(sub, tx, hint, acts); body.append(f);
+  acts.append(go, ca);
   const rm = realMails(list).slice().reverse().slice(0, 3);
-  if (rm.length) { const th = el('div', 'mthread'); rm.forEach(x => th.append(quoteNode(x))); body.append(th); }
+  if (rm.length) { const th = el('details', 'mthread'); th.open = true; th.append(el('summary', '', 'Bisheriger Verlauf (' + rm.length + ')')); const inner = el('div', 'mctx'); rm.forEach(x => inner.append(quoteNode(x))); th.append(inner); f.append(sub, th, tx); } else f.append(sub, tx);
+  f.append(hint, acts); body.append(f);
   f.addEventListener('submit', async ev => {
     ev.preventDefault();
     const text = tx.value.trim(); if (!text) { hint.textContent = 'Schreib erst etwas hinein.'; return; }
