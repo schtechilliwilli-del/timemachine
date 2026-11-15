@@ -128,6 +128,26 @@ p { margin: 0; }
 .mthread .tm p { font-family: var(--display); font-size: 16px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
 .mread.royal { border-top: 6px solid #6b4fb3; }
 .mbook .rt { text-align: center; font-family: var(--body); font-size: 14px; color: #8a6a2a; margin: 22px 0 0; }
+#printBook { display: none; }
+@page { size: A5; margin: 18mm 16mm 20mm; @bottom-center { content: counter(page); font-size: 9pt; color: #555; } }
+@media print {
+  :root { color-scheme: light; }
+  html, body { background: #fff !important; color: #000 !important; height: auto !important; overflow: visible !important; }
+  body > *:not(#printBook) { display: none !important; }
+  #printBook { display: block !important; font-family: Georgia, 'Times New Roman', serif; color: #111; font-size: 11.5pt; line-height: 1.55; }
+  #printBook .pcover { text-align: center; padding-top: 38mm; break-after: page; }
+  #printBook .pcover h1 { font-family: Georgia, serif; font-weight: 400; font-size: 30pt; line-height: 1.15; color: #111; margin: 0 0 10mm; }
+  #printBook .pcover p { margin: 3mm 0; font-style: italic; color: #444; }
+  #printBook .pchap { break-after: avoid; margin: 9mm 0 3mm; padding-top: 3mm; border-top: 0.4mm solid #bbb; font-size: 9pt; letter-spacing: 0.1em; text-transform: uppercase; color: #555; }
+  #printBook .pgap { font-style: italic; margin: 5mm 0 0; color: #333; break-after: avoid; }
+  #printBook .plab { font-weight: 700; margin: 0; break-after: avoid; }
+  #printBook .ptx { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; orphans: 3; widows: 3; }
+  #printBook .proyal { border: 0.4mm solid #8a7a50; padding: 4mm 5mm; margin: 6mm 0; background: #f6f0e0; break-inside: avoid; }
+  #printBook .proyal .rh { font-size: 8.5pt; letter-spacing: 0.08em; text-transform: uppercase; color: #5a3f9a; margin-bottom: 2mm; }
+  #printBook .proyal .rs { font-weight: 700; margin-bottom: 2mm; }
+  #printBook .prt { text-align: center; font-size: 10pt; color: #7a5a1a; margin: 5mm 0 0; }
+  #printBook .pend { margin-top: 12mm; text-align: center; border-top: 0.4mm solid #bbb; padding-top: 5mm; font-style: italic; }
+}
 .eyebrow { font-family: var(--mono); font-size: 13px; letter-spacing: 0.04em; color: var(--gold); margin-bottom: 8px; }
 .lede { color: var(--muted); margin-top: 10px; }
 .card { background: rgba(21, 26, 58, 0.56); border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
@@ -398,11 +418,13 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <button type="button" data-act="tasks">Meine Aufgaben</button>
     <button type="button" data-act="book">Als Buch lesen</button>
     <button type="button" data-act="title">Titel ändern</button>
+    <button type="button" data-act="pdf">Als PDF speichern oder drucken</button>
     <button type="button" data-act="txt">Als Textdatei speichern</button>
   </div>
   <div class="mbody" id="mBody"></div>
   <button class="mfab" id="mFab" type="button">&#9998; Neue Mail</button>
 </div>
+<div id="printBook" aria-hidden="true"></div>
 <div class="pop" id="wishPop" role="dialog" aria-modal="true" aria-labelledby="wishH" hidden>
   <div class="popbox">
     <span class="kind">Gefangen</span>
@@ -491,7 +513,7 @@ const DOORS = [
   { n: 4, kind: 'Frage', title: 'Drei Dinge', text: 'Kleine Aufgabe für heute, ganz ohne Druck.', ask: 'Drei Dinge, die ich an dir mag.' },
   { n: 5, kind: 'Spaß', title: 'Das Gepäck', text: 'In 500 Kilometern Entfernung packt es sich leichter, wenn man weiß, was wirklich nötig ist.', ask: 'Was darf auf keinen Fall im Gepäck fehlen?' },
   { n: 6, kind: 'Himmel', title: 'Gleicher Himmel', text: 'Der Mond zieht heute am Saturn vorbei. Wenn es aufklart, schau am Abend nach oben. Über Penzing und über Simmern liegt derselbe Himmel.', ask: 'Was siehst du, wenn du hochschaust?' },
-  { n: 7, kind: 'Orakel', title: 'Das Sehnsuchtsorakel', text: 'Die Karte dieses Tages gehört zu dem, was heute wirklich am Himmel steht, und zu euren beiden Horoskopen.', oracle: true },
+  { n: 7, kind: 'Frage', title: 'Die Flaschenpost', text: 'Heute schicken wir eine Flaschenpost los, die wir erst am Tag nach dem Wiedersehen öffnen. Sie reist durch die Zeit, nicht über das Meer.', ask: 'Was soll in der Flaschenpost stehen, die wir am 27. November aufmachen?' },
   { n: 8, kind: 'Himmel', title: 'Aufbruch', text: 'Heute wechselt die Sonne vom Skorpion in den Schützen. Das Zeichen für Reiselust, Weite und das Gefühl, dass es bald losgeht.', ask: 'Wofür bist du gerade bereit aufzubrechen?' },
   { n: 9, kind: 'Frage', title: 'Dein Lied', text: 'Noch drei Nächte. Der Mond ist fast voll und wird ein bisschen ungeduldig.', ask: 'Welches Lied soll am Tag der Ankunft laufen?' },
   { n: 10, kind: 'Himmel', title: 'Supermond', text: 'Heute um 15:53 Uhr ist Vollmond, und er ist ein Supermond, nur 360.768 Kilometer von der Erde entfernt. Er geht am Abend auf. Wir können ihn zur gleichen Zeit anschauen, jeder an seinem Ort.', ask: 'Welchen Satz gibst du dem Mond mit?' },
@@ -903,13 +925,13 @@ const DECK = [
 const DECK_PICK = [2, 2, 2, 1, 0, 2, 2, 2, 0, 2, 2, 2, 2];
 const DAILY_DO = [
   'Jeder schickt dem anderen ein Foto von etwas, das ihn heute trägt oder hält: ein Lieblingsplatz, eine Tasse, ein Stuhl. Wir zeigen uns, was uns Halt gibt.',
-  'Jeder schreibt auf einen Zettel einen Wunsch für unsere gemeinsamen Tage und zeigt ihn dem anderen nicht. Wir heben die Zettel bis zur Ankunft auf.',
+  'Jeder schreibt dem anderen einen Satz, der mit Ich merke gerade, dass anfängt. Klar und ohne Umweg, so wie der Wassermann-Mond es mag.',
   'Wir schauen beide zehn Minuten lang zum Himmel und schreiben uns danach in einem Satz, was wir gesehen haben.',
   'Heute Nacht gehen wir beide nach draußen und suchen Sternschnuppen. Wer die erste sieht, schreibt dem anderen sofort: Sternschnuppe!',
-  'Vor dem Einschlafen schreibt jeder in einem Satz, wovon er heute Nacht träumen möchte. Morgen erzählen wir uns, was wirklich kam.',
+  'Wir schreiben uns heute eine kurze Traumszene auf, in der wir beide vorkommen. Drei Sätze reichen.',
   'Wir reden oder schreiben heute länger als sonst, und jeder stellt dem anderen eine Frage, die man im Alltag nie stellt.',
   'Jeder erledigt heute eine Sache, die schon lange liegt, und schickt dem anderen ein Beweisfoto. Verlässlichkeit zählt.',
-  'Jeder schreibt fünf Dinge auf, die wir beim Wiedersehen zusammen erleben wollen. Am 26. vergleichen wir die Listen und suchen die Überschneidungen.',
+  'Jeder erzählt dem anderen von einem Moment dieses Jahres, in dem er an ihn denken musste, ohne dass es einen Anlass gab.',
   'Wir planen heute gemeinsam einen kleinen Ausflug für unsere Tage. Jeder schlägt einen Ort vor, dann einigen wir uns oder losen.',
   'Jeder gönnt sich heute etwas Gutes und schickt dem anderen ein Foto davon. Und wir nehmen uns heute nichts übel.',
   'Heute Abend gehen wir beide raus zum Supermond, schicken uns zeitgleich ein Foto vom Mond und sagen uns Gute Nacht.',
@@ -1121,8 +1143,10 @@ const bookS = { my: {}, local: {}, myTitle: null };
 const rateS = { my: {} };
 const mailS = { view: 'list', cur: null, reply: null, draft: {} };
 const QUEEN = [
-  { k: 'prolog', t: Date.UTC(2026, 10, 13, 23, 0), sub: 'Amtliches Schreiben des Feenhofs', text: 'An die Fee Mafifee, zuständig für Penzing, und an den Esel Masüsel, wohnhaft in Simmern.\n\nEs wurde festgestellt, dass der Esel manchmal süß und die Fee manchmal fies ist. Das ist zulässig. Die Entfernung von 500 Kilometern ist es nicht.\n\nDaher wird hiermit angeordnet:\n\n1. Die Fee prüft den Esel. Jeden Tag gibt es eine Aufgabe, und die Fee bewertet, was der Esel liefert, mit null bis fünf Karotten.\n2. Der Esel darf sich auf seine eigene Art beweisen. Die Fee darf prüfen, wie sie will, aber sie darf nicht schummeln.\n3. An manchen Tagen gerät die Fee ins Wanken. Dann prüft der Esel sie und vergibt Sterne.\n4. Am 26. November findet die Abschlussprüfung statt, im echten Leben und ohne Mail.\n5. Danach spreche ich das Urteil. Ich bin die Richterin und entscheide weitestgehend. Dabei achte ich nicht nur auf Karotten.\n6. Fällt der Esel durch, kann die Fee eine Nachprüfung anordnen. Der Zauberstab bleibt in ihrer Hand. Ob aus meinem Urteil ein Happy End wird, liegt allein bei der Fee.\n\nFür Pannen des Zauberstabs ist der Hof nicht zuständig.\n\nGezeichnet,\nKönigin Ernestine die Vorläufige\nHof zu Wolkenstein' },
-  { k: 'halbzeit', t: Date.UTC(2026, 10, 20, 7, 0), sub: 'Zwischenbescheid des Feenhofs', text: 'An Fee und Esel.\n\nDer Hof stellt fest: Die Halbzeit ist erreicht. Die Königin beobachtet, wie jeder weiß, aus den Wolken.\n\nSie erinnert daran, dass Punkte nicht alles sind. Auch ein Esel, der schlecht rechnet, kann sich beweisen, und auch eine Fee, die streng tut, darf weich werden.\n\nNoch sechs Tage bis zur Abschlussprüfung.\n\nGezeichnet,\nKönigin Ernestine die Vorläufige' }
+  { k: 'prolog', t: Date.UTC(2026, 10, 13, 23, 0), to: 'both', sub: 'Königlicher Erlass zu Wolkenstein', text: 'Hört, ihr beiden, und hört gut.\n\nAn die Fee Mafifee, die in Penzing über die Wiesen schwebt, und an den Esel Masüsel, der in Simmern im Westerwald seine Möhren hütet.\n\nEs ist Uns zu Ohren gekommen, dass der Esel manchmal süß ist und die Fee manchmal fies. Das lassen Wir gelten, denn so war es von jeher. Dass aber fünfhundert Kilometer Wegs zwischen euch liegen, das lassen Wir nicht gelten.\n\nSo sei es denn verkündet:\n\nErstens. Die Fee prüft den Esel. An jedem Tag stellt sie ihm eine Aufgabe, und was er liefert, wiegt sie ab: null bis fünf goldene Karotten.\n\nZweitens. Der Esel darf sich auf seine eigene Weise beweisen, mit seinen eigenen Worten. Die Fee darf prüfen, wie es ihr gefällt, doch schummeln darf sie nicht.\n\nDrittens. Auch eine Fee ist nicht ohne Fehl. Entgleitet ihr der Zauber, so darf der Esel sie prüfen und ihr Sterne schenken oder vorenthalten. Und zuweilen werden Wir Selbst der Fee eine Frage schicken. Der Esel liest in Kopie mit.\n\nViertens. Hat die Fee den weiten Weg zurückgelegt und weilt beim Esel, so schreibt weiter in diesem Buch. Am neunundzwanzigsten Tag des Novembers, wenn Fee und Esel beisammen sind, wird sich zeigen, was in dem Esel steckt.\n\nFünftens. Danach sprechen Wir das Urteil. Wir sind die Königin dieses Feenreiches, und Unser Wort gilt. Nicht nur Karotten wiegen schwer, auch das Herz.\n\nSechstens. Maßgeblich ist die Fee, denn sie sieht den Esel aus der Nähe. Wir aber sprechen am Ende das Urteil. Besteht der Esel nicht, mag die Fee eine Nachprüfung anordnen. Ob aus Unserem Urteil ein gutes Ende wird, liegt in ihrer Hand.\n\nFür Pannen des Zauberstabs ist der Hof nicht zuständig.\n\nGegeben zu Wolkenstein,\nKönigin Ernestine die Vorläufige' },
+  { k: 'frage1', t: Date.UTC(2026, 10, 19, 7, 0), to: 'fee', sub: 'Eine Frage der Königin an die Fee', text: 'Liebe Fee Mafifee,\n\nes heißt, du seist manchmal fies. Wir wollen es genau wissen: Wann warst du zuletzt fies zu jemandem, der es verdient hat, und wann zu jemandem, der es nicht verdient hat?\n\nAntworte in deiner nächsten Mail an den Esel, so ehrlich, wie eine Fee es vermag. Der Esel möge achtgeben, ob sie schummelt.\n\nKöniglich gegrüßt,\nErnestine die Vorläufige' },
+  { k: 'halbzeit', t: Date.UTC(2026, 10, 20, 7, 0), to: 'both', sub: 'Zwischenbescheid vom Hof zu Wolkenstein', text: 'Hört, Fee und Esel.\n\nDie Mitte des Weges ist erreicht. Die Königin sitzt auf ihrer Wolke und lässt ausrichten: Punkte sind nicht alles. Auch ein Esel, der schlecht rechnet, kann sich beweisen, und auch eine Fee, die streng tut, darf weich werden.\n\nNoch neun Tage bis zur Abschlussprüfung.\n\nGegeben zu Wolkenstein,\nKönigin Ernestine die Vorläufige' },
+  { k: 'frage2', t: Date.UTC(2026, 10, 23, 7, 0), to: 'fee', sub: 'Zweite Frage der Königin an die Fee', text: 'Liebe Fee Mafifee,\n\nWir haben gehört, dass dir der Esel gefällt. Nein, du musst es nicht zugeben.\n\nAber sag Uns: Wenn der Esel dich heute zum ersten Mal sähe und nicht wüsste, wer du bist, was wäre der erste Satz, den du zu ihm sagen würdest? Schreibe ihn in deiner nächsten Mail auf. Der Esel liest mit.\n\nKöniglich gegrüßt,\nErnestine die Vorläufige' }
 ];
 const TASKS = [
   { d: 'Die Vorstellung', lead: 'fee', f: 'Du eröffnest die Prüfung. Stell dich dem Esel als strenge Prüferin vor und gib ihm die erste Aufgabe: Er soll dir in drei Sätzen erklären, warum du ihn nicht gleich durchfallen lassen sollst.', e: 'Die Fee eröffnet die Prüfung. Antworte ihr in drei Sätzen auf deine eigene Art und versuch dabei, möglichst wenig zu schummeln.' },
@@ -1137,11 +1161,11 @@ const TASKS = [
   { d: 'Das Chaos der Ankunft', lead: 'fee', f: 'Der Esel soll dir das Wiedersehen als Chaos beschreiben: alles, was schiefgehen könnte, und wie er es trotzdem hinbekommt. Prüfe, ob er auch an dich denkt und nicht nur an sich.', e: 'Beschreib der Fee das Wiedersehen als Chaos: alles, was schiefgehen könnte, und wie du es trotzdem hinbekommst.' },
   { d: 'Die Gegenprobe', lead: 'esel', f: 'Heute merkst du, dass du den Esel mehr magst, als du zugeben wolltest. Beantworte seine Frage, ohne dich hinter einer Prüferinnenmiene zu verstecken.', e: 'Stell der Fee die eine Frage, vor der sie sich am meisten fürchtet, und lass sie nicht ausweichen. Danach bewertest du sie mit Sternen.' },
   { d: 'Der Brief für die Haustür', lead: 'fee', f: 'Der Esel soll dir den Brief schreiben, den er dir überreicht, wenn du vor der Tür stehst. Du bewertest, ob er sich traut.', e: 'Schreib den Brief, den du der Fee übergibst, wenn sie vor der Tür steht. Er muss ehrlich sein und darf kurz sein.' },
-  { d: 'Die Abschlussprüfung', lead: 'both', f: 'Heute zählt keine Mail. Die Abschlussprüfung findet im echten Leben statt, und du entscheidest, was dir dabei auffällt. Schreib später kurz auf, was du gesehen hast.', e: 'Heute zählt keine Mail. Bestehe die Abschlussprüfung auf deine eigene Art im echten Leben und schreib später auf, was passiert ist.' },
-  { d: 'Das Zwischenzeugnis', lead: 'after', f: 'Schreib dem Esel dein ehrliches Zwischenzeugnis, fies und liebevoll zugleich. Das Urteil der Königin steht noch aus.', e: 'Schreib der Fee, was du aus der Prüfung gelernt hast. Das Urteil der Königin steht noch aus.' },
-  { d: 'Das Urteil', lead: 'after', f: 'Die Königin hat gesprochen. Entscheide, was du daraus machst, und sag es dem Esel auf deine Art.', e: 'Reagiere auf das Urteil der Königin und auf das, was die Fee daraus macht.' },
-  { d: 'Der freie Tag', lead: 'after', f: 'Kein Auftrag mehr, nur Zeit. Erzähl dem Esel etwas, das du ihm noch nie erzählt hast.', e: 'Kein Auftrag mehr, nur Zeit. Erzähl der Fee etwas, das du ihr noch nie erzählt hast.' },
-  { d: 'Der letzte volle Tag', lead: 'after', f: 'Schreib dem Esel, was du mitnimmst, wenn du morgen fährst.', e: 'Schreib der Fee, was du ihr gern mitgeben würdest, wenn sie morgen fährt.' },
+  { d: 'Die Ankunft', lead: 'both', f: 'Du kommst heute um 14:10 Uhr an. Schreib dem Esel einen kurzen Gruß, den er liest, wenn du schon da bist.', e: 'Die Fee kommt heute um 14:10 Uhr an. Schreib ihr einen kurzen Gruß, den sie nach der Ankunft findet.' },
+  { d: 'Mails über den Tisch', lead: 'fee', f: 'Du bist angekommen. Stell dem Esel trotzdem eine schriftliche Aufgabe, auch wenn er im selben Raum sitzt: Er soll dir aufschreiben, was er an deinem ersten Abend über dich gelernt hat.', e: 'Die Fee ist da. Schreib ihr trotzdem auf, was du an ihrem ersten Abend über sie gelernt hast, auch wenn sie neben dir sitzt.' },
+  { d: 'Die Frage am Tisch', lead: 'esel', f: 'Der Esel stellt dir heute eine Frage, vor der du dich sonst drückst. Antworte ehrlich, auch wenn du direkt neben ihm sitzt.', e: 'Stell der Fee die Frage, die du dich im Alltag nie getraut hast, und lass sie nicht ausweichen. Bewerte sie danach mit Sternen.' },
+  { d: 'Die Abschlussprüfung', lead: 'both', f: 'Heute ist die Abschlussprüfung, im echten Leben und nicht auf dem Display. Du entscheidest, wie sie aussieht, und schreibst später auf, was dir aufgefallen ist.', e: 'Heute ist die Abschlussprüfung, im echten Leben. Bestehe sie auf deine eigene Art und schreib später auf, wie es dir ging.' },
+  { d: 'Das Urteil', lead: 'after', f: 'Die Königin hat gesprochen. Lies ihr Urteil und sag dem Esel, was du daraus machst. Maßgeblich bist du.', e: 'Lies das Urteil der Königin und antworte der Fee darauf, auf deine eigene Art.' },
   { d: 'Der Abschied', lead: 'after', f: 'Du fährst heute. Schreib die erste Mail unterwegs, noch auf der Fahrt.', e: 'Die Fee fährt heute. Schreib ihr, was zu Hause bleibt und worauf du dich freust.' },
   { d: 'Das Happy End', lead: 'after', f: 'Schreibt das Ende. Ihr entscheidet beide, wie es ausgeht, und die Fee hat das letzte Wort.', e: 'Schreibt das Ende. Du steuerst deinen Teil bei, und die Fee hat das letzte Wort.' }
 ];
@@ -1158,7 +1182,7 @@ function allBook() {
   });
   for (const k in bookS.local) { const e = bookS.local[k]; out.push({ id: 'local', k, key: 'local|' + k, who: 'Du', mine: true, e }); }
   const now = Date.now();
-  QUEEN.forEach(q => { if (q.t <= now) out.push({ id: 'queen', k: q.k, key: 'queen|' + q.k, who: 'Die Feenkönigin', mine: false, queen: true, e: { t: q.t, text: q.text, sub: q.sub } }); });
+  QUEEN.forEach(q => { if (q.t <= now) out.push({ id: 'queen', k: q.k, key: 'queen|' + q.k, who: 'Die Feenkönigin', mine: false, queen: true, to: q.to, e: { t: q.t, text: q.text, sub: q.sub } }); });
   return out.sort((a, b) => a.e.t - b.e.t);
 }
 function realMails(list) { return list.filter(x => !x.queen); }
@@ -1283,7 +1307,7 @@ function renderMail() {
     if (!x) { mailS.view = 'list'; renderMail(); return; }
     mailSetHeader('Nachricht', '');
     const box = el('div', 'mread' + (x.queen ? ' royal' : '')); box.append(el('h2', '', x.e.sub || '(ohne Betreff)'));
-    const f = el('div', 'from'); const who = el('div'); who.append(document.createTextNode(x.queen ? 'Die Feenkönigin an Fee und Esel' : (x.mine ? 'Ich' : x.who) + ' an ' + (x.mine ? mailOther() : 'mich')), el('small', '', bookLong.format(new Date(x.e.t)) + ' Uhr'));
+    const f = el('div', 'from'); const who = el('div'); who.append(document.createTextNode(x.queen ? (x.to === 'fee' ? 'Die Feenkönigin an Mafifee, Kopie an Masüsel' : 'Die Feenkönigin an Fee und Esel') : (x.mine ? 'Ich' : x.who) + ' an ' + (x.mine ? mailOther() : 'mich')), el('small', '', bookLong.format(new Date(x.e.t)) + ' Uhr'));
     f.append(avatar(x), who); box.append(f, el('div', 'txt', x.e.text));
     if (!x.queen) {
       const acts = el('div', 'acts'); const rb = el('button', 'mbtn main', '↩ Antworten'); rb.type = 'button';
@@ -1300,7 +1324,7 @@ function renderMail() {
     items.forEach(it => {
       if (it.r) { b.append(el('div', 'rt', 'Bewertung ' + (it.r.mine ? 'von mir' : 'von ' + it.r.who) + ': ' + rateIcons(it.r.day, it.r.n) + (it.r.c ? ', „' + it.r.c + '“' : ''))); return; }
       const x = it.x;
-      if (x.queen) { const rb = el('div', 'royal'); rb.append(el('div', 'rh', 'Brief der Feenkönigin'), el('div', 'rs', x.e.sub), el('p', 'tx', x.e.text)); b.append(rb); return; }
+      if (x.queen) { const rb = el('div', 'royal'); rb.append(el('div', 'rh', x.to === 'fee' ? 'Brief der Feenkönigin an die Fee (Kopie an den Esel)' : 'Brief der Feenkönigin'), el('div', 'rs', x.e.sub), el('p', 'tx', x.e.text)); b.append(rb); return; }
       const dk = berlinDay(x.e.t);
       if (dk !== lastDay) { lastDay = dk; n++; b.append(el('div', 'chap', 'Kapitel ' + n + ' · ' + bookFmt.format(new Date(x.e.t)))); }
       if (prevT) { b.append(el('div', 'gap', bookGap(prevT, x.e.t))); b.append(el('div', 'lab', flip ? 'AW:' : 'RE:')); flip = !flip; }
@@ -1362,6 +1386,25 @@ function bookAsText() {
   allRates().sort((a, b) => a.t - b.t).forEach(r => { out += 'Bewertung von ' + r.who + ' (' + TASKS[r.day].d + '): ' + rateIcons(r.day, r.n) + (r.c ? ', ' + r.c : '') + '\n'; });
   return out;
 }
+function buildPrintBook() {
+  const box = $('printBook'); box.textContent = '';
+  const list = allBook(), rs = allRates();
+  const cv = el('div', 'pcover'); cv.append(el('h1', '', bookTitleNow()), el('p', '', 'Ein Briefroman von Masüsel und Mafifee'), el('p', '', '14. November bis 2. Dezember 2026')); box.append(cv);
+  const items = list.map(x => ({ t: x.e.t, x })).concat(rs.map(r => ({ t: r.t, r }))).sort((a, c) => a.t - c.t);
+  let lastDay = '', n = 0, prevT = 0, flip = false;
+  items.forEach(it => {
+    if (it.r) { box.append(el('div', 'prt', 'Bewertung ' + (it.r.mine ? 'von mir' : 'von ' + it.r.who) + ': ' + rateIcons(it.r.day, it.r.n) + (it.r.c ? ', „' + it.r.c + '“' : ''))); return; }
+    const x = it.x;
+    if (x.queen) { const rb = el('div', 'proyal'); rb.append(el('div', 'rh', x.to === 'fee' ? 'Brief der Feenkönigin an die Fee (Kopie an den Esel)' : 'Brief der Feenkönigin'), el('div', 'rs', x.e.sub), el('div', 'ptx', x.e.text)); box.append(rb); return; }
+    const dk = berlinDay(x.e.t);
+    if (dk !== lastDay) { lastDay = dk; n++; box.append(el('div', 'pchap', 'Kapitel ' + n + ' · ' + bookFmt.format(new Date(x.e.t)))); }
+    if (prevT) { box.append(el('div', 'pgap', bookGap(prevT, x.e.t)), el('div', 'plab', flip ? 'AW:' : 'RE:')); flip = !flip; } else { flip = false; }
+    box.append(el('div', 'ptx', x.e.text)); prevT = x.e.t;
+  });
+  const st = rateStats(), bits = []; if (st.cm) bits.push('Karotten: ' + st.cs + ' von ' + st.cm); if (st.sm) bits.push('Sterne: ' + st.ss + ' von ' + st.sm);
+  if (bits.length) box.append(el('div', 'pend', bits.join('   ·   ')));
+}
+window.addEventListener('afterprint', () => { $('printBook').textContent = ''; if (!$('mailApp').hidden) document.body.style.overflow = 'hidden'; });
 function mailOpen() {
   $('mailApp').hidden = false; document.body.style.overflow = 'hidden';
   mailS.view = 'list'; mailS.reply = null; $('mMenuBox').hidden = true; renderMail();
@@ -1382,6 +1425,7 @@ $('mMenuBox').addEventListener('click', ev => {
   else if (a === 'tasks') { mailS.view = 'tasks'; renderMail(); $('mBody').scrollTop = 0; }
   else if (a === 'book') { mailS.view = 'book'; renderMail(); $('mBody').scrollTop = 0; }
   else if (a === 'title') { mailS.view = 'title'; renderTitleEdit(); }
+  else if (a === 'pdf') { buildPrintBook(); document.body.style.overflow = ''; setTimeout(() => window.print(), 50); }
   else if (a === 'txt') {
     const bl = new Blob([bookAsText()], { type: 'text/plain;charset=utf-8' });
     const an = document.createElement('a'); an.href = URL.createObjectURL(bl); an.download = 'unser-buch.txt';
