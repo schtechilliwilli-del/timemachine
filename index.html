@@ -356,6 +356,19 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .wnav { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .wnav .btn { min-width: 56px; }
 .entry img, .ocans img, .quote img { cursor: zoom-in; }
+.logbtn { position: fixed; left: 12px; bottom: 12px; z-index: 30; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(11, 14, 32, 0.88); color: var(--gold); font-size: 22px; line-height: 1; cursor: pointer; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5); }
+.logn { position: absolute; top: -6px; right: -6px; min-width: 22px; height: 22px; padding: 0 5px; box-sizing: border-box; border-radius: 11px; background: var(--rose); color: #2b0f19; font-family: var(--mono); font-size: 12px; font-weight: 700; line-height: 22px; text-align: center; }
+.logn[hidden] { display: none; }
+.logbox { max-width: 480px; height: 86vh; }
+.loghead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.loglist { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.logday { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold); margin: 14px 0 4px; }
+.logev { display: flex; gap: 10px; padding: 9px 6px; border-top: 1px solid var(--line); border-radius: 8px; }
+.logev.new { background: rgba(242, 196, 109, 0.1); }
+.logev .ic { flex: none; width: 26px; text-align: center; font-size: 20px; line-height: 1.3; }
+.logev .tx { min-width: 0; overflow-wrap: anywhere; font-size: 15px; line-height: 1.4; }
+.logev .who { font-family: var(--mono); font-size: 12px; color: var(--muted); display: block; }
+.logev .who b { color: var(--ink); font-weight: 500; }
 .imgpop { z-index: 60; flex-direction: column; gap: 12px; padding: 12px; cursor: zoom-out; }
 .imgpop[hidden] { display: none; }
 .imgpop img { max-width: 100%; max-height: 86vh; object-fit: contain; border-radius: 12px; box-shadow: 0 0 40px rgba(0, 0, 0, 0.6); }
@@ -512,6 +525,14 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
   <button class="mfab" id="mFab" type="button">&#9998; Neue Mail</button>
 </div>
 <div id="printBook" aria-hidden="true"></div>
+<button class="logbtn" id="logBtn" type="button" aria-label="Logbuch öffnen">📜<span class="logn" id="logN" hidden></span></button>
+<div class="pop" id="logPop" role="dialog" aria-modal="true" aria-labelledby="logH" hidden>
+  <div class="popbox logbox">
+    <div class="loghead"><h3 id="logH">Logbuch</h3><button class="btn" id="logClose" type="button">Schließen</button></div>
+    <div class="wcats" id="logCats" role="group" aria-label="Filter"></div>
+    <div class="loglist" id="logList"></div>
+  </div>
+</div>
 <div class="pop imgpop" id="imgPop" role="dialog" aria-modal="true" aria-label="Bild groß" hidden><img id="imgPopImg" alt="Bild im Tagebuch"><button class="btn" id="imgPopClose" type="button">Schließen</button></div>
 <div class="pop" id="wishPop" role="dialog" aria-modal="true" aria-labelledby="wishH" hidden>
   <div class="popbox">
@@ -2029,6 +2050,90 @@ function fillImg(id, im) {
   state.fb.fsM.getDoc(state.fb.fsM.doc(state.fb.fs, 'images/' + id)).then(sn => { if (sn.exists()) { imgCache[id] = sn.data().data; im.src = imgCache[id]; } }).catch(() => { });
 }
 
+
+/* ---- Logbuch ---- */
+const LOG_CATS = [['all', 'Alles'], ['wish', 'Wünsche'], ['react', 'Reaktionen'], ['diary', 'Tagebuch'], ['mail', 'Mails'], ['task', 'Aufgaben']];
+let logCat = 'all', logNewSince = 0;
+function logCut(t, n) { t = String(t || '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n) + ' ...' : t; }
+function logEvents() {
+  const out = [], ids = Object.keys(state.notes); if (state.uid && ids.indexOf(state.uid) < 0) ids.push(state.uid);
+  const byKey = {}; allEntries().forEach(x => { if (x.id !== 'local' && x.id !== 'both') byKey[ackKey(x.id, x.k)] = x; });
+  const mails = {}; allBook().forEach(x => { if (!x.queen && x.id !== 'local') mails[ackKey(x.id, x.k)] = x; });
+  const own = { diary: state.myDiary, ack: state.myAck, re: state.myRe, seal: state.mySeal, odone: state.myOdone, oc: state.myOc, mread: state.myRead, book: bookS.my, rate: rateS.my };
+  const label = (tg, u) => {
+    if (!tg) return 'einen Eintrag';
+    const of = tg.id === u ? '' : ' von ' + (tg.mine ? 'dir' : tg.who);
+    if (tg.kind === 'star') return 'Wunsch „' + logCut(tg.e.wish, 50) + '“' + of;
+    if (tg.kind === 'door') return 'Antwort zu Türchen ' + tg.d.n + of;
+    if (tg.kind === 'oracle' || tg.kind === 'oracle2') return 'Orakelkarte' + of;
+    if (tg.e && tg.e.heart) return 'ein Herz' + of;
+    return 'Eintrag' + (tg.e && tg.e.text ? ' „' + logCut(tg.e.text, 40) + '“' : '') + of;
+  };
+  ids.forEach(u => {
+    const v = state.notes[u] || {}, mine = u === state.uid, who = mine ? 'Du' : nameOf(u, v);
+    const get = f => mine ? Object.assign({}, v[f] || {}, own[f] || {}) : (v[f] || {});
+    const add = (t, cat, ic, text) => { if (typeof t === 'number' && t > 0) out.push({ t, cat, ic, text, who, mine }); };
+    const dd = get('diary');
+    for (const k in dd) { const e = dd[k]; if (!e || isLegacyOc(nameOf(u, v), e)) continue;
+      if (e.star) add(e.t, 'wish', '🌠', 'Sternschnuppe gefangen: ' + logCut(e.wish, 120));
+      else if (e.heart) add(e.t, 'react', '♥', 'Herz geschickt');
+      else add(e.t, 'diary', '📓', 'Tagebucheintrag' + (e.text ? ': ' + logCut(e.text, 120) : ' mit Bild')); }
+    const ak = get('ack');
+    for (const k in ak) { const d = ak[k] || {}, tg = byKey[k];
+      add(d.t, 'wish', '✨', 'Wunsch erfüllt' + (tg ? ' (' + (tg.mine ? 'von dir' : 'von ' + tg.who) + '): ' + logCut(tg.e.wish, 80) : '') + (d.text ? '. Antwort: ' + logCut(d.text, 100) : '') + (d.img ? ' (mit Bild)' : '')); }
+    const sl = get('seal');
+    for (const k in sl) { const tg = byKey[k]; add((sl[k] || {}).t, 'wish', '🧧', 'Wunsch besiegelt' + (tg ? ': ' + logCut(tg.e.wish, 80) : '')); }
+    const re = get('re');
+    for (const k in re) { const r = re[k] || {}, tg = byKey[k];
+      if (r.e) add(r.t, 'react', r.e, 'Reaktion auf ' + label(tg, u));
+      for (const c in (r.cm || {})) { const m = r.cm[c]; if (m && m.x) add(m.t, 'react', '💬', 'Kommentar zu ' + label(tg, u) + ': ' + logCut(m.x, 120)); } }
+    const oc = get('oc'), od = get('odone');
+    for (const k in oc) { const r = oc[k] || {}; add(r.t, 'task', '🔮', 'Orakel-Aufgabe erledigt' + (r.text ? ': ' + logCut(r.text, 100) : '') + (r.img ? ' (mit Bild)' : '')); }
+    for (const k in od) { if (od[k] && !oc[k]) add(od[k], 'task', '🔮', 'Orakel-Aufgabe als erledigt markiert'); }
+    const bk = get('book');
+    for (const k in bk) { const e = bk[k] || {}; add(e.t, 'mail', '✉️', 'Mail geschrieben: ' + (e.sub || '(ohne Betreff)')); }
+    const mr = get('mread');
+    for (const k in mr) { const ml = mails[k]; if (ml && typeof mr[k] === 'number') add(Math.abs(mr[k]), 'mail', '👁️', 'Mail gelesen: ' + (ml.e.sub || '(ohne Betreff)')); }
+    const rt = get('rate');
+    for (const k in rt) { const r = rt[k] || {}, m = /^d(\d+)$/.exec(k); if (m && typeof r.n === 'number') add(r.t, 'mail', rateIcon(Number(m[1])), 'Prüfung bewertet (' + TASKS[Number(m[1])].d + '): ' + rateIcons(Number(m[1]), r.n)); }
+    DOORS.forEach(d => { const x = v['d' + d.n]; if (x && x.text) add(typeof x.ts === 'number' ? x.ts : doorStart(d.n), 'diary', '🚪', 'Türchen ' + d.n + ' beantwortet: ' + logCut(x.text, 100)); });
+    if (typeof v.departed === 'number') add(v.departed, 'task', '🚗', 'Ist losgefahren');
+    if (v.bookTitle && v.bookTitle.v) add(v.bookTitle.t, 'mail', '📖', 'Buchtitel geändert: ' + logCut(v.bookTitle.v, 60));
+  });
+  return out.sort((a, b) => b.t - a.t);
+}
+const logDayFmt = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', day: 'numeric', month: 'long' });
+function logSeen() { try { return Number(localStorage.getItem('zm_logseen')) || 0; } catch (e) { return 0; } }
+function logMarkSeen() { try { localStorage.setItem('zm_logseen', String(Date.now())); } catch (e) { /* egal */ } }
+function renderLogBadge() {
+  let seen = logSeen(); if (!seen) { logMarkSeen(); seen = Date.now(); }
+  const n = logEvents().filter(x => !x.mine && x.t > seen && x.ic !== '👁️').length;
+  const b = $('logN'); b.hidden = !n; b.textContent = n > 9 ? '9+' : String(n);
+  if (!$('logPop').hidden) renderLog();
+}
+function renderLog() {
+  const cats = $('logCats'), cf = document.createDocumentFragment();
+  LOG_CATS.forEach(c => { const b = el('button', 'wchip' + (logCat === c[0] ? ' on' : ''), c[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(logCat === c[0])); b.addEventListener('click', () => { logCat = c[0]; renderLog(); }); cf.appendChild(b); });
+  cats.replaceChildren(cf);
+  const ev = logEvents().filter(x => logCat === 'all' || x.cat === logCat), box = $('logList'), f = document.createDocumentFragment();
+  if (!ev.length) f.append(el('p', 'muted', 'Hier ist noch nichts passiert.'));
+  const today = berlinDay(Date.now()); let lastDay = '';
+  ev.slice(0, 300).forEach(x => {
+    const dk = berlinDay(x.t);
+    if (dk !== lastDay) { lastDay = dk; f.append(el('div', 'logday', dk === today ? 'Heute' : logDayFmt.format(new Date(x.t)))); }
+    const row = el('div', 'logev' + (!x.mine && x.t > logNewSince ? ' new' : '')), ic = el('span', 'ic', x.ic), tx = el('div', 'tx');
+    const wh = el('span', 'who'); wh.append(el('b', '', x.who), document.createTextNode(' · ' + bookTime.format(new Date(x.t)) + ' Uhr'));
+    tx.append(wh, document.createTextNode(x.text)); row.append(ic, tx); f.append(row);
+  });
+  box.replaceChildren(f);
+}
+$('logBtn').addEventListener('click', () => { logNewSince = logSeen(); logMarkSeen(); $('logN').hidden = true; $('logPop').hidden = false; renderLog(); $('logList').scrollTop = 0; });
+function closeLog() { $('logPop').hidden = true; }
+$('logClose').addEventListener('click', closeLog);
+$('logPop').addEventListener('click', e => { if (e.target === $('logPop')) closeLog(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('logPop').hidden) closeLog(); });
+renderLogBadge();
+
 function startNotes(db) {
   const timer = setTimeout(() => { state.dbSlow = true; renderPanel(); }, 10000);
   db.collection('notes').onSnapshot(snap => {
@@ -2054,7 +2159,7 @@ function startNotes(db) {
       for (const k in (v.ack || {})) { const key = id + '|' + k; if (!state.seenA.has(key)) { state.seenA.add(key); if (state.seen && k.indexOf(ackKey(state.uid, '')) === 0) fresh.push(nameOf(id, v) + ' hat einen Wunsch von dir erfüllt' + ((v.ack[k] && v.ack[k].text) ? ': ' + (v.ack[k].text.length > 70 ? v.ack[k].text.slice(0, 70) + ' ...' : v.ack[k].text) : '.')); } }
     }
     state.notes = m; state.seen = true;
-    renderDoors(); renderPanel(); renderHoro(); renderArriveVisibility(); renderDiary(); renderBook();
+    renderDoors(); renderPanel(); renderHoro(); renderArriveVisibility(); renderDiary(); renderBook(); renderLogBadge();
     if (fresh.length) showToast(fresh[fresh.length - 1]);
   }, e => { clearTimeout(timer); state.db = null; state.connErr = (e && (e.code || e.message)) || 'unbekannt'; renderPanel(); renderDiary(); showToast('Keine Verbindung zum Speicher: ' + state.connErr); });
   renderPanel();
