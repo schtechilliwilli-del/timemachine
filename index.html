@@ -77,6 +77,12 @@ p { margin: 0; }
 .mrow.unread .tm { color: #c2305a; font-weight: 700; }
 .mrow.unread::before { content: ''; align-self: center; flex: none; width: 9px; height: 9px; border-radius: 50%; background: #c2305a; margin-right: -4px; }
 .mempty { padding: 40px 24px; text-align: center; color: #6a6f87; }
+.mfold { display: flex; gap: 8px; padding: 8px 12px; overflow-x: auto; background: #fff; border-bottom: 1px solid #e6e8f0; -webkit-overflow-scrolling: touch; }
+.mfold button { flex: none; min-height: 36px; border: 1px solid #d5d8e6; background: #fff; border-radius: 18px; padding: 6px 13px; font: inherit; font-size: 14px; color: #1d2030; cursor: pointer; }
+.mfold button.on { background: #1d2030; color: #fff; border-color: #1d2030; }
+.mempty { padding: 28px 18px; text-align: center; color: #6a6f87; font-size: 15px; }
+.mrow.draft .nm { color: #c2305a; }
+.mrow.draft .mav { background: #9aa0b8; font-size: 18px; }
 .mturn { padding: 10px 16px; font-size: 14px; color: #6a6f87; background: #eceef6; }
 .mread { background: #fff; min-height: 100%; padding: 18px 18px 30px; }
 .mread h2 { font-family: var(--body); font-size: 22px; font-weight: 700; margin: 0 0 14px; overflow-wrap: anywhere; text-wrap: wrap; }
@@ -1342,7 +1348,17 @@ $('toast').addEventListener('click', () => { $('toast').hidden = true; });
 /* ---- Postfach (Briefroman) ---- */
 const bookS = { my: {}, local: {}, myTitle: null };
 const rateS = { my: {} };
-const mailS = { view: 'list', cur: null, reply: null, draft: {} };
+const mailS = { view: 'list', cur: null, reply: null, draft: {}, folder: 'in', draftId: null };
+function draftsLoad() { try { const o = JSON.parse(localStorage.getItem('zm_drafts') || '{}'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } }
+function draftsSave(o) { try { localStorage.setItem('zm_drafts', JSON.stringify(o)); } catch (e) { /* egal */ } }
+function draftList() { const o = draftsLoad(); return Object.keys(o).map(k => Object.assign({ id: k }, o[k])).filter(d => d && d.text && d.text.trim()).sort((a, b) => b.t - a.t); }
+function draftPut(sub, text) {
+  const o = draftsLoad();
+  if (!text.trim()) { if (mailS.draftId) { delete o[mailS.draftId]; draftsSave(o); } return; }
+  if (!mailS.draftId) mailS.draftId = 'e' + Date.now();
+  o[mailS.draftId] = { t: Date.now(), sub: sub, text: text }; draftsSave(o);
+}
+function draftDrop() { if (!mailS.draftId) return; const o = draftsLoad(); delete o[mailS.draftId]; draftsSave(o); mailS.draftId = null; }
 const QUEEN = [
   { k: 'prolog', t: Date.UTC(2026, 10, 13, 23, 0), to: 'both', sub: 'Erlass der Königin', text: 'An die Fee Mafifee, zuständig für Penzing, und an den Esel Masüsel, wohnhaft in Simmern.\n\nEs wurde festgestellt, dass der Esel manchmal süß und manchmal Esel ist. Des Weiteren wurde festgestellt, dass die Fee manchmal fies und manchmal Fee ist. Beides ist zulässig. Die Entfernung von 500 Kilometern ist es nicht.\n\nIch ordne daher eine Prüfung an. Sie soll zeigen, ob beide einander vertrauen können. Süß wie fies, Esel wie Fee, an guten Tagen wie an schlechten. Wer sich auf den anderen verlassen kann, soll mit einem Happy End belohnt werden.\n\nHiermit wird im Namen des Feenreiches verfügt:\n\n§ 1 Die Prüfung. Die Fee prüft den Esel, ob er mehr süß oder mehr störrisch ist und ob sie sich auf ihn verlassen darf. Jeden Tag ergeht eine Aufgabe, und was der Esel liefert, bewertet die Fee mit null bis fünf goldenen Karotten.\n\n§ 2 Die Beweisführung. Der Esel darf sich auf seine eigene Weise beweisen, mit seinen eigenen Worten. Die Fee darf prüfen, wie es ihr beliebt, doch das Schummeln ist ihr untersagt.\n\n§ 3 Die Gegenprobe. Gleichzeitig prüft der Esel die Fee, ob sie mehr Fee oder mehr fies ist und ob er sich auf sie verlassen darf. Auch eine Fee ist nicht fehlerfrei: Entgleitet ihr der Zauber, ist der Esel berechtigt, sie auf die Probe zu stellen, und er vergibt Sterne.\n\n§ 4 Die Abschlussprüfung. Eine abschließende Prüfung ist für den 29. November geplant.\n\n§ 5 Die Beurteilung. Am Mittwoch, dem 2. Dezember, gebe ich meine Beurteilung ab, über den Esel und über die Fee.\n\n§ 6 Das letzte Wort. Maßgeblich ist die Fee, denn sie ist dem Königshaus unterstellt. Der Esel ist einfach nur ein Esel. Die Beurteilung spricht die Krone. Besteht der Esel nicht, kann die Fee eine Nachprüfung anordnen. Ob daraus ein gutes Ende wird, liegt weder in der Hand der Fee noch in der des Esels. Es liegt in den Sternen, und die gehorchen nicht einmal der Krone.\n\nFür Pannen des Zauberstabs übernimmt der Hof keine Haftung.\n\nAusgefertigt zu Wolkenstein, am vierzehnten Tag des Novembers,\nErnestine die Vorläufige, Königin des Feenreiches\n(Siegel: ein Tropfen Mondlicht)' },
   { k: 'frage1', t: Date.UTC(2026, 10, 17, 6, 0), to: 'fee', sub: 'Anfrage der Krone an die Fee', text: 'An die Fee Mafifee, Kopie an den Esel Masüsel.\n\nIn der Sache Fiesheit ergeht folgende Anfrage: Wann hat die Fee zuletzt jemanden fies behandelt, der es verdient hatte, und wann jemanden, der es nicht verdient hatte?\n\nDie Fee wird aufgefordert, in ihrer nächsten Mail an den Esel wahrheitsgemäß Auskunft zu geben, so ehrlich, wie eine Fee es vermag. Der Esel wird gebeten, auf etwaiges Schummeln zu achten.\n\nAusgefertigt zu Wolkenstein,\nErnestine die Vorläufige, Königin des Feenreiches' },
@@ -1525,9 +1541,31 @@ function renderMail() {
     body.append(el('div', 'mturn', (bar.length ? bar.join('   ') + '   ·   ' : '') + turn));
     const today = dayIdx(Date.now());
     if (v === 'tasks') { for (let i = today; i >= 0; i--) body.append(taskCard(i, list)); return; }
-    body.append(taskCard(today, list));
-    const items = list.map(x => ({ kind: 'mail', t: x.e.t, x })).concat(allRates().map(r => ({ kind: 'rate', t: r.t, r }))).sort((a, b) => b.t - a.t);
-    const rd = mailReadSet();
+    const rd = mailReadSet(), fo = mailS.folder || 'in', dr = draftList();
+    const unreadN = list.filter(x => !x.mine && !rd.has(x.key)).length;
+    const fb = el('div', 'mfold');
+    [['all', 'Alle', 0], ['in', 'Posteingang', unreadN], ['sent', 'Gesendet', 0], ['exam', 'Prüfungen', 0], ['draft', 'Entwürfe', dr.length]].forEach(f => {
+      const bt = el('button', fo === f[0] ? 'on' : '', f[1] + (f[2] ? ' (' + f[2] + ')' : '')); bt.type = 'button';
+      bt.addEventListener('click', () => { mailS.folder = f[0]; renderMail(); body.scrollTop = 0; }); fb.append(bt);
+    });
+    body.append(fb);
+    if (fo === 'all' || fo === 'in' || fo === 'exam') body.append(taskCard(today, list));
+    if (fo === 'draft') {
+      if (!dr.length) body.append(el('div', 'mempty', 'Keine Entwürfe. Wenn du eine Mail anfängst und nicht abschickst, bleibt sie hier liegen. Entwürfe bleiben nur auf diesem Gerät.'));
+      dr.forEach(d => {
+        const row = el('div', 'mrow draft'); row.tabIndex = 0; row.setAttribute('role', 'button');
+        const av = el('div', 'mav', '✎'); av.setAttribute('aria-hidden', 'true');
+        const c = el('div', 'mc'), l1 = el('div', 'l1'); l1.append(el('span', 'nm', 'Entwurf'), el('span', 'tm', mailWhen(d.t)));
+        c.append(l1, el('div', 'sj', d.sub || '(ohne Betreff)'), el('div', 'pv', d.text.replace(/\s+/g, ' ').slice(0, 100))); row.append(av, c);
+        const open = () => { mailS.view = 'compose'; mailS.draftId = d.id; mailS.reply = d.sub || null; renderCompose(); };
+        row.addEventListener('click', open); row.addEventListener('keydown', ev => { if (ev.key === 'Enter') open(); });
+        body.append(row);
+      });
+      return;
+    }
+    let items = list.map(x => ({ kind: 'mail', t: x.e.t, x })).concat(allRates().map(r => ({ kind: 'rate', t: r.t, r }))).sort((a, b) => b.t - a.t);
+    items = items.filter(it => fo === 'all' || (fo === 'in' && it.kind === 'mail' && !it.x.mine) || (fo === 'sent' && it.kind === 'mail' && it.x.mine) || (fo === 'exam' && it.kind === 'rate'));
+    if (!items.length) body.append(el('div', 'mempty', { in: 'Noch nichts im Posteingang.', sent: 'Du hast noch nichts gesendet.', exam: 'Noch keine Prüfungen bewertet.', all: 'Noch keine Mails.' }[fo]));
     items.forEach(it => {
       if (it.kind === 'rate') {
         const r = it.r, row = el('div', 'mrow rate'); const av = el('div', 'mav', rateIcon(r.day)); av.setAttribute('aria-hidden', 'true');
@@ -1559,7 +1597,7 @@ function renderMail() {
     const acts = el('div', 'acts');
     if (!x.queen) {
       const rb = el('button', 'mbtn main', '↩ Antworten'); rb.type = 'button';
-      rb.addEventListener('click', () => { mailS.view = 'compose'; mailS.reply = 'AW: ' + (x.e.sub || '(ohne Betreff)').replace(SUBRE, ''); renderCompose(); });
+      rb.addEventListener('click', () => { mailS.view = 'compose'; mailS.draftId = null; mailS.reply = 'AW: ' + (x.e.sub || '(ohne Betreff)').replace(SUBRE, ''); renderCompose(); });
       acts.append(rb);
     }
     if (!x.mine) { const ub = el('button', 'mbtn', '✉ Als ungelesen markieren'); ub.type = 'button'; ub.addEventListener('click', () => { mailMarkUnread(x.key); mailS.view = 'list'; renderBook(); showToast('Als ungelesen markiert.'); }); acts.append(ub); }
@@ -1615,10 +1653,13 @@ function renderCompose() {
   f.append(el('div', 'to', 'Von: ' + addrStr(ADDR[myRole()])), el('div', 'to', 'An: ' + addrStr(mailOther() === 'Mafifee' ? ADDR.fee : ADDR.esel)));
   const sub = el('input'); sub.id = 'mSub2'; sub.type = 'text'; sub.maxLength = 80; sub.placeholder = 'Betreff'; sub.value = mailS.reply || (realMails(list).length ? bookDefaultSub(list) : ''); sub.setAttribute('aria-label', 'Betreff');
   const tx = el('textarea'); tx.id = 'mText'; tx.maxLength = 8000; tx.placeholder = 'Liebe/r ...'; tx.setAttribute('aria-label', 'Nachricht');
+  { const dd = mailS.draftId ? draftsLoad()[mailS.draftId] : null; if (dd) { tx.value = dd.text || ''; if (dd.sub) sub.value = dd.sub; } }
+  const autosave = () => draftPut(sub.value.trim(), tx.value); tx.addEventListener('input', autosave); sub.addEventListener('input', autosave);
   const hint = el('div', 'hint'); hint.id = 'mHint'; hint.setAttribute('aria-live', 'polite'); if (!realMails(list).length && myRole() === 'esel') hint.textContent = 'Die Fee eröffnet die Prüfung und ist zuerst dran.';
   const acts = el('div', 'acts'); const go = el('button', 'mbtn main', 'Senden'); go.type = 'submit'; const ca = el('button', 'mbtn', 'Abbrechen'); ca.type = 'button';
-  ca.addEventListener('click', () => { mailS.view = 'list'; mailS.reply = null; renderMail(); });
-  acts.append(go, ca);
+  ca.textContent = 'Schließen'; ca.addEventListener('click', () => { const kept = tx.value.trim() && mailS.draftId; mailS.view = 'list'; mailS.reply = null; mailS.draftId = null; mailS.folder = kept ? 'draft' : mailS.folder; renderMail(); if (kept) showToast('Als Entwurf gespeichert.'); });
+  const dx = el('button', 'mbtn', 'Verwerfen'); dx.type = 'button'; dx.addEventListener('click', () => { draftDrop(); mailS.view = 'list'; mailS.reply = null; renderMail(); });
+  acts.append(go, ca, dx);
   const rm = realMails(list).slice().reverse().slice(0, 3);
   if (rm.length) { const th = el('details', 'mthread'); th.open = true; th.append(el('summary', '', 'Bisheriger Verlauf (' + rm.length + ')')); const inner = el('div', 'mctx'); rm.forEach(x => inner.append(quoteNode(x))); th.append(inner); f.append(sub, th, tx); } else f.append(sub, tx);
   f.append(hint, acts); body.append(f);
@@ -1629,6 +1670,7 @@ function renderCompose() {
     go.disabled = true;
     if (canShare()) { bookS.my[id] = entry; await writeOwn({ book: Object.assign({}, bookS.my) }); } else { bookS.local[id] = entry; }
     mailMarkRead((canShare() ? state.uid : 'local') + '|' + id);
+    draftDrop(); mailS.folder = 'sent';
     mailS.view = 'list'; mailS.reply = null; renderBook();
     if (state.err) showToast(state.err);
   });
@@ -1689,14 +1731,14 @@ function mailSyncHash() { if (location.hash === '#postfach') { if ($('mailApp').
 window.addEventListener('hashchange', mailSyncHash);
 $('mBack').addEventListener('click', () => {
   if (mailS.view === 'list') { location.hash = ''; mailClose(); }
-  else { mailS.view = 'list'; mailS.reply = null; renderMail(); }
+  else { const kept = mailS.view === 'compose' && mailS.draftId; mailS.view = 'list'; mailS.reply = null; mailS.draftId = null; if (kept) { mailS.folder = 'draft'; } renderMail(); if (kept) showToast('Als Entwurf gespeichert.'); }
 });
-$('mFab').addEventListener('click', () => { mailS.view = 'compose'; mailS.reply = null; renderCompose(); });
+$('mFab').addEventListener('click', () => { mailS.view = 'compose'; mailS.draftId = null; mailS.reply = null; renderCompose(); });
 $('mMenu').addEventListener('click', () => { $('mMenuBox').hidden = !$('mMenuBox').hidden; });
 $('mMenuBox').addEventListener('click', ev => {
   const b = ev.target.closest('button'); if (!b) return; $('mMenuBox').hidden = true;
   const a = b.getAttribute('data-act');
-  if (a === 'inbox') { mailS.view = 'list'; renderMail(); }
+  if (a === 'inbox') { mailS.view = 'list'; mailS.folder = 'in'; renderMail(); }
   else if (a === 'tasks') { mailS.view = 'tasks'; renderMail(); $('mBody').scrollTop = 0; }
   else if (a === 'book') { mailS.view = 'book'; renderMail(); $('mBody').scrollTop = 0; }
   else if (a === 'title') { mailS.view = 'title'; renderTitleEdit(); }
