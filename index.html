@@ -1614,7 +1614,7 @@ function renderCompose() {
   const f = el('form', 'mform');
   f.append(el('div', 'to', 'Von: ' + addrStr(ADDR[myRole()])), el('div', 'to', 'An: ' + addrStr(mailOther() === 'Mafifee' ? ADDR.fee : ADDR.esel)));
   const sub = el('input'); sub.id = 'mSub2'; sub.type = 'text'; sub.maxLength = 80; sub.placeholder = 'Betreff'; sub.value = mailS.reply || (realMails(list).length ? bookDefaultSub(list) : ''); sub.setAttribute('aria-label', 'Betreff');
-  const tx = el('textarea'); tx.id = 'mText'; tx.maxLength = 1500; tx.placeholder = 'Liebe/r ...'; tx.setAttribute('aria-label', 'Nachricht');
+  const tx = el('textarea'); tx.id = 'mText'; tx.maxLength = 8000; tx.placeholder = 'Liebe/r ...'; tx.setAttribute('aria-label', 'Nachricht');
   const hint = el('div', 'hint'); hint.id = 'mHint'; hint.setAttribute('aria-live', 'polite'); if (!realMails(list).length && myRole() === 'esel') hint.textContent = 'Die Fee eröffnet die Prüfung und ist zuerst dran.';
   const acts = el('div', 'acts'); const go = el('button', 'mbtn main', 'Senden'); go.type = 'submit'; const ca = el('button', 'mbtn', 'Abbrechen'); ca.type = 'button';
   ca.addEventListener('click', () => { mailS.view = 'list'; mailS.reply = null; renderMail(); });
