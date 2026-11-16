@@ -1571,7 +1571,8 @@ function renderMail() {
         const r = it.r, row = el('div', 'mrow rate'); const av = el('div', 'mav', rateIcon(r.day)); av.setAttribute('aria-hidden', 'true');
         const c = el('div', 'mc'); const l1 = el('div', 'l1'); l1.append(el('span', 'nm', 'Bewertung ' + (r.mine ? 'von mir' : 'von ' + r.who)), el('span', 'tm', mailWhen(r.t)));
         const sj = el('div', 'sj', rateIcons(r.day, r.n)); if (r.n >= 3) sj.append(passBadge());
-        c.append(l1, sj, el('div', 'pv', (r.n >= 3 ? 'Bestanden. ' : '') + (r.c || TASKS[r.day].d))); row.append(av, c);
+        const ex = el('div', 'sj'); ex.style.fontWeight = '700'; ex.textContent = 'Prüfung: ' + TASKS[r.day].d;
+        c.append(l1, ex, sj, el('div', 'pv', (r.n >= 3 ? 'Bestanden. ' : '') + (r.c || ''))); row.append(av, c);
         row.tabIndex = 0; row.setAttribute('role', 'button');
         const openRate = () => { mailS.view = 'rate'; mailS.cur = 'rate|' + r.id + '|' + r.day; renderMail(); body.scrollTop = 0; };
         row.addEventListener('click', openRate); row.addEventListener('keydown', ev => { if (ev.key === 'Enter') openRate(); });
