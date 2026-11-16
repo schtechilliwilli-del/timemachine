@@ -1295,7 +1295,7 @@ function spawnStar() {
   s.addEventListener('click', () => { anim.onfinish = null; anim.cancel(); s.remove(); catchBusy = false; openWish(); });
 }
 function scheduleStar(first) {
-  setTimeout(() => { if (!reduce && wishesToday() < 1) spawnStar(); scheduleStar(false); }, first ? 45000 : 150000 + Math.random() * 210000);
+  setTimeout(() => { if (!reduce && wishesToday() < wishLimit()) spawnStar(); scheduleStar(false); }, first ? 45000 : 150000 + Math.random() * 210000);
 }
 const WISH_CATS = [['📸', 'Bilder'], ['🎙️', 'Stimme'], ['💌', 'Worte'], ['🌙', 'Sterne'], ['🥰', 'Zärtlich'], ['🎉', 'Frech'], ['🎒', 'Wiedersehen']];
 const WISH_TEXT = [
