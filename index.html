@@ -325,6 +325,8 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .entry.wishing { border: 1px solid var(--rose); border-radius: 16px; padding: 14px 14px 12px; margin: 10px 0; background: rgba(240, 143, 169, 0.1); box-shadow: 0 0 16px rgba(240, 143, 169, 0.18); }
 .entry.wishing > p:first-of-type { font-family: var(--display); font-size: 19px; }
 .entry.sealed .badge { color: var(--gold); }
+.entry.door { border-left: 3px solid var(--gold); padding-left: 12px; margin: 6px 0; background: linear-gradient(90deg, rgba(242, 196, 109, 0.09), transparent 70%); border-radius: 0 12px 12px 0; }
+.entry .dtitle { font-family: var(--display); font-size: 17px; color: var(--gold); }
 .entry.sealed > p:first-of-type { font-family: var(--display); font-size: 19px; }
 .ocans { text-align: left; margin-top: 8px; font-size: 16px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .ocans b { color: var(--gold); font-weight: 600; }
@@ -1905,11 +1907,11 @@ function renderDiary(force) {
   entries.forEach(x => {
     if (x.kind === 'oracle' || x.kind === 'oracle2') { const oe = oracleEntry(x); if (x.id !== 'local') oe.dataset.lkey = ackKey(x.id, x.k); frag.append(oe); return; }
     const isW = x.kind === 'star' && x.id !== 'local', ackW = isW && getAck(x.id, x.k), sealedW = ackW && getSeal(x.id, x.k);
-    const box = el('div', 'entry' + (x.kind === 'star' ? ' star' : '') + (sealedW ? ' sealed' : isW ? ' wishing' : '')); if (x.id !== 'local') box.dataset.lkey = ackKey(x.id, x.k);
+    const box = el('div', 'entry' + (x.kind === 'star' ? ' star' : x.kind === 'door' ? ' door' : '') + (sealedW ? ' sealed' : isW ? ' wishing' : '')); if (x.id !== 'local') box.dataset.lkey = ackKey(x.id, x.k);
     const meta = el('div', 'meta');
-    meta.append(el('span', 'badge', x.kind === 'star' ? (sealedW ? 'Sternschnuppe, Wunsch erfüllt ✦' : ackW ? 'Sternschnuppe, wartet auf Bestätigung' : isW ? 'Sternschnuppe, Wunsch offen' : 'Sternschnuppe') : x.e.heart ? 'Herz' : x.kind === 'door' ? 'Türchen ' + x.d.n : 'Tagebuch'), el('span', '', x.who), el('span', '', entFmt.format(new Date(x.e.t))));
+    meta.append(el('span', 'badge', x.kind === 'star' ? (sealedW ? 'Sternschnuppe, Wunsch erfüllt ✦' : ackW ? 'Sternschnuppe, wartet auf Bestätigung' : isW ? 'Sternschnuppe, Wunsch offen' : 'Sternschnuppe') : x.e.heart ? 'Herz' : x.kind === 'door' ? '🚪 Türchen ' + x.d.n : 'Tagebuch'), el('span', '', x.who), el('span', '', entFmt.format(new Date(x.e.t))));
     box.append(meta);
-    if (x.kind === 'door') box.append(el('p', '', x.d.title + ': ' + x.e.text));
+    if (x.kind === 'door') { box.append(el('div', 'dtitle', x.d.title)); box.append(el('p', '', x.e.text)); }
     else if (x.kind === 'star') {
       box.append(el('p', '', (x.who === 'Du' ? 'Du wünschst dir: ' : x.who + ' wünscht sich: ') + x.e.wish));
       if (x.id !== 'local') {
