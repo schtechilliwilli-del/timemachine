@@ -1573,7 +1573,7 @@ function renderMail() {
     const bar = []; if (st.cm) bar.push('🥕 ' + st.cs + ' von ' + st.cm); if (st.sm) bar.push('⭐ ' + st.ss + ' von ' + st.sm);
     const last = rm[rm.length - 1];
     const turn = !last ? (myRole() === 'fee' ? 'Du bist dran: Die Fee eröffnet die Prüfung.' : 'Die Fee eröffnet die Prüfung. Wir warten auf Mafifee.') : last.mine ? 'Wir warten auf die Antwort von ' + mailOther() + '.' : 'Du bist dran, ' + last.who + ' hat zuletzt geschrieben.';
-    body.append(el('div', 'mturn', (bar.length ? bar.join('   ') + '   ·   ' : '') + turn));
+    if (bar.length) body.append(el('div', 'mturn', bar.join('   ')));
     const today = dayIdx(Date.now());
     if (v === 'tasks') { for (let i = today; i >= 0; i--) body.append(taskCard(i, list)); return; }
     const rd = mailReadSet(), fo = mailS.folder || 'in', dr = draftList();
