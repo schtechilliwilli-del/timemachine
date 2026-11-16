@@ -1312,28 +1312,28 @@ const SHOWER_FROM = Date.UTC(2026, 10, 16, 14, 0, 0), SHOWER_TO = Date.UTC(2026,
 let showerLive = 0;
 function showerOne() {
   const vw = window.innerWidth, vh = window.innerHeight;
-  const s = document.createElement('div'); s.className = 'shot'; s.setAttribute('aria-hidden', 'true');
-  const big = Math.random() < 0.2, len = big ? 190 : 90 + Math.random() * 70;
-  s.style.width = len + 'px'; s.style.height = big ? '4px' : '2px'; s.style.animation = 'none'; s.style.opacity = '0'; s.style.top = '0'; s.style.left = '0';
-  const a = 18 + Math.random() * 20, rad = a * Math.PI / 180, fromLeft = Math.random() < 0.5;
-  const sx = vw * (fromLeft ? Math.random() * 0.7 : 0.3 + Math.random() * 0.7), sy = -10 + Math.random() * vh * 0.35;
-  const D = vw * (0.35 + Math.random() * 0.35), dx = (fromLeft ? 1 : -1) * Math.cos(rad) * D, dy = Math.sin(rad) * D;
-  const rot = fromLeft ? a : 180 - a;
-  const tr = (x, y) => 'translate(' + x + 'px,' + y + 'px) rotate(' + rot + 'deg)';
-  document.body.appendChild(s); showerLive++;
+  const s = document.createElement('button'); s.type = 'button'; s.className = 'cstar'; s.setAttribute('aria-label', 'Sternschnuppe fangen');
+  s.innerHTML = '<span class="tail"></span><svg class="head" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l3 7.5 8 .6-6.1 5.2 2 7.9L12 17.6 5.1 22.2l2-7.9L1 9.1l8-.6z" fill="#fff5da"/></svg>';
+  const right = Math.random() < 0.5, a = 16 + Math.random() * 22, rad = a * Math.PI / 180;
+  const sx = right ? vw * (0.4 + Math.random() * 0.6) : vw * Math.random() * 0.6, sy = -20 + Math.random() * vh * 0.3;
+  const D = Math.max(vw, vh) * (0.7 + Math.random() * 0.5), dx = (right ? -1 : 1) * Math.cos(rad) * D, dy = Math.sin(rad) * D;
+  const rot = right ? 180 - a : a;
+  const tr = (x, y) => 'translate(' + (x - 110) + 'px,' + (y - 20) + 'px) rotate(' + rot + 'deg)';
+  s.style.opacity = '0'; document.body.appendChild(s); showerLive++;
   const an = s.animate([
     { transform: tr(sx, sy), opacity: 0 },
-    { opacity: 1, offset: 0.15 },
-    { opacity: 1, offset: 0.6 },
+    { opacity: 1, offset: 0.1 },
+    { opacity: 1, offset: 0.8 },
     { transform: tr(sx + dx, sy + dy), opacity: 0 }
-  ], { duration: 1100 + Math.random() * 900, easing: 'ease-in' });
+  ], { duration: 2800 + Math.random() * 1400, easing: 'linear' });
   an.onfinish = () => { s.remove(); showerLive--; };
+  s.addEventListener('click', () => { an.onfinish = null; an.cancel(); s.remove(); showerLive--; openWish(); });
 }
 setInterval(() => {
   const n = Date.now();
   if (n < SHOWER_FROM || n > SHOWER_TO || document.hidden) return;
   const k = Math.random() < 0.35 ? 2 : 1;
-  for (let i = 0; i < k && showerLive < 7; i++) setTimeout(showerOne, Math.random() * 500);
+  for (let i = 0; i < k && showerLive < 8; i++) setTimeout(showerOne, Math.random() * 500);
 }, 650);
 const WISHES = [];
 WISH_TEXT.forEach((arr, c) => arr.forEach(t => WISHES.push({ c, t })));
