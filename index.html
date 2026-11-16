@@ -1308,13 +1308,13 @@ const WISH_TEXT = [
   ['etwas, das wir unbedingt zusammen essen müssen', 'einen Ausflug, den du für uns planst', 'dass du mir sagst, was du als Erstes mit mir machen willst, wenn wir uns sehen', 'ein Spiel, das wir spielen sollen', 'ein Ding auf deiner Packliste, das nur für mich eingepackt wird', 'einen Ort, den ich dir zeigen soll']
 ];
 /* ---- Sternschauer (zeitlich begrenzt) ---- */
-const SHOWER_FROM = Date.UTC(2026, 10, 16, 14, 0, 0), SHOWER_TO = Date.UTC(2026, 10, 16, 14, 18, 0);
+const SHOWER_FROM = Date.UTC(2026, 10, 16, 14, 0, 0), SHOWER_TO = Date.UTC(2026, 10, 16, 14, 24, 0);
 let showerLive = 0;
 function showerOne() {
   const vw = window.innerWidth, vh = window.innerHeight;
   const s = document.createElement('div'); s.className = 'shot'; s.setAttribute('aria-hidden', 'true');
   const big = Math.random() < 0.2, len = big ? 190 : 90 + Math.random() * 70;
-  s.style.width = len + 'px'; s.style.height = big ? '4px' : '2px'; s.style.animation = 'none'; s.style.opacity = '0';
+  s.style.width = len + 'px'; s.style.height = big ? '4px' : '2px'; s.style.animation = 'none'; s.style.opacity = '0'; s.style.top = '0'; s.style.left = '0';
   const a = 18 + Math.random() * 20, rad = a * Math.PI / 180, fromLeft = Math.random() < 0.5;
   const sx = vw * (fromLeft ? Math.random() * 0.7 : 0.3 + Math.random() * 0.7), sy = -10 + Math.random() * vh * 0.35;
   const D = vw * (0.35 + Math.random() * 0.35), dx = (fromLeft ? 1 : -1) * Math.cos(rad) * D, dy = Math.sin(rad) * D;
