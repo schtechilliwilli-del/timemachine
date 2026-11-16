@@ -1263,6 +1263,7 @@ $('hNext').addEventListener('click', () => { const now = Date.now(); const cur =
 /* ---- Fangbare Sternschnuppe ---- */
 let catchBusy = false;
 function shoot() { spawnStar(); }
+function wishLimit() { return berlinDay(Date.now()) === berlinDay(Date.UTC(2026, 10, 16, 14, 0, 0)) ? 3 : 1; }
 function wishesToday() {
   const mine = Object.assign({}, (state.notes[state.uid] || {}).diary || {}, state.myDiary, state.localDiary);
   const today = berlinDay(Date.now()); let n = 0;
@@ -1356,7 +1357,7 @@ function showWish() {
   box.replaceChildren(frag);
 }
 function pickWish() { const l = wishList(); let p; do { p = Math.floor(Math.random() * l.length); } while (l.length > 1 && l[p] === wishIdx); wishPos = p; showWish(); }
-function openWish() { if (wishesToday() >= 1) { showToast('Gefangen, aber heute hattest du schon deinen Wunsch. Eine Sternschnuppe pro Tag, morgen darfst du wieder.'); return; } $('wishOwn').value = ''; pickWish(); $('wishPop').hidden = false; $('wishGo').focus(); }
+function openWish() { if (wishesToday() >= wishLimit()) { showToast(wishLimit() > 1 ? 'Gefangen, aber heute hattest du schon deine drei Wünsche. Morgen darfst du wieder.' : 'Gefangen, aber heute hattest du schon deinen Wunsch. Eine Sternschnuppe pro Tag, morgen darfst du wieder.'); return; } $('wishOwn').value = ''; pickWish(); $('wishPop').hidden = false; $('wishGo').focus(); }
 function closeWish() { $('wishPop').hidden = true; }
 $('wishAgain').addEventListener('click', pickWish);
 $('wishPrev').addEventListener('click', () => { wishPos--; showWish(); });
