@@ -1421,11 +1421,7 @@ function bookTitleNow() {
   for (const id in state.notes) { const x = (state.notes[id] || {}).bookTitle; if (x && x.v && (!best || x.t > best.t)) best = x; }
   return best && best.v ? best.v : 'Feenstaub und Eselsohren';
 }
-function shareRead(x) {
-  if (!canShare() || x.mine || x.queen || x.id === 'local') return;
-  const k = ackKey(x.id, x.k); if (state.myRead[k]) return;
-  state.myRead[k] = Date.now(); writeOwn({ mread: Object.assign({}, state.myRead) });
-}
+function shareRead(x) { /* bewusst leer: keine Lesebestätigung, ein Mailverlauf ist kein Chat */ }
 function readAtOf(x) {
   if (!x.mine || x.id === 'local' || x.queen) return 0;
   const k = ackKey(x.id, x.k);
@@ -1471,7 +1467,6 @@ function headRows(x) {
 }
 function mailHead(x) {
   const h = el('div', 'mhead'), rows = headRows(x);
-  if (x.mine && x.id !== 'local') { const ra = readAtOf(x); rows.push(['Gelesen:', ra ? (ra > 0 ? 'Ja, am ' + bookLong.format(new Date(ra)) + ' Uhr' : 'Ja, der Zeitpunkt ist unbekannt') : 'Noch nicht gelesen']); }
   rows.forEach(a => { const r = el('div', 'hr'); r.append(el('span', 'hl', a[0]), el('span', 'hv', a[1])); h.append(r); });
   return h;
 }
@@ -1531,8 +1526,6 @@ function renderMail() {
     body.append(taskCard(today, list));
     const items = list.map(x => ({ kind: 'mail', t: x.e.t, x })).concat(allRates().map(r => ({ kind: 'rate', t: r.t, r }))).sort((a, b) => b.t - a.t);
     const rd = mailReadSet();
-    let bf = false; list.forEach(x => { if (canShare() && !x.mine && !x.queen && x.id !== 'local' && rd.has(x.key) && !state.myRead[ackKey(x.id, x.k)]) { state.myRead[ackKey(x.id, x.k)] = -Date.now(); bf = true; } });
-    if (bf) writeOwn({ mread: Object.assign({}, state.myRead) });
     items.forEach(it => {
       if (it.kind === 'rate') {
         const r = it.r, row = el('div', 'mrow rate'); const av = el('div', 'mav', rateIcon(r.day)); av.setAttribute('aria-hidden', 'true');
@@ -1548,7 +1541,6 @@ function renderMail() {
       const row = el('div', 'mrow' + (unread ? ' unread' : '') + (x.queen ? ' queenrow' : '')); row.tabIndex = 0; row.setAttribute('role', 'button');
       const c = el('div', 'mc'); const l1 = el('div', 'l1');
       const tmS = el('span', 'tm', mailWhen(x.e.t));
-      if (x.mine && x.id !== 'local') { const ra = readAtOf(x); tmS.append(el('span', 'rc' + (ra ? ' ok' : ''), ra ? ' ✓✓' : ' ✓')); }
       l1.append(el('span', 'nm', x.mine ? 'Ich' : x.who), tmS);
       c.append(l1, el('div', 'sj', x.e.sub || '(ohne Betreff)'), el('div', 'pv', x.e.text.replace(/\s+/g, ' ').slice(0, 100)));
       row.append(avatar(x), c);
@@ -2105,8 +2097,6 @@ function logEvents() {
     for (const k in od) { if (od[k] && !oc[k]) add(od[k], 'task', '🔮', 'Orakel-Aufgabe als erledigt markiert', null); }
     const bk = get('book');
     for (const k in bk) { const e = bk[k] || {}; add(e.t, 'mail', '✉️', 'Mail geschrieben: ' + (e.sub || '(ohne Betreff)'), { t: 'm', key: u + '|' + k }); }
-    const mr = get('mread');
-    for (const k in mr) { const ml = mails[k]; if (ml && typeof mr[k] === 'number') add(Math.abs(mr[k]), 'mail', '👁️', 'Mail gelesen: ' + (ml.e.sub || '(ohne Betreff)'), { t: 'm', key: ml.key }); }
     const rt = get('rate');
     for (const k in rt) { const r = rt[k] || {}, m = /^d(\d+)$/.exec(k); if (m && typeof r.n === 'number') add(r.t, 'mail', rateIcon(Number(m[1])), 'Prüfung bewertet (' + TASKS[Number(m[1])].d + '): ' + rateIcons(Number(m[1]), r.n), { t: 'r', key: 'rate|' + u + '|' + Number(m[1]) }); }
     DOORS.forEach(d => { const x = v['d' + d.n]; if (x && x.text) add(typeof x.ts === 'number' ? x.ts : doorStart(d.n), 'diary', '🚪', 'Türchen ' + d.n + ' beantwortet: ' + logCut(x.text, 100), { t: 'd', keys: [ackKey(u, 'd' + d.n)] }); });
@@ -2189,7 +2179,6 @@ function startNotes(db) {
       }
       for (const k in (v.odone || {})) { const key = id + '|od|' + k + '|' + (v.odone[k] ? 1 : 0); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen && v.odone[k] && !(v.oc && v.oc[k])) fresh.push(nameOf(id, v) + ' hat die Aufgabe der Orakelkarte erledigt.' + (state.myOc[k] ? '' : ' Und du?')); } }
       for (const k in (v.oc || {})) { const r = v.oc[k] || {}, key = id + '|oc|' + k + '|' + (r.t || 0); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen && r.t) fresh.push(nameOf(id, v) + ' hat die Aufgabe der Orakelkarte erledigt' + (r.text ? ': ' + (r.text.length > 60 ? r.text.slice(0, 60) + ' ...' : r.text) : '.') + (state.myOc[k] && state.myOc[k].t ? '' : ' Und du?')); } }
-      for (const k in (v.mread || {})) { const key = id + '|rd|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat deine Mail gelesen.'); } }
       for (const k in (v.seal || {})) { const key = id + '|seal|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat einen erfüllten Wunsch offiziell besiegelt ✦'); } }
       DOORS.forEach(d => { const x = v['d' + d.n]; if (x && x.text) { const key = id + '|d' + d.n + '|' + (x.ts || x.text.length); if (!state.seenE.has(key)) { state.seenE.add(key); if (state.seen) fresh.push(nameOf(id, v) + ' hat bei Türchen ' + d.n + ' geantwortet.'); } } });
       for (const k in (v.ack || {})) { const key = id + '|' + k; if (!state.seenA.has(key)) { state.seenA.add(key); if (state.seen && k.indexOf(ackKey(state.uid, '')) === 0) fresh.push(nameOf(id, v) + ' hat einen Wunsch von dir erfüllt' + ((v.ack[k] && v.ack[k].text) ? ': ' + (v.ack[k].text.length > 70 ? v.ack[k].text.slice(0, 70) + ' ...' : v.ack[k].text) : '.')); } }
