@@ -1306,6 +1306,34 @@ const WISH_TEXT = [
   ['ein Foto, wie du eine alberne Pose machst', 'ein Rätsel, das ich bis morgen lösen muss', 'ein Foto von etwas Verrücktem, das du heute gefunden hast', 'dass du mir ein Tier ausdenkst, das wir zusammen wären', 'eine Frage, auf die ich nur mit einem Emoji antworten darf', 'dass du mir einen Spitznamen für heute gibst'],
   ['etwas, das wir unbedingt zusammen essen müssen', 'einen Ausflug, den du für uns planst', 'dass du mir sagst, was du als Erstes mit mir machen willst, wenn wir uns sehen', 'ein Spiel, das wir spielen sollen', 'ein Ding auf deiner Packliste, das nur für mich eingepackt wird', 'einen Ort, den ich dir zeigen soll']
 ];
+/* ---- Sternschauer (zeitlich begrenzt) ---- */
+const SHOWER_FROM = Date.UTC(2026, 10, 16, 14, 0, 0), SHOWER_TO = Date.UTC(2026, 10, 16, 14, 9, 0);
+let showerLive = 0;
+function showerOne() {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const s = document.createElement('div'); s.className = 'shot'; s.setAttribute('aria-hidden', 'true');
+  const big = Math.random() < 0.2, len = big ? 190 : 90 + Math.random() * 70;
+  s.style.width = len + 'px'; s.style.height = big ? '4px' : '2px'; s.style.animation = 'none'; s.style.opacity = '0';
+  const a = 18 + Math.random() * 20, rad = a * Math.PI / 180, fromLeft = Math.random() < 0.5;
+  const sx = vw * (fromLeft ? Math.random() * 0.7 : 0.3 + Math.random() * 0.7), sy = -10 + Math.random() * vh * 0.35;
+  const D = vw * (0.35 + Math.random() * 0.35), dx = (fromLeft ? 1 : -1) * Math.cos(rad) * D, dy = Math.sin(rad) * D;
+  const rot = fromLeft ? a : 180 - a;
+  const tr = (x, y) => 'translate(' + x + 'px,' + y + 'px) rotate(' + rot + 'deg)';
+  document.body.appendChild(s); showerLive++;
+  const an = s.animate([
+    { transform: tr(sx, sy), opacity: 0 },
+    { opacity: 1, offset: 0.15 },
+    { opacity: 1, offset: 0.6 },
+    { transform: tr(sx + dx, sy + dy), opacity: 0 }
+  ], { duration: 1100 + Math.random() * 900, easing: 'ease-in' });
+  an.onfinish = () => { s.remove(); showerLive--; };
+}
+setInterval(() => {
+  const n = Date.now();
+  if (n < SHOWER_FROM || n > SHOWER_TO || document.hidden) return;
+  const k = Math.random() < 0.35 ? 2 : 1;
+  for (let i = 0; i < k && showerLive < 7; i++) setTimeout(showerOne, Math.random() * 500);
+}, 650);
 const WISHES = [];
 WISH_TEXT.forEach((arr, c) => arr.forEach(t => WISHES.push({ c, t })));
 let wishIdx = 0, wishCat = -1, wishPos = 0;
