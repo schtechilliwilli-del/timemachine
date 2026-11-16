@@ -1507,7 +1507,7 @@ function bookGap(prev, t) {
   if (dayDiff === 1) { const hr = Number(bookHour.format(new Date(t))); return hr < 11 ? 'Am nächsten Morgen' : hr < 17 ? 'Am nächsten Tag' : 'Am nächsten Abend'; }
   return numW(dayDiff, 'Ein') + (dayDiff === 1 ? ' Tag später' : ' Tage später');
 }
-const ADDR = { fee: ['Mafifee', 'mafifee@penzing.feenpost'], esel: ['Masüsel', 'masuesel@simmern.feenpost'], queen: ['Königin Ernestine die Vorläufige', 'krone@wolkenstein.feenreich'] };
+const ADDR = { fee: ['Mafifee', 'mafifee@feen.staub'], esel: ['Masüsel', 'masuesel@esel.ohr'], queen: ['Königin Ernestine die Vorläufige', 'krone@wolkenstein.feenreich'] };
 const SUBRE = /^((AW|RE):\s*)+/i;
 function addrStr(a) { return a[0] + ' <' + a[1] + '>'; }
 function fromOf(x) { if (x.queen) return ADDR.queen; return ADDR[(x.mine ? myRole() : (x.who === 'Mafifee' ? 'fee' : 'esel'))]; }
