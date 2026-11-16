@@ -1657,7 +1657,7 @@ function renderCompose() {
   const autosave = () => draftPut(sub.value.trim(), tx.value); tx.addEventListener('input', autosave); sub.addEventListener('input', autosave);
   const hint = el('div', 'hint'); hint.id = 'mHint'; hint.setAttribute('aria-live', 'polite'); if (!realMails(list).length && myRole() === 'esel') hint.textContent = 'Die Fee eröffnet die Prüfung und ist zuerst dran.';
   const acts = el('div', 'acts'); const go = el('button', 'mbtn main', 'Senden'); go.type = 'submit'; const ca = el('button', 'mbtn', 'Abbrechen'); ca.type = 'button';
-  ca.textContent = 'Schließen'; ca.addEventListener('click', () => { const kept = tx.value.trim() && mailS.draftId; mailS.view = 'list'; mailS.reply = null; mailS.draftId = null; mailS.folder = kept ? 'draft' : mailS.folder; renderMail(); if (kept) showToast('Als Entwurf gespeichert.'); });
+  ca.textContent = 'Speichern und schließen'; ca.addEventListener('click', () => { const kept = tx.value.trim() && mailS.draftId; mailS.view = 'list'; mailS.reply = null; mailS.draftId = null; mailS.folder = kept ? 'draft' : mailS.folder; renderMail(); showToast(kept ? 'Als Entwurf gespeichert.' : 'Nichts zu speichern, die Mail ist leer.'); });
   const dx = el('button', 'mbtn', 'Verwerfen'); dx.type = 'button'; dx.addEventListener('click', () => { draftDrop(); mailS.view = 'list'; mailS.reply = null; renderMail(); });
   acts.append(go, ca, dx);
   const rm = realMails(list).slice().reverse().slice(0, 3);
