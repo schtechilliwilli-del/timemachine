@@ -1826,6 +1826,11 @@ function getAck(id, k) {
   const key = ackKey(id, k);
   for (const o in state.notes) { if (o !== id && state.notes[o] && state.notes[o].ack && state.notes[o].ack[key]) return { who: nameOf(o, state.notes[o]), me: o === state.uid, d: state.notes[o].ack[key] }; }
   if (id !== state.uid && state.myAck[key]) return { who: 'Du', me: true, d: state.myAck[key] };
+  const sl0 = getSeal(id, k);
+  if (sl0 && sl0.via && sl0.via.u && sl0.via.k) {
+    const u = sl0.via.u, v = state.notes[u] || {}, e = (v.diary || {})[sl0.via.k] || (u === state.uid ? state.myDiary[sl0.via.k] : null);
+    if (e) return { who: nameOf(u, v), me: u === state.uid, d: { t: e.t, text: e.text, img: e.img } };
+  }
   return null;
 }
 function openImg(src) { $('imgPopImg').src = src; $('imgPop').hidden = false; }
@@ -1955,6 +1960,11 @@ function sealWish(x) {
   state.mySeal[ackKey(x.id, x.k)] = { t: Date.now() }; renderDiary(true); showToast('Der Wunsch ist offiziell erfüllt. Das Siegel ist gesetzt.');
   return writeOwn({ seal: Object.assign({}, state.mySeal) });
 }
+function linkWish(w, x) {
+  state.mySeal[ackKey(w.id, w.k)] = { t: Date.now(), via: { u: x.id, k: x.k } }; state.linkKey = null; renderDiary(true);
+  showToast('Der Wunsch ist erfüllt und besiegelt.');
+  return writeOwn({ seal: Object.assign({}, state.mySeal) });
+}
 function sealNode(sl, who, title, sub, sym) {
   const b = el('div', 'sealbox'), w = el('div', 'wax' + (sym ? ' moon' : '')), t = el('div', 'sealtx');
   w.setAttribute('aria-hidden', 'true'); w.append(el('span', '', sym ? sym + '︎' : '♛'));
@@ -2030,6 +2040,7 @@ function renderDiary(force) {
   const act = DFILTERS.filter(f => dfSel.has(f[0])), shown = act.length ? allE.filter(x => act.some(f => f[2](x))) : allE;
   const entries = shown.slice(0, 80);
   if (!entries.length) frag.append(el('p', 'muted', allE.length ? 'Dazu gibt es noch nichts. Wähle oben einen anderen Filter.' : 'Noch keine Einträge. Der erste gehört uns.'));
+  const openMine = allE.filter(w => w.kind === 'star' && w.mine && w.id !== 'local' && !getAck(w.id, w.k));
   entries.forEach(x => {
     if (x.kind === 'oracle' || x.kind === 'oracle2') { const oe = oracleEntry(x); if (x.id !== 'local') oe.dataset.lkey = ackKey(x.id, x.k); frag.append(oe); return; }
     const isW = x.kind === 'star' && x.id !== 'local', ackW = isW && getAck(x.id, x.k), sealedW = ackW && getSeal(x.id, x.k);
@@ -2074,6 +2085,16 @@ function renderDiary(force) {
     } else if (x.e.heart) box.append(el('p', '', '♥ ' + (x.who === 'Du' ? 'Du schickst ein Herz, weil du an ' + (otherName() || 'jemand Besonderen') + ' denken musstest.' : x.who + ' schickt ein Herz, weil ' + pron(x.who) + ' an dich denken musste.')));
     else if (x.e.text) box.append(el('p', '', x.e.text));
     const mainImg = imgNode(x.e.img); if (mainImg) box.append(mainImg);
+    if (openMine.length && x.kind === 'note' && !x.mine && x.id !== 'local' && canShare() && !x.e.heart && (x.e.text || x.e.img)) {
+      const lk = ackKey(x.id, x.k), lb = el('button', 'btn', '✦ Das erfüllt einen meiner Wünsche'); lb.type = 'button';
+      lb.addEventListener('click', () => { state.linkKey = state.linkKey === lk ? null : lk; renderDiary(true); });
+      box.append(lb);
+      if (state.linkKey === lk) {
+        const lw = el('div', 'linkw'); lw.append(el('p', 'muted small', 'Welcher Wunsch ist damit erfüllt? Er wird sofort besiegelt.'));
+        openMine.forEach(w => { const b2 = el('button', 'btn solid', w.e.wish); b2.type = 'button'; b2.addEventListener('click', () => linkWish(w, x)); lw.append(b2); });
+        box.append(lw);
+      }
+    }
     if (x.id !== 'local' && canShare()) box.append(reactNode(x));
     frag.append(box);
   });
