@@ -847,8 +847,9 @@ function drawCalm(t) {
   drawBgMoon(t);
   drawHeartStars(t);
   const k = Math.max(1.5, Math.min(W * 0.0054, H * 0.0072));
-  bgFig(FIG_AQR, 6 - 22 * k + Math.sin(t / 2600) * 9, H * 0.68 + Math.cos(t / 3300) * 8, k, '154,216,255', t, 0);
-  bgFig(FIG_LEO, W - 6 - 90 * k + Math.sin(t / 2900 + 2) * 9, H * 0.66 + Math.cos(t / 3700 + 1) * 8, k, '242,196,109', t, 3);
+  const ga = objGeo('aqr'), gl = objGeo('leo');
+  bgFig(FIG_AQR, ga.ox + Math.sin(t / 2600) * 9, ga.oy + Math.cos(t / 3300) * 8, ga.k, '154,216,255', t, 0);
+  bgFig(FIG_LEO, gl.ox + Math.sin(t / 2900 + 2) * 9, gl.oy + Math.cos(t / 3700 + 1) * 8, gl.k, '242,196,109', t, 3);
 }
 const HS_COL = { gold: '242,196,109', rose: '240,143,169' };
 function hsHash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -935,58 +936,80 @@ function flyHeart(mine, tx, ty, rgb) {
   a.onfinish = () => el0.remove();
 }
 let moonImg = null, moonKey = '';
-let moonCur = null, moonDrag = false;
-function moonGeo() {
-  const R0 = Math.max(32, Math.min(W * 0.11, 60));
-  if (!moonDrag) {
-    let best = state.myMoon;
-    for (const id in state.notes) { if (id !== state.uid) { const m = (state.notes[id] || {}).moon; if (Array.isArray(m) && m.length >= 4 && (!best || m[3] > best[3])) best = m; } }
-    moonCur = best ? { x: best[0], y: best[1], s: best[2] } : null;
-  }
-  if (!moonCur) return { cx: W - R0 - 18, cy: R0 + 26, R: R0, custom: false };
-  return { cx: moonCur.x * W, cy: moonCur.y * H, R: R0 * moonCur.s, custom: true };
+const objCur = { moon: null, aqr: null, leo: null }; let objDrag = null;
+const OBJ_IDS = ['moon', 'leo', 'aqr'], FIGS = { aqr: FIG_AQR, leo: FIG_LEO };
+function figBox(f) { let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; f.pts.forEach(p => { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }); return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, hw: (x1 - x0) / 2, hh: (y1 - y0) / 2 }; }
+function figK() { return Math.max(1.5, Math.min(W * 0.0054, H * 0.0072)); }
+function cfgOf(id) {
+  let best = id === 'moon' ? state.myMoon : (state.myFigs || {})[id];
+  for (const nid in state.notes) { if (nid === state.uid) continue; const n = state.notes[nid] || {}, m = id === 'moon' ? n.moon : (n.figs || {})[id]; if (Array.isArray(m) && m.length >= 4 && (!best || m[3] > best[3])) best = m; }
+  return best;
 }
-function moonCommit() {
-  if (!moonCur) return;
-  const c = moonCur; state.myMoon = [Math.round(c.x * 1000) / 1000, Math.round(c.y * 1000) / 1000, Math.round(c.s * 100) / 100, Date.now()];
-  writeOwn({ moon: state.myMoon }); moonDrag = false;
+function syncObj() { if (objDrag) return; OBJ_IDS.forEach(id => { const b = cfgOf(id); objCur[id] = b ? { x: b[0], y: b[1], s: b[2] } : null; }); }
+function objGeo(id) {
+  syncObj(); const c = objCur[id];
+  if (id === 'moon') {
+    const R0 = Math.max(32, Math.min(W * 0.11, 60));
+    if (!c) return { cx: W - R0 - 18, cy: R0 + 26, R: R0, hw: R0, hh: R0, custom: false };
+    return { cx: c.x * W, cy: c.y * H, R: R0 * c.s, hw: R0 * c.s, hh: R0 * c.s, custom: true };
+  }
+  const f = FIGS[id], bx = figBox(f), k = figK();
+  const ox = id === 'aqr' ? 6 - 22 * k : W - 6 - 90 * k, oy = H * (id === 'aqr' ? 0.68 : 0.66);
+  const kk = c ? k * c.s : k, cx = c ? c.x * W : ox + bx.cx * k, cy = c ? c.y * H : oy + bx.cy * k;
+  return { cx, cy, k: kk, hw: bx.hw * kk, hh: bx.hh * kk, ox: cx - bx.cx * kk, oy: cy - bx.cy * kk, custom: !!c };
+}
+const moonGeo = () => objGeo('moon');
+function hitObj(x, y) {
+  for (const id of OBJ_IDS) { const g = objGeo(id), dx = Math.abs(g.cx - x), dy = Math.abs(g.cy - y); if (id === 'moon' ? dx * dx + dy * dy <= g.R * g.R : (dx <= g.hw + 14 && dy <= g.hh + 14)) return id; }
+  return null;
+}
+function objStart(id) { const g = objGeo(id); objCur[id] = objCur[id] || { x: g.cx / W, y: g.cy / H, s: 1 }; objDrag = id; }
+function objCommit() {
+  const id = objDrag; if (!id) return; const c = objCur[id];
+  const cfg = [Math.round(c.x * 1000) / 1000, Math.round(c.y * 1000) / 1000, Math.round(c.s * 100) / 100, Date.now()];
+  if (id === 'moon') { state.myMoon = cfg; writeOwn({ moon: cfg }); } else { state.myFigs = state.myFigs || {}; state.myFigs[id] = cfg; writeOwn({ figs: Object.assign({}, state.myFigs) }); }
+  objDrag = null;
 }
 const mptr = new Map(); let mpinch = null, mgrab = null;
-function moonStart() { const g = moonGeo(), R0 = Math.max(32, Math.min(W * 0.11, 60)); moonCur = moonCur || { x: g.cx / W, y: g.cy / H, s: g.R / R0 }; moonDrag = true; }
 cv.addEventListener('pointerdown', e => {
   if (!document.body.classList.contains('skyonly')) return;
   mptr.set(e.pointerId, [e.clientX, e.clientY]);
   if (mptr.size === 2) {
     if (sky.drag) skyDrop();
-    const [a, b] = [...mptr.values()]; moonStart(); mgrab = null;
-    mpinch = { d0: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, s0: moonCur.s };
+    const [a, b] = [...mptr.values()];
+    let id = objDrag || hitObj(a[0], a[1]) || hitObj(b[0], b[1]) || hitObj((a[0] + b[0]) / 2, (a[1] + b[1]) / 2) || 'moon';
+    if (objDrag && objDrag !== id) objDrag = null;
+    objStart(id); mgrab = null;
+    mpinch = { d0: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, s0: objCur[id].s };
     try { cv.setPointerCapture(e.pointerId); } catch (er) { /* egal */ }
     return;
   }
   if (sky.drag) return;
-  const g = moonGeo(), dx = g.cx - e.clientX, dy = g.cy - e.clientY;
-  if (dx * dx + dy * dy <= g.R * g.R) { moonStart(); mgrab = { dx: moonCur.x * W - e.clientX, dy: moonCur.y * H - e.clientY }; try { cv.setPointerCapture(e.pointerId); } catch (er) { /* egal */ } e.preventDefault(); }
+  const id = hitObj(e.clientX, e.clientY);
+  if (id) { objStart(id); const c = objCur[id]; mgrab = { dx: c.x * W - e.clientX, dy: c.y * H - e.clientY }; try { cv.setPointerCapture(e.pointerId); } catch (er) { /* egal */ } e.preventDefault(); }
 });
 cv.addEventListener('pointermove', e => {
-  if (!mptr.has(e.pointerId)) return;
+  if (!mptr.has(e.pointerId) || !objDrag) return;
   mptr.set(e.pointerId, [e.clientX, e.clientY]);
-  if (mpinch && mptr.size >= 2) { const [a, b] = [...mptr.values()]; moonCur.s = Math.min(4, Math.max(0.4, mpinch.s0 * Math.hypot(a[0] - b[0], a[1] - b[1]) / mpinch.d0)); }
-  else if (mgrab) { moonCur.x = Math.min(0.97, Math.max(0.03, (e.clientX + mgrab.dx) / W)); moonCur.y = Math.min(0.96, Math.max(0.04, (e.clientY + mgrab.dy) / H)); }
+  const c = objCur[objDrag], mx = objDrag === 'moon' ? 4 : 3;
+  if (mpinch && mptr.size >= 2) { const [a, b] = [...mptr.values()]; c.s = Math.min(mx, Math.max(0.4, mpinch.s0 * Math.hypot(a[0] - b[0], a[1] - b[1]) / mpinch.d0)); }
+  else if (mgrab) { c.x = Math.min(0.97, Math.max(0.03, (e.clientX + mgrab.dx) / W)); c.y = Math.min(0.96, Math.max(0.04, (e.clientY + mgrab.dy) / H)); }
   else return;
   if (reduce && !warping) drawCalm(0);
 });
-function moonUp(e) {
+function objUp(e) {
   mptr.delete(e.pointerId);
-  if (mpinch && mptr.size < 2) { mpinch = null; moonCommit(); }
-  else if (mgrab && mptr.size === 0) { mgrab = null; moonCommit(); }
+  if (mpinch && mptr.size < 2) { mpinch = null; mgrab = null; objCommit(); }
+  else if (mgrab && mptr.size === 0) { mgrab = null; objCommit(); }
 }
-cv.addEventListener('pointerup', moonUp); cv.addEventListener('pointercancel', moonUp);
-let moonWheelT = null;
+cv.addEventListener('pointerup', objUp); cv.addEventListener('pointercancel', objUp);
+let objWheelT = null;
 cv.addEventListener('wheel', e => {
   if (!document.body.classList.contains('skyonly')) return;
-  const g = moonGeo(), dx = g.cx - e.clientX, dy = g.cy - e.clientY; if (dx * dx + dy * dy > g.R * g.R * 1.3) return;
-  e.preventDefault(); moonStart(); moonCur.s = Math.min(4, Math.max(0.4, moonCur.s * Math.exp(-e.deltaY * 0.0015)));
-  clearTimeout(moonWheelT); moonWheelT = setTimeout(moonCommit, 500);
+  const id = objDrag || hitObj(e.clientX, e.clientY); if (!id) return;
+  e.preventDefault(); if (objDrag !== id) { objDrag = null; objStart(id); }
+  objCur[id].s = Math.min(id === 'moon' ? 4 : 3, Math.max(0.4, objCur[id].s * Math.exp(-e.deltaY * 0.0015)));
+  clearTimeout(objWheelT); objWheelT = setTimeout(objCommit, 500);
 }, { passive: false });
 function drawBgMoon(t) {
   const day = berlinDay(Date.now());
@@ -1135,7 +1158,7 @@ $('warpX').addEventListener('click', () => { if (warpHold) endWarp(); });
 $('warp').addEventListener('click', () => { if (warpHold) endWarp(); else startWarp(); });
 
 /* ---- Tuerchen und gemeinsame Daten ---- */
-const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRe: {}, myRz: {}, myHpos: {}, myMoon: null, myShower: 0, myShowerNo: 0, rzKey: null, rzdraft: '', mySeal: {}, myOdone: {}, myOc: {}, myRead: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
+const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRe: {}, myRz: {}, myHpos: {}, myMoon: null, myFigs: {}, myShower: 0, myShowerNo: 0, rzKey: null, rzdraft: '', mySeal: {}, myOdone: {}, myOc: {}, myRead: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
 let writeChain = Promise.resolve();
 function writeOwn(patch) {
   if (!state.db || !state.uid) return Promise.resolve();
@@ -2449,7 +2472,7 @@ function logEvents() {
   const out = [], ids = Object.keys(state.notes); if (state.uid && ids.indexOf(state.uid) < 0) ids.push(state.uid);
   const byKey = {}; allEntries().forEach(x => { if (x.id !== 'local' && x.id !== 'both') byKey[ackKey(x.id, x.k)] = x; });
   const mails = {}; allBook().forEach(x => { if (!x.queen && x.id !== 'local') mails[ackKey(x.id, x.k)] = x; });
-  const own = { diary: state.myDiary, ack: state.myAck, re: state.myRe, seal: state.mySeal, odone: state.myOdone, oc: state.myOc, mread: state.myRead, book: bookS.my, rate: rateS.my, rz: state.myRz, hpos: state.myHpos, moon: state.myMoon || [], shower: state.myShower || 0, showerNo: state.myShowerNo || 0 };
+  const own = { diary: state.myDiary, ack: state.myAck, re: state.myRe, seal: state.mySeal, odone: state.myOdone, oc: state.myOc, mread: state.myRead, book: bookS.my, rate: rateS.my, rz: state.myRz, hpos: state.myHpos, moon: state.myMoon || [], figs: state.myFigs || {}, shower: state.myShower || 0, showerNo: state.myShowerNo || 0 };
   const label = (tg, u) => {
     if (!tg) return 'einen Eintrag';
     const of = tg.id === u ? '' : ' von ' + (tg.mine ? 'dir' : tg.who);
@@ -2560,7 +2583,7 @@ function startNotes(db) {
     const fresh = [];
     for (const id in m) {
       const v = m[id] || {};
-      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (Array.isArray(v.moon) && v.moon.length >= 4 && (!state.myMoon || v.moon[3] > state.myMoon[3])) state.myMoon = v.moon; if (typeof v.shower === 'number') state.myShower = Math.max(state.myShower || 0, v.shower); if (typeof v.showerNo === 'number') state.myShowerNo = Math.max(state.myShowerNo || 0, v.showerNo); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
+      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (v.figs && typeof v.figs === 'object') { for (const fid in v.figs) { const m = v.figs[fid]; if (Array.isArray(m) && m.length >= 4 && (!state.myFigs[fid] || m[3] > state.myFigs[fid][3])) state.myFigs[fid] = m; } } if (Array.isArray(v.moon) && v.moon.length >= 4 && (!state.myMoon || v.moon[3] > state.myMoon[3])) state.myMoon = v.moon; if (typeof v.shower === 'number') state.myShower = Math.max(state.myShower || 0, v.shower); if (typeof v.showerNo === 'number') state.myShowerNo = Math.max(state.myShowerNo || 0, v.showerNo); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
       for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz, weil ' + pron(nameOf(id, v)) + ' an dich denken musste ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       for (const k in (v.book || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.book[k]; if (state.seen && e && e.text) fresh.push(nameOf(id, v) + ' hat dir im Buch geschrieben: ' + (e.sub || '(ohne Betreff)')); } }
       for (const k in (v.rate || {})) { const key = id + '|r|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const r = v.rate[k], m = /^d(\d+)$/.exec(k); if (state.seen && r && m) fresh.push(nameOf(id, v) + ' hat dich bewertet: ' + rateIcons(Number(m[1]), r.n)); } }
