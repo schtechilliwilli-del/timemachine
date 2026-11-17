@@ -569,7 +569,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
 </div>
 <div id="printBook" aria-hidden="true"></div>
 <button class="logbtn" id="logBtn" type="button" aria-label="Logbuch öffnen">📜<span class="logn" id="logN" hidden></span></button>
-<div id="warpEnd" class="warpend"><p>Angekommen. Hier bleibt es, bis du zurückkehrst.</p><button type="button" id="warpX" aria-label="Zurück ins Hier und Jetzt">✕</button></div>
+<div id="warpEnd" class="warpend"><p>Angekommen, im Herzen.</p><button type="button" id="warpX" aria-label="Zurück ins Hier und Jetzt">✕</button></div>
 <div id="showerAsk" class="showerask" role="alertdialog" aria-live="assertive" hidden><div id="showerAskTxt"></div><div class="showerrow"><button type="button" id="showerYes">🌠 Annehmen</button><button type="button" id="showerNo">Ablehnen</button></div></div>
 <button class="logbtn skybtn showerbtn" id="showerBtn" type="button" aria-label="Sternschnuppenschauer auslösen">🌠</button>
 <button class="logbtn skybtn" id="skyBtn" type="button" aria-label="Nur den Sternenhimmel zeigen" aria-pressed="false">🌙</button>
@@ -1050,7 +1050,7 @@ function startWarp() {
     warpHold = true; warpEndT = performance.now(); document.body.classList.remove('warping');
     setGather(); if (reduce) { warpEndT -= 9000; arrP = 1; drawCalm(0); drawEndHeart(0, 0.35); }
     $('warp').disabled = false; $('warp').textContent = 'Zurück ins Hier und Jetzt';
-    $('warpNote').textContent = 'Angekommen. Hier bleibt es, bis du zurückkehrst.';
+    $('warpNote').textContent = 'Angekommen, im Herzen.';
     setTimeout(() => { if (warpHold) $('warpEnd').classList.add('on'); }, 6600);
   }
   requestAnimationFrame(frame);
