@@ -1058,7 +1058,7 @@ function startWarp() {
 function endWarp() {
   if (gatherP > 0 && state.hs) {
     const now = Date.now(), cl = (v, lo, hi) => Math.min(hi, Math.max(lo, v)), jt = k => ((hsHash(k) % 1000) / 1000 - 0.5) * 0.045; let any = false;
-    for (const k in state.hs) { const o = state.hs[k]; if (o.gt == null) continue; const gg = gatherXY(o, true); o.x = cl(gg[0] + jt(k), 0.03, 0.97); o.y = cl(gg[1] + jt(k + 'y'), 0.04, 0.96); state.myHpos[o.ak] = [Math.round(o.x * 1000) / 1000, Math.round(o.y * 1000) / 1000, now]; any = true; }
+    for (const k in state.hs) { const o = state.hs[k]; if (o.gt == null) continue; const gg = gatherXY(o, false); o.x = cl(gg[0], 0.03, 0.97); o.y = cl(gg[1], 0.04, 0.96); state.myHpos[o.ak] = [Math.round(o.x * 1000) / 1000, Math.round(o.y * 1000) / 1000, now]; any = true; }
     if (any) writeOwn({ hpos: Object.assign({}, state.myHpos) });
   }
   warping = false; warpHold = false; arrP = 1; gatherP = 0; $('warpEnd').classList.remove('on');
