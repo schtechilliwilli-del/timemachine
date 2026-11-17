@@ -1111,7 +1111,8 @@ function startWarp() {
     setGather(); if (reduce) { warpEndT -= 9000; arrP = 1; drawCalm(0); drawEndHeart(0, 0.35); }
     $('warp').disabled = false; $('warp').textContent = 'Zurück ins Hier und Jetzt';
     $('warpNote').textContent = 'Angekommen, im Herzen.';
-    setTimeout(() => { if (warpHold) $('warpEnd').classList.add('on'); }, 6600);
+    setTimeout(() => { if (warpHold) $('warpEnd').classList.add('on'); }, 4300);
+    setTimeout(() => { if (warpHold) endWarp(); }, 8200);
   }
   requestAnimationFrame(frame);
 }
