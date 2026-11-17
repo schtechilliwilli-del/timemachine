@@ -1848,7 +1848,7 @@ async function sendFulfil(x, text, file, info, btn) {
   state.myAck[ackKey(x.id, x.k)] = d; state.fulfilKey = null;
   renderDiary(); writeOwn({ ack: Object.assign({}, state.myAck) });
 }
-const EMOS = ['🫂', '❤️', '🥲', '😘', '😂', '🥹', '🥕', '🙂‍↕️', '🙂‍↔️', '🫠', '🥰', '😍', '😭', '🤗', '🔥', '✨', '🌙', '💫', '🫶', '🤭', '💋', '🍀', '🦁', '🌊'];
+const EMOS = ['🫂', '❤️', '🥲', '😘', '🫶', '😂', '🥹', '🥕', '🙂‍↕️', '🙂‍↔️', '🫠', '🥰', '😍', '😭', '🤗', '🔥', '✨', '🌙', '💫', '🤭', '💋', '🍀', '🦁', '🌊'];
 function allRe(id, k) {
   const rk = ackKey(id, k), out = [];
   const ids = Object.keys(state.notes); if (state.uid && ids.indexOf(state.uid) < 0) ids.push(state.uid);
