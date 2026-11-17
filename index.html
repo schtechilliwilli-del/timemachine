@@ -368,6 +368,10 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .wnav { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .wnav .btn { min-width: 56px; }
 .entry img, .ocans img, .quote img { cursor: zoom-in; }
+.skybtn { bottom: 70px !important; font-size: 20px !important; }
+body.skyonly main { opacity: 0; visibility: hidden; pointer-events: none; }
+body.skyonly #logBtn { display: none; }
+main { transition: opacity 0.35s ease, visibility 0.35s; }
 .logbtn { position: fixed; left: 12px; bottom: 12px; z-index: 30; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(11, 14, 32, 0.88); color: var(--gold); font-size: 22px; line-height: 1; cursor: pointer; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5); }
 .logn { position: absolute; top: -6px; right: -6px; min-width: 22px; height: 22px; padding: 0 5px; box-sizing: border-box; border-radius: 11px; background: var(--rose); color: #2b0f19; font-family: var(--mono); font-size: 12px; font-weight: 700; line-height: 22px; text-align: center; }
 .logn[hidden] { display: none; }
@@ -548,6 +552,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
 </div>
 <div id="printBook" aria-hidden="true"></div>
 <button class="logbtn" id="logBtn" type="button" aria-label="Logbuch öffnen">📜<span class="logn" id="logN" hidden></span></button>
+<button class="logbtn skybtn" id="skyBtn" type="button" aria-label="Nur den Sternenhimmel zeigen" aria-pressed="false">🌙</button>
 <div class="pop" id="logPop" role="dialog" aria-modal="true" aria-labelledby="logH" hidden>
   <div class="popbox logbox">
     <div class="loghead"><h3 id="logH">Logbuch</h3><button class="btn" id="logClose" type="button">Schließen</button></div>
@@ -2282,6 +2287,12 @@ function renderLog() {
   });
   box.replaceChildren(f);
 }
+$('skyBtn').addEventListener('click', () => {
+  const on = document.body.classList.toggle('skyonly'), b = $('skyBtn');
+  b.textContent = on ? '✕' : '🌙'; b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  b.setAttribute('aria-label', on ? 'Alles wieder einblenden' : 'Nur den Sternenhimmel zeigen');
+  if (on) showToast('Nur der Himmel. Fang die Sternschnuppen, mit ✕ ist alles wieder da.');
+});
 $('logBtn').addEventListener('click', () => { logNewSince = logSeen(); logMarkSeen(); $('logN').hidden = true; $('logPop').hidden = false; renderLog(); $('logList').scrollTop = 0; });
 function closeLog() { $('logPop').hidden = true; }
 function flashEl(e) { e.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); e.classList.remove('flash'); void e.offsetWidth; e.classList.add('flash'); setTimeout(() => e.classList.remove('flash'), 2800); }
