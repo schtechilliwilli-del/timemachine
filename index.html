@@ -817,7 +817,7 @@ function renderAll(force) {
 
 /* ---- Sternenhimmel und Warp ---- */
 const cv = $('sky'), ctx = cv.getContext('2d');
-let W = 0, H = 0, calm = [];
+let W = 0, H = 0, calm = [], arrP = 1, gatherP = 0;
 function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
 function drawCalm(t) {
   t = t || 0;
@@ -825,12 +825,13 @@ function drawCalm(t) {
   const g = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, H * 0.7);
   g.addColorStop(0, 'rgba(40,48,110,0.55)'); g.addColorStop(1, 'rgba(11,14,32,0)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  calm.forEach(s => { const a = s.a * (0.35 + 0.65 * Math.abs(Math.sin(t * s.sp + s.ph))); ctx.fillStyle = 'rgba(236,233,247,' + a.toFixed(3) + ')'; ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r, 0, 6.2832); ctx.fill(); });
+  const bx = W / 2, by = H * 0.42;
+  calm.forEach(s => { const a = s.a * arrP * (0.35 + 0.65 * Math.abs(Math.sin(t * s.sp + s.ph))); ctx.fillStyle = 'rgba(236,233,247,' + a.toFixed(3) + ')'; ctx.beginPath(); ctx.arc(bx + (s.x * W - bx) * arrP, by + (s.y * H - by) * arrP, s.r, 0, 6.2832); ctx.fill(); });
   drawBgMoon(t);
   drawHeartStars(t);
   const k = Math.max(1.5, Math.min(W * 0.0054, H * 0.0072));
   bgFig(FIG_AQR, 6 - 22 * k + Math.sin(t / 2600) * 9, H * 0.3 + Math.cos(t / 3300) * 8, k, '154,216,255', t, 0);
-  bgFig(FIG_LEO, W - 6 - 90 * k + Math.sin(t / 2900 + 2) * 9, H * (document.body.classList.contains('skyonly') ? 0.3 : 0.17) + Math.cos(t / 3700 + 1) * 8, k, '242,196,109', t, 3);
+  bgFig(FIG_LEO, W - 6 - 90 * k + Math.sin(t / 2900 + 2) * 9, H * ((document.body.classList.contains('skyonly') || warpHold) ? 0.3 : 0.17) + Math.cos(t / 3700 + 1) * 8, k, '242,196,109', t, 3);
 }
 const HS_COL = { gold: '242,196,109', rose: '240,143,169' };
 function hsHash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -838,9 +839,10 @@ function drawHeartStars(t) {
   const now = Date.now(), hs = state.hs || {};
   for (const k in hs) {
     const o = hs[k]; if (o.show > now) continue;
-    const x = o.x * W, y = o.y * H, age = now - o.show, rgb = o.rgb;
+    let fx = o.x, fy = o.y; if (gatherP > 0 && o.gx != null) { fx = o.x + (o.gx - o.x) * gatherP; fy = o.y + (o.gy - o.y) * gatherP; }
+    const bx = W / 2, by = H * 0.42, x = bx + (fx * W - bx) * arrP, y = by + (fy * H - by) * arrP, age = now - o.show, rgb = o.rgb;
     const pulse = 1 + 0.2 * Math.sin(t / 500 + o.x * 20), r = 7.5 * pulse;
-    ctx.save();
+    ctx.save(); ctx.globalAlpha = Math.max(0, Math.min(1, arrP * 1.4));
     if (age < 1000) { ctx.strokeStyle = 'rgba(' + rgb + ',' + (0.8 * (1 - age / 1000)).toFixed(3) + ')'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 6 + age / 14, 0, 6.2832); ctx.stroke(); }
     const g = ctx.createRadialGradient(x, y, 0, x, y, r * 5); g.addColorStop(0, 'rgba(' + rgb + ',0.8)'); g.addColorStop(1, 'rgba(' + rgb + ',0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * 5, 0, 6.2832); ctx.fill();
@@ -922,16 +924,16 @@ function drawBgMoon(t) {
     moonKey = day; moonImg = new Image();
     moonImg.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(moonSVG(moonPhase(Date.now())).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '));
   }
-  const sk = document.body.classList.contains('skyonly');
+  const sk = document.body.classList.contains('skyonly') || warpHold;
   const R = sk ? Math.max(32, Math.min(W * 0.11, 60)) : Math.max(60, Math.min(W * 0.3, H * 0.2)), cx = sk ? W - R - 18 : W / 2, cy = sk ? R + 26 : H * 0.6, pulse = 1 + 0.04 * Math.sin(t / 1500);
   const g = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R * 2.1 * pulse);
   g.addColorStop(0, 'rgba(243,236,210,0.16)'); g.addColorStop(1, 'rgba(243,236,210,0)');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  if (moonImg && moonImg.complete && moonImg.naturalWidth) { ctx.globalAlpha = sk ? 0.85 : 0.5; ctx.drawImage(moonImg, cx - R, cy - R, R * 2, R * 2); ctx.globalAlpha = 1; }
+  ctx.save(); ctx.globalAlpha = arrP; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore();
+  if (moonImg && moonImg.complete && moonImg.naturalWidth) { ctx.globalAlpha = (sk ? 0.85 : 0.5) * arrP * arrP; ctx.drawImage(moonImg, cx - R, cy - R, R * 2, R * 2); ctx.globalAlpha = 1; }
 }
 function bgFig(f, ox, oy, k, rgb, t, off) {
   t = t || 0; off = off || 0;
-  ctx.save();
+  ctx.save(); ctx.globalAlpha = arrP * arrP;
   ctx.lineWidth = 1.7; ctx.lineCap = 'round';
   ctx.strokeStyle = 'rgba(' + rgb + ',' + (0.62 + 0.2 * Math.sin(t / 1100 + off)).toFixed(3) + ')';
   ctx.shadowColor = 'rgba(' + rgb + ',0.9)'; ctx.shadowBlur = 8;
@@ -978,18 +980,39 @@ function drawWarp(w) {
   });
 }
 let warpEndT = 0;
-function drawEndHeart(t) {
-  const age = Math.min(1, (performance.now() - warpEndT) / 2200), cx = W / 2, cy = H * 0.42, sc = Math.min(W, H) * 0.34 * (0.92 + 0.08 * age);
-  ctx.save(); ctx.globalAlpha = age;
-  const N = 110;
+function heartGeo() { return { cx: W / 2, cy: H * 0.42, sc: Math.min(W, H) * 0.34 * 1.05 }; }
+function drawEndHeart(t, am) {
+  const g = heartGeo(), N = 110;
   for (let i = 0; i < N; i++) {
     const hp = heartPt({ t: i / N * 6.2832, j: 0 });
-    const x = cx + hp[0] * sc * 1.05, y = cy + hp[1] * sc * 1.05;
-    const a = 0.35 + 0.65 * Math.abs(Math.sin(t * 0.0012 + i * 0.7)), r = 1.1 + (i % 5 === 0 ? 1.1 : 0);
+    const x = g.cx + hp[0] * g.sc, y = g.cy + hp[1] * g.sc;
+    const a = (0.35 + 0.65 * Math.abs(Math.sin(t * 0.0012 + i * 0.7))) * am, r = 1.1 + (i % 5 === 0 ? 1.1 : 0);
     ctx.fillStyle = 'rgba(255,225,170,' + (a * 0.18).toFixed(3) + ')'; ctx.beginPath(); ctx.arc(x, y, r * 4, 0, 6.2832); ctx.fill();
     ctx.fillStyle = 'rgba(255,240,205,' + a.toFixed(3) + ')'; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
   }
-  ctx.restore();
+}
+function setGather() {
+  const g = heartGeo(), ks = Object.keys(state.hs || {}).sort(), n = ks.length;
+  ks.forEach((k, i) => { const hp = heartPt({ t: (i + 0.5) / n * 6.2832, j: 0 }); const o = state.hs[k]; o.gx = (g.cx + hp[0] * g.sc) / W; o.gy = (g.cy + hp[1] * g.sc) / H; });
+  gatherP = 1;
+}
+const easeOut = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+function drawArrival(t) {
+  const age = performance.now() - warpEndT, g = heartGeo();
+  if (age < 1500) {
+    arrP = 0; ctx.fillStyle = 'rgba(11,14,32,0.14)'; ctx.fillRect(0, 0, W, H);
+    drawEndHeart(t, Math.min(1, age / 600));
+    return;
+  }
+  const e = age - 1500; arrP = easeOut(e / 3600);
+  drawCalm(t);
+  if (e < 1400) {
+    const f = e / 1400, r = 20 + f * Math.max(W, H) * 0.7;
+    const gr = ctx.createRadialGradient(g.cx, g.cy, 0, g.cx, g.cy, r); gr.addColorStop(0, 'rgba(255,240,205,' + (0.55 * (1 - f)).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(255,240,205,0)');
+    ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(255,230,180,' + (0.6 * (1 - f)).toFixed(3) + ')'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(g.cx, g.cy, r * 0.8, 0, 6.2832); ctx.stroke();
+  }
+  drawEndHeart(t, 1 - 0.65 * easeOut(e / 2500));
 }
 function startWarp() {
   if (warping) return;
@@ -1009,15 +1032,15 @@ function startWarp() {
     if (w < 1) { requestAnimationFrame(frame); return; }
     document.body.classList.add('done'); $('jh').textContent = 'Angekommen';
     warpHold = true; warpEndT = performance.now(); document.body.classList.remove('warping');
-    if (reduce) { drawCalm(0); drawEndHeart(0); }
+    setGather(); if (reduce) { arrP = 1; drawCalm(0); drawEndHeart(0, 0.35); }
     $('warp').disabled = false; $('warp').textContent = 'Zurück ins Hier und Jetzt';
     $('warpNote').textContent = 'Angekommen. Hier bleibt es, bis du zurückkehrst.';
-    setTimeout(() => { if (warpHold) $('warpEnd').classList.add('on'); }, 1500);
+    setTimeout(() => { if (warpHold) $('warpEnd').classList.add('on'); }, 4800);
   }
   requestAnimationFrame(frame);
 }
 function endWarp() {
-  warping = false; warpHold = false; $('warpEnd').classList.remove('on');
+  warping = false; warpHold = false; arrP = 1; gatherP = 0; $('warpEnd').classList.remove('on');
   document.body.classList.remove('warping', 'warpfade'); setTimeout(() => document.body.classList.remove('warpslow'), 1800);
   drawCalm(); renderAll(true);
   const q = parts(TARGET - Date.now());
@@ -2240,7 +2263,7 @@ renderDiary();
 renderBook();
 mailSyncHash();
 let lastDraw = 0;
-function skyLoop(t) { requestAnimationFrame(skyLoop); if ((warping && !warpHold) || reduce || document.hidden || t - lastDraw < 40) return; lastDraw = t; if (warpHold) { const a = Math.min(1, (performance.now() - warpEndT) / 900); ctx.globalAlpha = Math.max(0.12, a); drawCalm(t); ctx.globalAlpha = 1; drawEndHeart(t); } else drawCalm(t); }
+function skyLoop(t) { requestAnimationFrame(skyLoop); if ((warping && !warpHold) || reduce || document.hidden || t - lastDraw < 40) return; lastDraw = t; if (warpHold) drawArrival(t); else drawCalm(t); }
 if (!reduce) requestAnimationFrame(skyLoop);
 scheduleStar(true);
 let showerOn = false, showerLoop = null;
