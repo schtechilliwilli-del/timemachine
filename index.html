@@ -1123,6 +1123,7 @@ function startWarp() {
   if (warping) return;
   warping = true;
   document.body.classList.add('warping', 'warpfade', 'warpslow');
+  $('toast').hidden = true;
   $('warp').disabled = true; $('warp').textContent = 'Reise läuft';
   $('warpNote').textContent = '';
   $('journey').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
@@ -2551,7 +2552,7 @@ $('skyBtn').addEventListener('click', () => {
   const on = document.body.classList.toggle('skyonly'), b = $('skyBtn');
   b.textContent = on ? '✕' : '🌙'; b.setAttribute('aria-pressed', on ? 'true' : 'false');
   b.setAttribute('aria-label', on ? 'Alles wieder einblenden' : 'Nur den Sternenhimmel zeigen');
-  if (on) showToast('Nur der Himmel. Fang die Sternschnuppen, mit ✕ ist alles wieder da.');
+  $('toast').hidden = true;
 });
 $('logBtn').addEventListener('click', () => { logNewSince = logSeen(); logMarkSeen(); $('logN').hidden = true; $('logPop').hidden = false; renderLog(); $('logList').scrollTop = 0; });
 function closeLog() { $('logPop').hidden = true; }
