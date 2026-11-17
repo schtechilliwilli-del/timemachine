@@ -1040,6 +1040,11 @@ function startWarp() {
   requestAnimationFrame(frame);
 }
 function endWarp() {
+  if (gatherP > 0 && state.hs) {
+    const now = Date.now(), cl = (v, lo, hi) => Math.min(hi, Math.max(lo, v)), jt = k => ((hsHash(k) % 1000) / 1000 - 0.5) * 0.045; let any = false;
+    for (const k in state.hs) { const o = state.hs[k]; if (o.gx == null) continue; o.x = cl(o.gx + jt(k), 0.03, 0.97); o.y = cl(o.gy + jt(k + 'y'), 0.04, 0.96); state.myHpos[o.ak] = [Math.round(o.x * 1000) / 1000, Math.round(o.y * 1000) / 1000, now]; any = true; }
+    if (any) writeOwn({ hpos: Object.assign({}, state.myHpos) });
+  }
   warping = false; warpHold = false; arrP = 1; gatherP = 0; $('warpEnd').classList.remove('on');
   document.body.classList.remove('warping', 'warpfade'); setTimeout(() => document.body.classList.remove('warpslow'), 1800);
   drawCalm(); renderAll(true);
