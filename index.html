@@ -371,6 +371,10 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .skybtn { bottom: 70px !important; font-size: 20px !important; }
 body.skyonly main { opacity: 0; visibility: hidden; pointer-events: none; }
 body.skyonly #logBtn { display: none; }
+.showerbtn { bottom: 128px !important; display: none !important; }
+body.skyonly .showerbtn { display: block !important; }
+.showerbtn.on { box-shadow: 0 0 0 2px var(--gold), 0 0 18px rgba(242, 196, 109, 0.8); animation: showerpulse 1.4s ease-in-out infinite; }
+@keyframes showerpulse { 50% { box-shadow: 0 0 0 2px var(--gold), 0 0 6px rgba(242, 196, 109, 0.4); } }
 body.skyonly #sky { pointer-events: auto; touch-action: none; }
 main { transition: opacity 0.35s ease, visibility 0.35s; }
 .logbtn { position: fixed; left: 12px; bottom: 12px; z-index: 30; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(11, 14, 32, 0.88); color: var(--gold); font-size: 22px; line-height: 1; cursor: pointer; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5); }
@@ -553,6 +557,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
 </div>
 <div id="printBook" aria-hidden="true"></div>
 <button class="logbtn" id="logBtn" type="button" aria-label="Logbuch öffnen">📜<span class="logn" id="logN" hidden></span></button>
+<button class="logbtn skybtn showerbtn" id="showerBtn" type="button" aria-label="Sternschnuppenschauer auslösen">🌠</button>
 <button class="logbtn skybtn" id="skyBtn" type="button" aria-label="Nur den Sternenhimmel zeigen" aria-pressed="false">🌙</button>
 <div class="pop" id="logPop" role="dialog" aria-modal="true" aria-labelledby="logH" hidden>
   <div class="popbox logbox">
@@ -986,7 +991,7 @@ function endWarp() {
 $('warp').addEventListener('click', () => { if (warpHold) endWarp(); else startWarp(); });
 
 /* ---- Tuerchen und gemeinsame Daten ---- */
-const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRe: {}, myRz: {}, myHpos: {}, rzKey: null, rzdraft: '', mySeal: {}, myOdone: {}, myOc: {}, myRead: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
+const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRe: {}, myRz: {}, myHpos: {}, myShower: 0, rzKey: null, rzdraft: '', mySeal: {}, myOdone: {}, myOc: {}, myRead: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
 let writeChain = Promise.resolve();
 function writeOwn(patch) {
   if (!state.db || !state.uid) return Promise.resolve();
@@ -1308,16 +1313,28 @@ $('hNext').addEventListener('click', () => { const now = Date.now(); const cur =
 /* ---- Fangbare Sternschnuppe ---- */
 let catchBusy = false;
 function shoot() { spawnStar(); }
-function wishLimit() { return berlinDay(Date.now()) === berlinDay(Date.UTC(2026, 10, 16, 14, 0, 0)) ? 3 : 1; }
+function wishLimit() { const base = berlinDay(Date.now()) === berlinDay(Date.UTC(2026, 10, 16, 14, 0, 0)) ? 3 : 1; return showerNow() ? Math.max(3, base) : base; }
+const SHOWER_WAIT = 300000, SHOWER_LEN = 180000;
+function showerDone() { try { return Number(localStorage.getItem('zm_showerdone')) || 0; } catch (e) { return 0; } }
+function setShowerDone(v) { try { localStorage.setItem('zm_showerdone', String(v)); } catch (e) { /* egal */ } }
+function otherShower() { let m = 0; for (const id in state.notes) { if (id !== state.uid) { const v = (state.notes[id] || {}).shower; if (typeof v === 'number' && v > m) m = v; } } return m; }
+function showerNow() {
+  const a = state.myShower || 0, b = otherShower(), now = Date.now();
+  if (!a || !b || Math.abs(a - b) > SHOWER_WAIT) return null;
+  const S = Math.max(a, b);
+  if (Math.min(a, b) <= showerDone() || now < S) return null;
+  if (now < S + SHOWER_LEN) return { start: S, end: S + SHOWER_LEN };
+  setShowerDone(S); return null;
+}
 function wishesToday() {
   const mine = Object.assign({}, (state.notes[state.uid] || {}).diary || {}, state.myDiary, state.localDiary);
   const today = berlinDay(Date.now()); let n = 0;
   for (const k in mine) { const e = mine[k]; if (e && e.star && berlinDay(e.t) === today) n++; }
   return n;
 }
-function spawnStar() {
-  if (catchBusy || warping || document.hidden) return;
-  catchBusy = true;
+function spawnStar(shower) {
+  if ((!shower && catchBusy) || warping || document.hidden) return;
+  if (!shower) catchBusy = true;
   const vw = window.innerWidth, vh = window.innerHeight;
   const s = document.createElement('button'); s.type = 'button'; s.className = 'cstar'; s.setAttribute('aria-label', 'Sternschnuppe fangen');
   s.innerHTML = '<span class="tail"></span><svg class="head" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l3 7.5 8 .6-6.1 5.2 2 7.9L12 17.6 5.1 22.2l2-7.9L1 9.1l8-.6z" fill="#fff5da"/></svg>';
@@ -1336,11 +1353,11 @@ function spawnStar() {
     { opacity: 1, offset: 0.85 },
     { transform: tr(sx + dx * L, sy + dy * L), opacity: 0, offset: 1 }
   ], { duration: dur, easing: 'linear' });
-  anim.onfinish = () => { s.remove(); catchBusy = false; };
-  s.addEventListener('click', () => { anim.onfinish = null; anim.cancel(); s.remove(); catchBusy = false; openWish(); });
+  anim.onfinish = () => { s.remove(); if (!shower) catchBusy = false; };
+  s.addEventListener('click', () => { anim.onfinish = null; anim.cancel(); s.remove(); if (!shower) catchBusy = false; openWish(); });
 }
 function scheduleStar(first) {
-  setTimeout(() => { if (!reduce && wishesToday() < wishLimit()) spawnStar(); scheduleStar(false); }, first ? 45000 : 150000 + Math.random() * 210000);
+  setTimeout(() => { if (!reduce && wishesToday() < wishLimit()) spawnStar(); scheduleStar(false); }, first ? 20000 : 50000 + Math.random() * 20000);
 }
 const WISH_CATS = [['📸', 'Bilder'], ['🎙️', 'Stimme'], ['💌', 'Worte'], ['🌙', 'Sterne'], ['🥰', 'Zärtlich'], ['🎉', 'Frech'], ['🎒', 'Wiedersehen']];
 const WISH_TEXT = [
@@ -2188,6 +2205,28 @@ let lastDraw = 0;
 function skyLoop(t) { requestAnimationFrame(skyLoop); if ((warping && !warpHold) || reduce || document.hidden || t - lastDraw < 40) return; lastDraw = t; drawCalm(t); }
 if (!reduce) requestAnimationFrame(skyLoop);
 scheduleStar(true);
+let showerOn = false, showerLoop = null;
+function showerStars() { if (!showerOn) return; spawnStar(true); showerLoop = setTimeout(showerStars, 450 + Math.random() * 650); }
+function showerTick() {
+  const sh = showerNow(), a = state.myShower || 0, b = otherShower(), now = Date.now(), btn = $('showerBtn'), dn = showerDone();
+  if (sh && !showerOn) { showerOn = true; showToast('Sternschnuppenschauer! Solange er läuft, hast du drei Wünsche frei.'); showerStars(); }
+  if (!sh && showerOn) { showerOn = false; clearTimeout(showerLoop); showToast('Der Sternschnuppenschauer ist vorbei.'); }
+  const waiting = !sh && a > dn && now - a < SHOWER_WAIT;
+  btn.classList.toggle('on', !!sh || waiting);
+  btn.setAttribute('aria-label', sh ? 'Der Sternschnuppenschauer läuft' : waiting ? 'Wartet auf die andere Person' : 'Sternschnuppenschauer auslösen');
+  if (!sh && b > dn && now - b < SHOWER_WAIT && (!a || Math.abs(a - b) > SHOWER_WAIT) && state.showerNotified !== b) {
+    state.showerNotified = b; showToast((otherName() || 'Die andere Person') + ' wünscht sich einen Sternschnuppenschauer. Öffne den Himmel (🌙) und drück 🌠, dann geht es los.');
+  }
+}
+$('showerBtn').addEventListener('click', () => {
+  const now = Date.now(), a = state.myShower || 0, who = otherName() || 'die andere Person';
+  if (showerNow()) { showToast('Der Schauer läuft schon.'); return; }
+  if (a > showerDone() && now - a < SHOWER_WAIT) { showToast('Dein Wunsch ist schon raus. Drückt ' + who + ' in den nächsten Minuten auch, geht es los.'); return; }
+  state.myShower = now; writeOwn({ shower: now });
+  showToast('Ein Schauer ist bestellt. Drückt ' + who + ' innerhalb von 5 Minuten auch auf 🌠, fallen die Sternschnuppen.');
+  showerTick();
+});
+setInterval(showerTick, 1000);
 renderAll(true);
 setInterval(renderAll, 1000);
 document.addEventListener('visibilitychange', () => renderAll(true));
@@ -2252,7 +2291,7 @@ function logEvents() {
   const out = [], ids = Object.keys(state.notes); if (state.uid && ids.indexOf(state.uid) < 0) ids.push(state.uid);
   const byKey = {}; allEntries().forEach(x => { if (x.id !== 'local' && x.id !== 'both') byKey[ackKey(x.id, x.k)] = x; });
   const mails = {}; allBook().forEach(x => { if (!x.queen && x.id !== 'local') mails[ackKey(x.id, x.k)] = x; });
-  const own = { diary: state.myDiary, ack: state.myAck, re: state.myRe, seal: state.mySeal, odone: state.myOdone, oc: state.myOc, mread: state.myRead, book: bookS.my, rate: rateS.my, rz: state.myRz, hpos: state.myHpos };
+  const own = { diary: state.myDiary, ack: state.myAck, re: state.myRe, seal: state.mySeal, odone: state.myOdone, oc: state.myOc, mread: state.myRead, book: bookS.my, rate: rateS.my, rz: state.myRz, hpos: state.myHpos, shower: state.myShower || 0 };
   const label = (tg, u) => {
     if (!tg) return 'einen Eintrag';
     const of = tg.id === u ? '' : ' von ' + (tg.mine ? 'dir' : tg.who);
@@ -2363,7 +2402,7 @@ function startNotes(db) {
     const fresh = [];
     for (const id in m) {
       const v = m[id] || {};
-      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
+      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (typeof v.shower === 'number') state.myShower = Math.max(state.myShower || 0, v.shower); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
       for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz, weil ' + pron(nameOf(id, v)) + ' an dich denken musste ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       for (const k in (v.book || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.book[k]; if (state.seen && e && e.text) fresh.push(nameOf(id, v) + ' hat dir im Buch geschrieben: ' + (e.sub || '(ohne Betreff)')); } }
       for (const k in (v.rate || {})) { const key = id + '|r|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const r = v.rate[k], m = /^d(\d+)$/.exec(k); if (state.seen && r && m) fresh.push(nameOf(id, v) + ' hat dich bewertet: ' + rateIcons(Number(m[1]), r.n)); } }
