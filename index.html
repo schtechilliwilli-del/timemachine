@@ -830,8 +830,8 @@ function drawCalm(t) {
   drawBgMoon(t);
   drawHeartStars(t);
   const k = Math.max(1.5, Math.min(W * 0.0054, H * 0.0072));
-  bgFig(FIG_AQR, 6 - 22 * k + Math.sin(t / 2600) * 9, H * 0.3 + Math.cos(t / 3300) * 8, k, '154,216,255', t, 0);
-  bgFig(FIG_LEO, W - 6 - 90 * k + Math.sin(t / 2900 + 2) * 9, H * ((document.body.classList.contains('skyonly') || warpHold) ? 0.3 : 0.17) + Math.cos(t / 3700 + 1) * 8, k, '242,196,109', t, 3);
+  bgFig(FIG_AQR, 6 - 22 * k + Math.sin(t / 2600) * 9, H * (warpHold ? 0.68 : 0.3) + Math.cos(t / 3300) * 8, k, '154,216,255', t, 0);
+  bgFig(FIG_LEO, W - 6 - 90 * k + Math.sin(t / 2900 + 2) * 9, H * (warpHold ? 0.66 : document.body.classList.contains('skyonly') ? 0.3 : 0.17) + Math.cos(t / 3700 + 1) * 8, k, '242,196,109', t, 3);
 }
 const HS_COL = { gold: '242,196,109', rose: '240,143,169' };
 function hsHash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
