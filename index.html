@@ -929,6 +929,59 @@ function flyHeart(mine, tx, ty, rgb) {
   a.onfinish = () => el0.remove();
 }
 let moonImg = null, moonKey = '';
+let moonCur = null, moonDrag = false;
+function moonGeo() {
+  const R0 = Math.max(32, Math.min(W * 0.11, 60));
+  if (!moonDrag) {
+    let best = state.myMoon;
+    for (const id in state.notes) { if (id !== state.uid) { const m = (state.notes[id] || {}).moon; if (Array.isArray(m) && m.length >= 4 && (!best || m[3] > best[3])) best = m; } }
+    moonCur = best ? { x: best[0], y: best[1], s: best[2] } : null;
+  }
+  if (!moonCur) return { cx: W - R0 - 18, cy: R0 + 26, R: R0 };
+  return { cx: moonCur.x * W, cy: moonCur.y * H, R: R0 * moonCur.s };
+}
+function moonCommit() {
+  if (!moonCur) return;
+  const c = moonCur; state.myMoon = [Math.round(c.x * 1000) / 1000, Math.round(c.y * 1000) / 1000, Math.round(c.s * 100) / 100, Date.now()];
+  writeOwn({ moon: state.myMoon }); moonDrag = false;
+}
+const mptr = new Map(); let mpinch = null, mgrab = null;
+function moonStart() { const g = moonGeo(), R0 = Math.max(32, Math.min(W * 0.11, 60)); moonCur = moonCur || { x: g.cx / W, y: g.cy / H, s: g.R / R0 }; moonDrag = true; }
+cv.addEventListener('pointerdown', e => {
+  if (!document.body.classList.contains('skyonly')) return;
+  mptr.set(e.pointerId, [e.clientX, e.clientY]);
+  if (mptr.size === 2) {
+    if (sky.drag) skyDrop();
+    const [a, b] = [...mptr.values()]; moonStart(); mgrab = null;
+    mpinch = { d0: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, s0: moonCur.s };
+    try { cv.setPointerCapture(e.pointerId); } catch (er) { /* egal */ }
+    return;
+  }
+  if (sky.drag) return;
+  const g = moonGeo(), dx = g.cx - e.clientX, dy = g.cy - e.clientY;
+  if (dx * dx + dy * dy <= g.R * g.R) { moonStart(); mgrab = { dx: moonCur.x * W - e.clientX, dy: moonCur.y * H - e.clientY }; try { cv.setPointerCapture(e.pointerId); } catch (er) { /* egal */ } e.preventDefault(); }
+});
+cv.addEventListener('pointermove', e => {
+  if (!mptr.has(e.pointerId)) return;
+  mptr.set(e.pointerId, [e.clientX, e.clientY]);
+  if (mpinch && mptr.size >= 2) { const [a, b] = [...mptr.values()]; moonCur.s = Math.min(4, Math.max(0.4, mpinch.s0 * Math.hypot(a[0] - b[0], a[1] - b[1]) / mpinch.d0)); }
+  else if (mgrab) { moonCur.x = Math.min(0.97, Math.max(0.03, (e.clientX + mgrab.dx) / W)); moonCur.y = Math.min(0.96, Math.max(0.04, (e.clientY + mgrab.dy) / H)); }
+  else return;
+  if (reduce && !warping) drawCalm(0);
+});
+function moonUp(e) {
+  mptr.delete(e.pointerId);
+  if (mpinch && mptr.size < 2) { mpinch = null; moonCommit(); }
+  else if (mgrab && mptr.size === 0) { mgrab = null; moonCommit(); }
+}
+cv.addEventListener('pointerup', moonUp); cv.addEventListener('pointercancel', moonUp);
+let moonWheelT = null;
+cv.addEventListener('wheel', e => {
+  if (!document.body.classList.contains('skyonly')) return;
+  const g = moonGeo(), dx = g.cx - e.clientX, dy = g.cy - e.clientY; if (dx * dx + dy * dy > g.R * g.R * 1.3) return;
+  e.preventDefault(); moonStart(); moonCur.s = Math.min(4, Math.max(0.4, moonCur.s * Math.exp(-e.deltaY * 0.0015)));
+  clearTimeout(moonWheelT); moonWheelT = setTimeout(moonCommit, 500);
+}, { passive: false });
 function drawBgMoon(t) {
   const day = berlinDay(Date.now());
   if (moonKey !== day) {
@@ -936,7 +989,8 @@ function drawBgMoon(t) {
     moonImg.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(moonSVG(moonPhase(Date.now())).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '));
   }
   const sk = document.body.classList.contains('skyonly') || warpHold;
-  const R = sk ? Math.max(32, Math.min(W * 0.11, 60)) : Math.max(60, Math.min(W * 0.3, H * 0.2)), cx = sk ? W - R - 18 : W / 2, cy = sk ? R + 26 : H * 0.6, pulse = 1 + 0.04 * Math.sin(t / 1500);
+  const mg = moonGeo(), onlySky = document.body.classList.contains('skyonly') && !warpHold;
+  const R = onlySky ? mg.R : sk ? Math.max(32, Math.min(W * 0.11, 60)) : Math.max(60, Math.min(W * 0.3, H * 0.2)), cx = onlySky ? mg.cx : sk ? W - R - 18 : W / 2, cy = onlySky ? mg.cy : sk ? R + 26 : H * 0.6, pulse = 1 + 0.04 * Math.sin(t / 1500);
   const g = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R * 2.1 * pulse);
   g.addColorStop(0, 'rgba(243,236,210,0.16)'); g.addColorStop(1, 'rgba(243,236,210,0)');
   ctx.save(); ctx.globalAlpha = arrP; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore();
@@ -1072,7 +1126,7 @@ $('warpX').addEventListener('click', () => { if (warpHold) endWarp(); });
 $('warp').addEventListener('click', () => { if (warpHold) endWarp(); else startWarp(); });
 
 /* ---- Tuerchen und gemeinsame Daten ---- */
-const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRe: {}, myRz: {}, myHpos: {}, myShower: 0, myShowerNo: 0, rzKey: null, rzdraft: '', mySeal: {}, myOdone: {}, myOc: {}, myRead: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
+const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRe: {}, myRz: {}, myHpos: {}, myMoon: null, myShower: 0, myShowerNo: 0, rzKey: null, rzdraft: '', mySeal: {}, myOdone: {}, myOc: {}, myRead: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
 let writeChain = Promise.resolve();
 function writeOwn(patch) {
   if (!state.db || !state.uid) return Promise.resolve();
@@ -2377,7 +2431,7 @@ function logEvents() {
   const out = [], ids = Object.keys(state.notes); if (state.uid && ids.indexOf(state.uid) < 0) ids.push(state.uid);
   const byKey = {}; allEntries().forEach(x => { if (x.id !== 'local' && x.id !== 'both') byKey[ackKey(x.id, x.k)] = x; });
   const mails = {}; allBook().forEach(x => { if (!x.queen && x.id !== 'local') mails[ackKey(x.id, x.k)] = x; });
-  const own = { diary: state.myDiary, ack: state.myAck, re: state.myRe, seal: state.mySeal, odone: state.myOdone, oc: state.myOc, mread: state.myRead, book: bookS.my, rate: rateS.my, rz: state.myRz, hpos: state.myHpos, shower: state.myShower || 0, showerNo: state.myShowerNo || 0 };
+  const own = { diary: state.myDiary, ack: state.myAck, re: state.myRe, seal: state.mySeal, odone: state.myOdone, oc: state.myOc, mread: state.myRead, book: bookS.my, rate: rateS.my, rz: state.myRz, hpos: state.myHpos, moon: state.myMoon || [], shower: state.myShower || 0, showerNo: state.myShowerNo || 0 };
   const label = (tg, u) => {
     if (!tg) return 'einen Eintrag';
     const of = tg.id === u ? '' : ' von ' + (tg.mine ? 'dir' : tg.who);
@@ -2488,7 +2542,7 @@ function startNotes(db) {
     const fresh = [];
     for (const id in m) {
       const v = m[id] || {};
-      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (typeof v.shower === 'number') state.myShower = Math.max(state.myShower || 0, v.shower); if (typeof v.showerNo === 'number') state.myShowerNo = Math.max(state.myShowerNo || 0, v.showerNo); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
+      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (Array.isArray(v.moon) && v.moon.length >= 4 && (!state.myMoon || v.moon[3] > state.myMoon[3])) state.myMoon = v.moon; if (typeof v.shower === 'number') state.myShower = Math.max(state.myShower || 0, v.shower); if (typeof v.showerNo === 'number') state.myShowerNo = Math.max(state.myShowerNo || 0, v.showerNo); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
       for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz, weil ' + pron(nameOf(id, v)) + ' an dich denken musste ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       for (const k in (v.book || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.book[k]; if (state.seen && e && e.text) fresh.push(nameOf(id, v) + ' hat dir im Buch geschrieben: ' + (e.sub || '(ohne Betreff)')); } }
       for (const k in (v.rate || {})) { const key = id + '|r|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const r = v.rate[k], m = /^d(\d+)$/.exec(k); if (state.seen && r && m) fresh.push(nameOf(id, v) + ' hat dich bewertet: ' + rateIcons(Number(m[1]), r.n)); } }
