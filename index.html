@@ -376,6 +376,9 @@ body.skyonly #logBtn { display: none; }
 .showerrow { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
 .showerrow button { padding: 8px 14px; border-radius: 10px; border: 1px solid var(--gold); background: transparent; color: inherit; font: inherit; cursor: pointer; }
 .showerrow #showerYes { background: var(--gold); color: #1b1436; }
+#funShowerBtn { bottom: 186px !important; }
+#funOneBtn { bottom: 244px !important; }
+#warpSkyBtn { bottom: 302px !important; }
 .showerbtn { bottom: 128px !important; display: none !important; }
 body.skyonly .showerbtn { display: block !important; }
 .showerbtn.on { box-shadow: 0 0 0 2px var(--gold), 0 0 18px rgba(242, 196, 109, 0.8); animation: showerpulse 1.4s ease-in-out infinite; }
@@ -572,6 +575,9 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
 <div id="warpEnd" class="warpend"><p>Angekommen, im Herzen.</p><button type="button" id="warpX" aria-label="Zurück ins Hier und Jetzt">✕</button></div>
 <div id="showerAsk" class="showerask" role="alertdialog" aria-live="assertive" hidden><div id="showerAskTxt"></div><div class="showerrow"><button type="button" id="showerYes">🌠 Annehmen</button><button type="button" id="showerNo">Ablehnen</button></div></div>
 <button class="logbtn skybtn showerbtn" id="showerBtn" type="button" aria-label="Sternschnuppenschauer auslösen">🌠</button>
+<button class="logbtn skybtn showerbtn" id="funOneBtn" type="button" aria-label="Eine Sternschnuppe zum Anschauen"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20 L16 8" opacity="0.7"/><path d="M17.5 3.5l1.1 2.4 2.6.3-1.9 1.8.5 2.6-2.3-1.3-2.3 1.3.5-2.6-1.9-1.8 2.6-.3z" fill="currentColor" stroke="none"/></svg></button>
+<button class="logbtn skybtn showerbtn" id="funShowerBtn" type="button" aria-label="Einen Sternschnuppenschauer zum Anschauen"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 11 L11 3" opacity="0.6"/><path d="M3 19 L19 3"/><path d="M11 21 L21 11" opacity="0.6"/><circle cx="19.5" cy="3.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="11.5" cy="2.5" r="1" fill="currentColor" stroke="none"/><circle cx="21.5" cy="10.5" r="1" fill="currentColor" stroke="none"/></svg></button>
+<button class="logbtn skybtn showerbtn" id="warpSkyBtn" type="button" aria-label="Zeitreise starten">⏳</button>
 <button class="logbtn skybtn" id="skyBtn" type="button" aria-label="Nur den Sternenhimmel zeigen" aria-pressed="false">🌙</button>
 <div class="pop" id="logPop" role="dialog" aria-modal="true" aria-labelledby="logH" hidden>
   <div class="popbox logbox">
@@ -1468,11 +1474,13 @@ function wishesToday() {
   for (const k in mine) { const e = mine[k]; if (e && e.star && berlinDay(e.t) === today) n++; }
   return n;
 }
-function spawnStar(shower) {
-  if ((!shower && catchBusy) || warping || document.hidden) return;
-  if (!shower) catchBusy = true;
+function spawnStar(shower, fun) {
+  const free = shower || fun;
+  if ((!free && catchBusy) || warping || document.hidden) return;
+  if (!free) catchBusy = true;
   const vw = window.innerWidth, vh = window.innerHeight;
-  const s = document.createElement('button'); s.type = 'button'; s.className = 'cstar'; s.setAttribute('aria-label', 'Sternschnuppe fangen');
+  const s = document.createElement('button'); s.type = 'button'; s.className = 'cstar'; s.setAttribute('aria-label', fun ? 'Sternschnuppe zum Anschauen' : 'Sternschnuppe fangen');
+  if (fun) { s.style.pointerEvents = 'none'; s.tabIndex = -1; s.setAttribute('aria-hidden', 'true'); }
   s.innerHTML = '<span class="tail"></span><svg class="head" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l3 7.5 8 .6-6.1 5.2 2 7.9L12 17.6 5.1 22.2l2-7.9L1 9.1l8-.6z" fill="#fff5da"/></svg>';
   const right = Math.random() < 0.5; let sx, sy, a;
   if (Math.random() < 0.35) { sx = vw * (0.1 + Math.random() * 0.8); sy = -20; a = 55 + Math.random() * 20; }
@@ -1489,8 +1497,8 @@ function spawnStar(shower) {
     { opacity: 1, offset: 0.85 },
     { transform: tr(sx + dx * L, sy + dy * L), opacity: 0, offset: 1 }
   ], { duration: dur, easing: 'linear' });
-  anim.onfinish = () => { s.remove(); if (!shower) catchBusy = false; };
-  s.addEventListener('click', () => { anim.onfinish = null; anim.cancel(); s.remove(); if (!shower) catchBusy = false; openWish(); });
+  anim.onfinish = () => { s.remove(); if (!free) catchBusy = false; };
+  if (!fun) s.addEventListener('click', () => { anim.onfinish = null; anim.cancel(); s.remove(); if (!free) catchBusy = false; openWish(); });
 }
 function scheduleStar(first) {
   setTimeout(() => { if (!reduce) spawnStar(); scheduleStar(false); }, first ? 20000 : 50000 + Math.random() * 20000);
@@ -2358,6 +2366,10 @@ function showerTick() {
 }
 $('showerYes').addEventListener('click', () => { const now = Date.now(); state.myShower = now; writeOwn({ shower: now }); showerTick(); });
 $('showerNo').addEventListener('click', () => { const b = otherShower(); state.myShowerNo = b; writeOwn({ showerNo: b }); showerTick(); showToast('Abgelehnt. ' + (otherName() || 'Die andere Person') + ' bekommt Bescheid.'); });
+function funStars(n) { let i = 0; (function go() { spawnStar(false, true); if (++i < n) setTimeout(go, 250 + Math.random() * 550); })(); }
+$('funOneBtn').addEventListener('click', () => spawnStar(false, true));
+$('funShowerBtn').addEventListener('click', () => funStars(10));
+$('warpSkyBtn').addEventListener('click', () => { if (warping || warpHold) return; if (document.body.classList.contains('skyonly')) $('skyBtn').click(); startWarp(); });
 $('showerBtn').addEventListener('click', () => {
   const now = Date.now(), a = state.myShower || 0, who = otherName() || 'die andere Person';
   if (showerNow()) { showToast('Der Schauer läuft schon.'); return; }
