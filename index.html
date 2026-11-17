@@ -485,8 +485,8 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <p class="muted small">Tipp: Tipp auf eine Zeile, dann siehst du, wann du mit diesem Tempo da wärst.</p>
   </section>
 
-  <section aria-label="Zeitmaschine" style="display:flex;flex-direction:column;gap:10px">
-    <button class="warp" id="warp" type="button">Zeitmaschine starten</button>
+  <section aria-label="Zeitreise" style="display:flex;flex-direction:column;gap:10px">
+    <button class="warp" id="warp" type="button">Zeitreise starten</button>
     <p class="warp-note" id="warpNote" aria-live="polite"></p>
   </section>
 
@@ -1126,9 +1126,9 @@ function endWarp() {
   document.body.classList.remove('warping', 'warpfade'); setTimeout(() => document.body.classList.remove('warpslow'), 1800);
   drawCalm(); renderAll(true);
   const q = parts(TARGET - Date.now());
-  $('warp').disabled = false; $('warp').textContent = 'Zeitmaschine noch einmal starten';
+  $('warp').disabled = false; $('warp').textContent = 'Zeitreise noch einmal starten';
   $('warpNote').textContent = 'Zurück in der Gegenwart: noch ' + q.d + ' Tage und ' + q.h + ' Stunden. Der Vorgeschmack war echt.';
-  if (warpFromSky) { warpFromSky = false; if (!document.body.classList.contains('skyonly')) $('skyBtn').click(); }
+  warpFromSky = false; if (!document.body.classList.contains('skyonly')) $('skyBtn').click();
 }
 $('warpX').addEventListener('click', () => { if (warpHold) endWarp(); });
 $('warp').addEventListener('click', () => { if (warpHold) endWarp(); else startWarp(); });
