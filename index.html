@@ -2055,12 +2055,12 @@ function renderDiary(force) {
           const key = ackKey(x.id, x.k);
           if (state.fulfilKey === key) {
             const ta = el('textarea'); ta.maxLength = 600; ta.placeholder = 'Wie hast du den Wunsch erfüllt?'; ta.setAttribute('aria-label', 'Text zum erfüllten Wunsch');
-            const fid = 'ff' + key, row = el('div', 'row'), info = el('p', 'muted small');
+            const fid = 'ff' + key, row = el('div', 'row'), info = el('p', 'muted small', 'Text und Foto sind freiwillig, du kannst den Wunsch auch ohne beides erfüllen.');
             const fl = el('label', 'btn', 'Foto anhängen'); fl.setAttribute('for', fid); fl.hidden = !state.assets;
             const fi = document.createElement('input'); fi.type = 'file'; fi.accept = 'image/*'; fi.id = fid;
-            fi.addEventListener('change', () => { info.textContent = fi.files[0] ? 'Foto bereit: ' + fi.files[0].name : ''; });
-            const go = el('button', 'btn solid', 'Abschicken'); go.type = 'button';
-            go.addEventListener('click', () => { const t = ta.value.trim(); if (!t && !fi.files[0]) { info.textContent = 'Schreib etwas oder hänge ein Foto an.'; return; } sendFulfil(x, t, fi.files[0], info, go); });
+            fi.addEventListener('change', () => { info.textContent = fi.files[0] ? 'Foto bereit: ' + fi.files[0].name : 'Text und Foto sind freiwillig, du kannst den Wunsch auch ohne beides erfüllen.'; });
+            const go = el('button', 'btn solid', 'Wunsch erfüllen'); go.type = 'button';
+            go.addEventListener('click', () => { sendFulfil(x, ta.value.trim(), fi.files[0], info, go); });
             const cn = el('button', 'btn', 'Abbrechen'); cn.type = 'button';
             cn.addEventListener('click', () => { state.fulfilKey = null; renderDiary(true); });
             row.append(fl, fi, go, cn); box.append(ta, row, info);
