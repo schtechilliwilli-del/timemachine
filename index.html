@@ -1115,6 +1115,7 @@ function startWarp() {
   }
   requestAnimationFrame(frame);
 }
+let warpFromSky = false;
 function endWarp() {
   if (gatherP > 0 && state.hs) {
     const now = Date.now(), cl = (v, lo, hi) => Math.min(hi, Math.max(lo, v)), jt = k => ((hsHash(k) % 1000) / 1000 - 0.5) * 0.045; let any = false;
@@ -1127,6 +1128,7 @@ function endWarp() {
   const q = parts(TARGET - Date.now());
   $('warp').disabled = false; $('warp').textContent = 'Zeitmaschine noch einmal starten';
   $('warpNote').textContent = 'Zurück in der Gegenwart: noch ' + q.d + ' Tage und ' + q.h + ' Stunden. Der Vorgeschmack war echt.';
+  if (warpFromSky) { warpFromSky = false; if (!document.body.classList.contains('skyonly')) $('skyBtn').click(); }
 }
 $('warpX').addEventListener('click', () => { if (warpHold) endWarp(); });
 $('warp').addEventListener('click', () => { if (warpHold) endWarp(); else startWarp(); });
@@ -2372,7 +2374,7 @@ $('showerNo').addEventListener('click', () => { const b = otherShower(); state.m
 function funStars(n) { let i = 0; const rp = newRadiant(); (function go() { spawnStar(false, true, rp); if (++i < n) setTimeout(go, 250 + Math.random() * 550); })(); }
 $('funOneBtn').addEventListener('click', () => spawnStar(false, true));
 $('funShowerBtn').addEventListener('click', () => funStars(10));
-$('warpSkyBtn').addEventListener('click', () => { if (warping || warpHold) return; if (document.body.classList.contains('skyonly')) $('skyBtn').click(); startWarp(); });
+$('warpSkyBtn').addEventListener('click', () => { if (warping || warpHold) return; if (document.body.classList.contains('skyonly')) { $('skyBtn').click(); warpFromSky = true; } startWarp(); });
 $('showerBtn').addEventListener('click', () => {
   const now = Date.now(), a = state.myShower || 0, who = otherName() || 'die andere Person';
   if (showerNow()) { showToast('Der Schauer läuft schon.'); return; }
