@@ -422,6 +422,10 @@ main { transition: opacity 0.35s ease, visibility 0.35s; }
 .wax::before { content: ''; position: absolute; inset: 7px; border-radius: 50%; border: 2px solid rgba(255, 190, 190, 0.35); box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4); }
 .wax span { font-size: 28px; color: rgba(255, 214, 200, 0.88); text-shadow: 0 1px 1px rgba(0, 0, 0, 0.55), 0 -1px 0 rgba(255, 255, 255, 0.2); }
 
+#warpEnd { position: fixed; left: 0; right: 0; bottom: 22px; z-index: 6; display: flex; flex-direction: column; align-items: center; gap: 10px; opacity: 0; pointer-events: none; transition: opacity 1.4s ease; color: #f1e9d6; text-align: center; padding: 0 20px; }
+#warpEnd.on { opacity: 1; pointer-events: auto; }
+#warpEnd p { margin: 0; font-size: 15px; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7); }
+#warpEnd button { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(242, 196, 109, 0.7); background: rgba(20, 16, 44, 0.6); color: #f1e9d6; font-size: 16px; cursor: pointer; }
 body.warpslow main, body.warpslow .logbtn, body.warpslow .wishbar { transition: opacity 1.6s ease; }
 body.warpfade main { opacity: 0; pointer-events: none; }
 body.warpfade .logbtn, body.warpfade .wishbar { opacity: 0; pointer-events: none; }
@@ -565,6 +569,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
 </div>
 <div id="printBook" aria-hidden="true"></div>
 <button class="logbtn" id="logBtn" type="button" aria-label="Logbuch öffnen">📜<span class="logn" id="logN" hidden></span></button>
+<div id="warpEnd" class="warpend"><p>Angekommen. Hier bleibt es, bis du zurückkehrst.</p><button type="button" id="warpX" aria-label="Zurück ins Hier und Jetzt">✕</button></div>
 <div id="showerAsk" class="showerask" role="alertdialog" aria-live="assertive" hidden><div id="showerAskTxt"></div><div class="showerrow"><button type="button" id="showerYes">🌠 Annehmen</button><button type="button" id="showerNo">Ablehnen</button></div></div>
 <button class="logbtn skybtn showerbtn" id="showerBtn" type="button" aria-label="Sternschnuppenschauer auslösen">🌠</button>
 <button class="logbtn skybtn" id="skyBtn" type="button" aria-label="Nur den Sternenhimmel zeigen" aria-pressed="false">🌙</button>
@@ -972,6 +977,20 @@ function drawWarp(w) {
     ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
   });
 }
+let warpEndT = 0;
+function drawEndHeart(t) {
+  const age = Math.min(1, (performance.now() - warpEndT) / 2200), cx = W / 2, cy = H * 0.42, sc = Math.min(W, H) * 0.34 * (0.92 + 0.08 * age);
+  ctx.save(); ctx.globalAlpha = age;
+  const N = 110;
+  for (let i = 0; i < N; i++) {
+    const hp = heartPt({ t: i / N * 6.2832, j: 0 });
+    const x = cx + hp[0] * sc * 1.05, y = cy + hp[1] * sc * 1.05;
+    const a = 0.35 + 0.65 * Math.abs(Math.sin(t * 0.0012 + i * 0.7)), r = 1.1 + (i % 5 === 0 ? 1.1 : 0);
+    ctx.fillStyle = 'rgba(255,225,170,' + (a * 0.18).toFixed(3) + ')'; ctx.beginPath(); ctx.arc(x, y, r * 4, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = 'rgba(255,240,205,' + a.toFixed(3) + ')'; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+  }
+  ctx.restore();
+}
 function startWarp() {
   if (warping) return;
   warping = true;
@@ -989,20 +1008,23 @@ function startWarp() {
     drawWarp(w);
     if (w < 1) { requestAnimationFrame(frame); return; }
     document.body.classList.add('done'); $('jh').textContent = 'Angekommen';
-    warpHold = true; document.body.classList.remove('warping'); setTimeout(() => { if (warpHold) document.body.classList.remove('warpfade'); setTimeout(() => document.body.classList.remove('warpslow'), 1800); }, 1200);
+    warpHold = true; warpEndT = performance.now(); document.body.classList.remove('warping');
+    if (reduce) { drawCalm(0); drawEndHeart(0); }
     $('warp').disabled = false; $('warp').textContent = 'Zurück ins Hier und Jetzt';
     $('warpNote').textContent = 'Angekommen. Hier bleibt es, bis du zurückkehrst.';
+    setTimeout(() => { if (warpHold) $('warpEnd').classList.add('on'); }, 1500);
   }
   requestAnimationFrame(frame);
 }
 function endWarp() {
-  warping = false; warpHold = false;
-  document.body.classList.remove('warping', 'warpfade', 'warpslow');
+  warping = false; warpHold = false; $('warpEnd').classList.remove('on');
+  document.body.classList.remove('warping', 'warpfade'); setTimeout(() => document.body.classList.remove('warpslow'), 1800);
   drawCalm(); renderAll(true);
   const q = parts(TARGET - Date.now());
   $('warp').disabled = false; $('warp').textContent = 'Zeitmaschine noch einmal starten';
   $('warpNote').textContent = 'Zurück in der Gegenwart: noch ' + q.d + ' Tage und ' + q.h + ' Stunden. Der Vorgeschmack war echt.';
 }
+$('warpX').addEventListener('click', () => { if (warpHold) endWarp(); });
 $('warp').addEventListener('click', () => { if (warpHold) endWarp(); else startWarp(); });
 
 /* ---- Tuerchen und gemeinsame Daten ---- */
@@ -2218,7 +2240,7 @@ renderDiary();
 renderBook();
 mailSyncHash();
 let lastDraw = 0;
-function skyLoop(t) { requestAnimationFrame(skyLoop); if ((warping && !warpHold) || reduce || document.hidden || t - lastDraw < 40) return; lastDraw = t; drawCalm(t); }
+function skyLoop(t) { requestAnimationFrame(skyLoop); if ((warping && !warpHold) || reduce || document.hidden || t - lastDraw < 40) return; lastDraw = t; if (warpHold) { const a = Math.min(1, (performance.now() - warpEndT) / 900); ctx.globalAlpha = Math.max(0.12, a); drawCalm(t); ctx.globalAlpha = 1; drawEndHeart(t); } else drawCalm(t); }
 if (!reduce) requestAnimationFrame(skyLoop);
 scheduleStar(true);
 let showerOn = false, showerLoop = null;
