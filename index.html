@@ -937,8 +937,8 @@ function moonGeo() {
     for (const id in state.notes) { if (id !== state.uid) { const m = (state.notes[id] || {}).moon; if (Array.isArray(m) && m.length >= 4 && (!best || m[3] > best[3])) best = m; } }
     moonCur = best ? { x: best[0], y: best[1], s: best[2] } : null;
   }
-  if (!moonCur) return { cx: W - R0 - 18, cy: R0 + 26, R: R0 };
-  return { cx: moonCur.x * W, cy: moonCur.y * H, R: R0 * moonCur.s };
+  if (!moonCur) return { cx: W - R0 - 18, cy: R0 + 26, R: R0, custom: false };
+  return { cx: moonCur.x * W, cy: moonCur.y * H, R: R0 * moonCur.s, custom: true };
 }
 function moonCommit() {
   if (!moonCur) return;
@@ -989,7 +989,7 @@ function drawBgMoon(t) {
     moonImg.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(moonSVG(moonPhase(Date.now())).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '));
   }
   const sk = document.body.classList.contains('skyonly') || warpHold;
-  const mg = moonGeo(), onlySky = document.body.classList.contains('skyonly') && !warpHold;
+  const mg = moonGeo(), onlySky = mg.custom || (document.body.classList.contains('skyonly') && !warpHold);
   const R = onlySky ? mg.R : sk ? Math.max(32, Math.min(W * 0.11, 60)) : Math.max(60, Math.min(W * 0.3, H * 0.2)), cx = onlySky ? mg.cx : sk ? W - R - 18 : W / 2, cy = onlySky ? mg.cy : sk ? R + 26 : H * 0.6, pulse = 1 + 0.04 * Math.sin(t / 1500);
   const g = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R * 2.1 * pulse);
   g.addColorStop(0, 'rgba(243,236,210,0.16)'); g.addColorStop(1, 'rgba(243,236,210,0)');
