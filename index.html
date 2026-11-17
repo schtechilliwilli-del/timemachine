@@ -371,6 +371,7 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .skybtn { bottom: 70px !important; font-size: 20px !important; }
 body.skyonly main { opacity: 0; visibility: hidden; pointer-events: none; }
 body.skyonly #logBtn { display: none; }
+body.skyonly #sky { pointer-events: auto; touch-action: none; }
 main { transition: opacity 0.35s ease, visibility 0.35s; }
 .logbtn { position: fixed; left: 12px; bottom: 12px; z-index: 30; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(11, 14, 32, 0.88); color: var(--gold); font-size: 22px; line-height: 1; cursor: pointer; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5); }
 .logn { position: absolute; top: -6px; right: -6px; min-width: 22px; height: 22px; padding: 0 5px; box-sizing: border-box; border-radius: 11px; background: var(--rose); color: #2b0f19; font-family: var(--mono); font-size: 12px; font-weight: 700; line-height: 22px; text-align: center; }
@@ -810,7 +811,7 @@ function drawCalm(t) {
   drawHeartStars(t);
   const k = Math.max(1.5, Math.min(W * 0.0054, H * 0.0072));
   bgFig(FIG_AQR, 6 - 22 * k + Math.sin(t / 2600) * 9, H * 0.3 + Math.cos(t / 3300) * 8, k, '154,216,255', t, 0);
-  bgFig(FIG_LEO, W - 6 - 90 * k + Math.sin(t / 2900 + 2) * 9, H * 0.17 + Math.cos(t / 3700 + 1) * 8, k, '242,196,109', t, 3);
+  bgFig(FIG_LEO, W - 6 - 90 * k + Math.sin(t / 2900 + 2) * 9, H * (document.body.classList.contains('skyonly') ? 0.3 : 0.17) + Math.cos(t / 3700 + 1) * 8, k, '242,196,109', t, 3);
 }
 const HS_COL = { gold: '242,196,109', rose: '240,143,169' };
 function hsHash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -830,6 +831,37 @@ function drawHeartStars(t) {
     ctx.restore();
   }
 }
+function applyHpos() {
+  const best = {};
+  const take = h => { for (const k in (h || {})) { const p = h[k]; if (Array.isArray(p) && p.length >= 3 && (!best[k] || p[2] > best[k][2])) best[k] = p; } };
+  for (const id in state.notes) { if (id !== state.uid) take((state.notes[id] || {}).hpos); }
+  take(state.myHpos);
+  const hs = state.hs || {};
+  for (const k in hs) { const o = hs[k]; if (o === sky.drag) continue; const p = best[o.ak]; if (p) { o.x = Math.min(0.97, Math.max(0.03, p[0])); o.y = Math.min(0.96, Math.max(0.04, p[1])); } }
+}
+const sky = { drag: null, dx: 0, dy: 0 };
+function skyPos(e) { return [e.clientX, e.clientY]; }
+cv.addEventListener('pointerdown', e => {
+  if (!document.body.classList.contains('skyonly')) return;
+  const [px, py] = skyPos(e), hs = state.hs || {}; let best = null, bd = 40 * 40;
+  for (const k in hs) { const o = hs[k]; if (o.show > Date.now()) continue; const dx = o.x * W - px, dy = o.y * H - py, d = dx * dx + dy * dy; if (d < bd) { bd = d; best = o; } }
+  if (!best) return;
+  sky.drag = best; sky.dx = best.x * W - px; sky.dy = best.y * H - py;
+  try { cv.setPointerCapture(e.pointerId); } catch (er) { /* egal */ }
+  e.preventDefault();
+});
+cv.addEventListener('pointermove', e => {
+  if (!sky.drag) return;
+  const [px, py] = skyPos(e);
+  sky.drag.x = Math.min(0.97, Math.max(0.03, (px + sky.dx) / W)); sky.drag.y = Math.min(0.96, Math.max(0.04, (py + sky.dy) / H));
+  if (reduce && !warping) drawCalm(0);
+});
+function skyDrop() {
+  const o = sky.drag; if (!o) return; sky.drag = null;
+  state.myHpos[o.ak] = [Math.round(o.x * 1000) / 1000, Math.round(o.y * 1000) / 1000, Date.now()];
+  writeOwn({ hpos: Object.assign({}, state.myHpos) });
+}
+cv.addEventListener('pointerup', skyDrop); cv.addEventListener('pointercancel', skyDrop);
 function syncHeartStars(entries) {
   state.hs = state.hs || {};
   if (state.connectDone && !state.db) state.hsReady = true;
@@ -842,10 +874,11 @@ function syncHeartStars(entries) {
     const key = x.id + '|' + x.k;
     if (state.hs[key]) return;
     const n = order[key] || 1, tx = 0.06 + fr(0.5 + 0.7548776662 * n) * 0.88, ty = 0.05 + fr(0.5 + 0.5698402910 * n) * 0.9;
-    const o = { x: tx, y: ty, rgb: x.who === 'Mafifee' ? HS_COL.rose : HS_COL.gold, show: 0 };
+    const o = { x: tx, y: ty, ak: ackKey(x.id, x.k), rgb: x.who === 'Mafifee' ? HS_COL.rose : HS_COL.gold, show: 0 };
     state.hs[key] = o; changed = true;
     if (state.hsReady && !reduce) { o.show = Date.now() + 1400; flyHeart(x.mine, tx * window.innerWidth, ty * window.innerHeight, o.rgb); }
   });
+  applyHpos();
   if (state.seen) state.hsReady = true;
   const total = counts['Masüsel'] + counts['Mafifee'];
   $('heartCount').textContent = total ? '♥ ' + total + (total === 1 ? ' Herz' : ' Herzen') + ' bisher: Masüsel ' + counts['Masüsel'] + ', Mafifee ' + counts['Mafifee'] : '';
@@ -870,11 +903,12 @@ function drawBgMoon(t) {
     moonKey = day; moonImg = new Image();
     moonImg.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(moonSVG(moonPhase(Date.now())).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '));
   }
-  const R = Math.max(60, Math.min(W * 0.3, H * 0.2)), cx = W / 2, cy = H * 0.6, pulse = 1 + 0.04 * Math.sin(t / 1500);
+  const sk = document.body.classList.contains('skyonly');
+  const R = sk ? Math.max(32, Math.min(W * 0.11, 60)) : Math.max(60, Math.min(W * 0.3, H * 0.2)), cx = sk ? W - R - 18 : W / 2, cy = sk ? R + 26 : H * 0.6, pulse = 1 + 0.04 * Math.sin(t / 1500);
   const g = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R * 2.1 * pulse);
   g.addColorStop(0, 'rgba(243,236,210,0.16)'); g.addColorStop(1, 'rgba(243,236,210,0)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  if (moonImg && moonImg.complete && moonImg.naturalWidth) { ctx.globalAlpha = 0.5; ctx.drawImage(moonImg, cx - R, cy - R, R * 2, R * 2); ctx.globalAlpha = 1; }
+  if (moonImg && moonImg.complete && moonImg.naturalWidth) { ctx.globalAlpha = sk ? 0.85 : 0.5; ctx.drawImage(moonImg, cx - R, cy - R, R * 2, R * 2); ctx.globalAlpha = 1; }
 }
 function bgFig(f, ox, oy, k, rgb, t, off) {
   t = t || 0; off = off || 0;
@@ -952,7 +986,7 @@ function endWarp() {
 $('warp').addEventListener('click', () => { if (warpHold) endWarp(); else startWarp(); });
 
 /* ---- Tuerchen und gemeinsame Daten ---- */
-const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRe: {}, myRz: {}, rzKey: null, rzdraft: '', mySeal: {}, myOdone: {}, myOc: {}, myRead: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
+const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRe: {}, myRz: {}, myHpos: {}, rzKey: null, rzdraft: '', mySeal: {}, myOdone: {}, myOc: {}, myRead: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
 let writeChain = Promise.resolve();
 function writeOwn(patch) {
   if (!state.db || !state.uid) return Promise.resolve();
@@ -2218,7 +2252,7 @@ function logEvents() {
   const out = [], ids = Object.keys(state.notes); if (state.uid && ids.indexOf(state.uid) < 0) ids.push(state.uid);
   const byKey = {}; allEntries().forEach(x => { if (x.id !== 'local' && x.id !== 'both') byKey[ackKey(x.id, x.k)] = x; });
   const mails = {}; allBook().forEach(x => { if (!x.queen && x.id !== 'local') mails[ackKey(x.id, x.k)] = x; });
-  const own = { diary: state.myDiary, ack: state.myAck, re: state.myRe, seal: state.mySeal, odone: state.myOdone, oc: state.myOc, mread: state.myRead, book: bookS.my, rate: rateS.my, rz: state.myRz };
+  const own = { diary: state.myDiary, ack: state.myAck, re: state.myRe, seal: state.mySeal, odone: state.myOdone, oc: state.myOc, mread: state.myRead, book: bookS.my, rate: rateS.my, rz: state.myRz, hpos: state.myHpos };
   const label = (tg, u) => {
     if (!tg) return 'einen Eintrag';
     const of = tg.id === u ? '' : ' von ' + (tg.mine ? 'dir' : tg.who);
@@ -2329,7 +2363,7 @@ function startNotes(db) {
     const fresh = [];
     for (const id in m) {
       const v = m[id] || {};
-      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
+      if (id === state.uid) { if (v.diary) state.myDiary = Object.assign({}, state.myDiary, v.diary); if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
       for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz, weil ' + pron(nameOf(id, v)) + ' an dich denken musste ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       for (const k in (v.book || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.book[k]; if (state.seen && e && e.text) fresh.push(nameOf(id, v) + ' hat dir im Buch geschrieben: ' + (e.sub || '(ohne Betreff)')); } }
       for (const k in (v.rate || {})) { const key = id + '|r|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const r = v.rate[k], m = /^d(\d+)$/.exec(k); if (state.seen && r && m) fresh.push(nameOf(id, v) + ' hat dich bewertet: ' + rateIcons(Number(m[1]), r.n)); } }
