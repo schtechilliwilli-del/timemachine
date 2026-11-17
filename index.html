@@ -722,12 +722,23 @@ function renderFigs() {
 }
 
 /* ---- Himmel ---- */
+const MOON_TEX = '<g filter="url(#mblur)" fill="#8f8870" fill-opacity="0.62">'
+  + '<ellipse cx="32" cy="25" rx="9.5" ry="7" transform="rotate(-18 32 25)"/><ellipse cx="46" cy="26" rx="5.5" ry="5"/><ellipse cx="55" cy="36" rx="8" ry="6" transform="rotate(20 55 36)"/>'
+  + '<ellipse cx="66" cy="28" rx="4" ry="3"/><ellipse cx="19" cy="41" rx="8" ry="14" transform="rotate(8 19 41)"/><ellipse cx="62" cy="47" rx="4.5" ry="6"/>'
+  + '<ellipse cx="34" cy="55" rx="7" ry="5"/><ellipse cx="22" cy="54" rx="4" ry="3.4"/><ellipse cx="44" cy="44" rx="4" ry="3"/><ellipse cx="46" cy="14" rx="3.5" ry="2"/></g>'
+  + '<g fill="#6f6955" fill-opacity="0.35"><circle cx="48" cy="58" r="3.2"/><circle cx="52" cy="66" r="2.4"/><circle cx="29" cy="62" r="2"/><circle cx="58" cy="57" r="1.8"/><circle cx="40" cy="31" r="1.6"/><circle cx="68" cy="40" r="1.7"/><circle cx="26" cy="20" r="1.5"/><circle cx="13" cy="50" r="1.5"/><circle cx="50" cy="21" r="1.3"/><circle cx="36" cy="72" r="1.8"/></g>'
+  + '<g stroke="#fffbe8" stroke-opacity="0.35" stroke-width="0.5" stroke-linecap="round"><line x1="38" y1="66" x2="30" y2="52"/><line x1="38" y1="66" x2="46" y2="52"/><line x1="38" y1="66" x2="38" y2="50"/><line x1="38" y1="66" x2="52" y2="62"/><line x1="38" y1="66" x2="26" y2="66"/></g>'
+  + '<g fill="#fffbe8" fill-opacity="0.8"><circle cx="38" cy="66" r="1.7"/><circle cx="31" cy="38" r="1.5"/><circle cx="21" cy="33" r="1"/><circle cx="24" cy="42" r="0.9"/><circle cx="57" cy="52" r="0.8"/></g>'
+  + '<g fill="none" stroke="#fffbe8" stroke-opacity="0.22" stroke-width="0.6"><circle cx="31" cy="38" r="2.6"/><circle cx="38" cy="66" r="2.8"/><circle cx="48" cy="58" r="3.4"/></g>';
 function moonSVG(p) {
   const r = 38, c = 42, waning = p > 0.5, q = waning ? 1 - p : p;
   const rx = r * Math.abs(Math.cos(2 * Math.PI * q));
   const sweep = q < 0.25 ? 0 : 1;
-  const lit = q < 0.005 ? '' : '<path d="M ' + c + ' ' + (c - r) + ' A ' + r + ' ' + r + ' 0 0 1 ' + c + ' ' + (c + r) + ' A ' + rx.toFixed(2) + ' ' + r + ' 0 0 ' + sweep + ' ' + c + ' ' + (c - r) + ' Z" fill="#f3ecd2"' + (waning ? ' transform="translate(' + (2 * c) + ',0) scale(-1,1)"' : '') + '/>';
-  return '<svg viewBox="0 0 84 84" role="img" aria-label="Mondphase"><circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="#1d2250" stroke="#2a3066" stroke-width="2"/>' + lit + '</svg>';
+  const d = 'M ' + c + ' ' + (c - r) + ' A ' + r + ' ' + r + ' 0 0 1 ' + c + ' ' + (c + r) + ' A ' + rx.toFixed(2) + ' ' + r + ' 0 0 ' + sweep + ' ' + c + ' ' + (c - r) + ' Z';
+  const tr = waning ? ' transform="translate(' + (2 * c) + ',0) scale(-1,1)"' : '';
+  const lit = q < 0.005 ? '' : '<path d="' + d + '" fill="#f3ecd2"' + tr + '/><g clip-path="url(#mclip)">' + MOON_TEX + '</g>';
+  const defs = '<defs><filter id="mblur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.1"/></filter><clipPath id="mclip"><path d="' + d + '"' + tr + '/></clipPath></defs>';
+  return '<svg viewBox="0 0 84 84" role="img" aria-label="Mondphase">' + defs + '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="#1d2250" stroke="#2a3066" stroke-width="2"/>' + lit + '</svg>';
 }
 function renderSky(now) {
   const p = moonPhase(now);
