@@ -825,7 +825,7 @@ function drawCalm(t) {
   const g = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, H * 0.7);
   g.addColorStop(0, 'rgba(40,48,110,0.55)'); g.addColorStop(1, 'rgba(11,14,32,0)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  const bx = W / 2, by = H * 0.42;
+  const bx = W / 2, by = H * 0.5;
   calm.forEach(s => { const a = s.a * arrP * (0.35 + 0.65 * Math.abs(Math.sin(t * s.sp + s.ph))); ctx.fillStyle = 'rgba(236,233,247,' + a.toFixed(3) + ')'; ctx.beginPath(); ctx.arc(bx + (s.x * W - bx) * arrP, by + (s.y * H - by) * arrP, s.r, 0, 6.2832); ctx.fill(); });
   drawBgMoon(t);
   drawHeartStars(t);
@@ -839,8 +839,8 @@ function drawHeartStars(t) {
   const now = Date.now(), hs = state.hs || {};
   for (const k in hs) {
     const o = hs[k]; if (o.show > now) continue;
-    let fx = o.x, fy = o.y; if (gatherP > 0 && o.gx != null) { fx = o.x + (o.gx - o.x) * gatherP; fy = o.y + (o.gy - o.y) * gatherP; }
-    const bx = W / 2, by = H * 0.42, x = bx + (fx * W - bx) * arrP, y = by + (fy * H - by) * arrP, age = now - o.show, rgb = o.rgb;
+    let fx = o.x, fy = o.y; if (gatherP > 0 && o.gt != null) { const gg = gatherXY(o, false); fx = o.x + (gg[0] - o.x) * gatherP; fy = o.y + (gg[1] - o.y) * gatherP; }
+    const bx = W / 2, by = H * 0.5, x = bx + (fx * W - bx) * arrP, y = by + (fy * H - by) * arrP, age = now - o.show, rgb = o.rgb;
     const pulse = 1 + 0.2 * Math.sin(t / 500 + o.x * 20), r = 7.5 * pulse;
     ctx.save(); ctx.globalAlpha = Math.max(0, Math.min(1, arrP * 1.4));
     if (age < 1000) { ctx.strokeStyle = 'rgba(' + rgb + ',' + (0.8 * (1 - age / 1000)).toFixed(3) + ')'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 6 + age / 14, 0, 6.2832); ctx.stroke(); }
@@ -980,9 +980,13 @@ function drawWarp(w) {
   });
 }
 let warpEndT = 0;
-function heartGeo() { return { cx: W / 2, cy: H * 0.42, sc: Math.min(W, H) * 0.34 * 1.05 }; }
+function heartGeo(grown) {
+  const sc = Math.min(W, H) * 0.34 * 1.05; if (grown) return { cx: W / 2, cy: H * 0.42, sc };
+  const e = (performance.now() - warpEndT - 1500) / 5200, q = Math.min(1, Math.max(0, e)), p = q * q * (3 - 2 * q);
+  return { cx: W / 2, cy: H * (0.5 - 0.08 * p), sc: sc * (0.62 + 0.38 * p) };
+}
 function drawEndHeart(t, am) {
-  const g = heartGeo(), N = 110;
+  const g = heartGeo(!warpHold), N = 110;
   for (let i = 0; i < N; i++) {
     const hp = heartPt({ t: i / N * 6.2832, j: 0 });
     const x = g.cx + hp[0] * g.sc, y = g.cy + hp[1] * g.sc;
@@ -991,14 +995,15 @@ function drawEndHeart(t, am) {
     ctx.fillStyle = 'rgba(255,240,205,' + a.toFixed(3) + ')'; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
   }
 }
+function gatherXY(o, grown) { const hp = heartPt({ t: o.gt, j: 0 }), g = heartGeo(grown); return [(g.cx + hp[0] * g.sc) / W, (g.cy + hp[1] * g.sc) / H]; }
 function setGather() {
-  const g = heartGeo(), ks = Object.keys(state.hs || {}).sort(), n = ks.length;
-  ks.forEach((k, i) => { const hp = heartPt({ t: (i + 0.5) / n * 6.2832, j: 0 }); const o = state.hs[k]; o.gx = (g.cx + hp[0] * g.sc) / W; o.gy = (g.cy + hp[1] * g.sc) / H; });
+  const ks = Object.keys(state.hs || {}).sort(), n = ks.length;
+  ks.forEach((k, i) => { state.hs[k].gt = (i + 0.5) / n * 6.2832; });
   gatherP = 1;
 }
 const easeOut = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
 function drawArrival(t) {
-  const age = performance.now() - warpEndT, g = heartGeo();
+  const age = performance.now() - warpEndT, g = heartGeo(false);
   if (age < 1500) {
     arrP = 0; ctx.fillStyle = 'rgba(11,14,32,0.14)'; ctx.fillRect(0, 0, W, H);
     drawEndHeart(t, Math.min(1, age / 600));
@@ -1032,17 +1037,17 @@ function startWarp() {
     if (w < 1) { requestAnimationFrame(frame); return; }
     document.body.classList.add('done'); $('jh').textContent = 'Angekommen';
     warpHold = true; warpEndT = performance.now(); document.body.classList.remove('warping');
-    setGather(); if (reduce) { arrP = 1; drawCalm(0); drawEndHeart(0, 0.35); }
+    setGather(); if (reduce) { warpEndT -= 9000; arrP = 1; drawCalm(0); drawEndHeart(0, 0.35); }
     $('warp').disabled = false; $('warp').textContent = 'Zurück ins Hier und Jetzt';
     $('warpNote').textContent = 'Angekommen. Hier bleibt es, bis du zurückkehrst.';
-    setTimeout(() => { if (warpHold) $('warpEnd').classList.add('on'); }, 4800);
+    setTimeout(() => { if (warpHold) $('warpEnd').classList.add('on'); }, 6600);
   }
   requestAnimationFrame(frame);
 }
 function endWarp() {
   if (gatherP > 0 && state.hs) {
     const now = Date.now(), cl = (v, lo, hi) => Math.min(hi, Math.max(lo, v)), jt = k => ((hsHash(k) % 1000) / 1000 - 0.5) * 0.045; let any = false;
-    for (const k in state.hs) { const o = state.hs[k]; if (o.gx == null) continue; o.x = cl(o.gx + jt(k), 0.03, 0.97); o.y = cl(o.gy + jt(k + 'y'), 0.04, 0.96); state.myHpos[o.ak] = [Math.round(o.x * 1000) / 1000, Math.round(o.y * 1000) / 1000, now]; any = true; }
+    for (const k in state.hs) { const o = state.hs[k]; if (o.gt == null) continue; const gg = gatherXY(o, true); o.x = cl(gg[0] + jt(k), 0.03, 0.97); o.y = cl(gg[1] + jt(k + 'y'), 0.04, 0.96); state.myHpos[o.ak] = [Math.round(o.x * 1000) / 1000, Math.round(o.y * 1000) / 1000, now]; any = true; }
     if (any) writeOwn({ hpos: Object.assign({}, state.myHpos) });
   }
   warping = false; warpHold = false; arrP = 1; gatherP = 0; $('warpEnd').classList.remove('on');
