@@ -1474,7 +1474,7 @@ function wishesToday() {
   for (const k in mine) { const e = mine[k]; if (e && e.star && berlinDay(e.t) === today) n++; }
   return n;
 }
-function spawnStar(shower, fun) {
+function spawnStar(shower, fun, rp) {
   const free = shower || fun;
   if ((!free && catchBusy) || warping || document.hidden) return;
   if (!free) catchBusy = true;
@@ -1485,8 +1485,9 @@ function spawnStar(shower, fun) {
   const right = Math.random() < 0.5; let sx, sy, a;
   if (Math.random() < 0.35) { sx = vw * (0.1 + Math.random() * 0.8); sy = -20; a = 55 + Math.random() * 20; }
   else { sx = right ? vw + 20 : -20; sy = vh * (0.03 + Math.random() * 0.5); a = 14 + Math.random() * 22; }
-  const rad = a * Math.PI / 180, dx = (right ? -1 : 1) * Math.cos(rad), dy = Math.sin(rad), L = Math.max(vw, vh) * 1.5;
-  const rot = right ? 180 - a : a;
+  let rad = a * Math.PI / 180, dx = (right ? -1 : 1) * Math.cos(rad), dy = Math.sin(rad), L = Math.max(vw, vh) * 1.5;
+  let rot = right ? 180 - a : a;
+  if (rp) { const th = (15 + Math.random() * 150) * Math.PI / 180, off = 30 + Math.random() * Math.max(vw, vh) * 0.45; dx = Math.cos(th); dy = Math.sin(th); sx = rp.x + dx * off; sy = rp.y + dy * off; L = Math.max(vw, vh) * 0.7; rot = Math.atan2(dy, dx) * 180 / Math.PI; }
   const tr = (x, y) => 'translate(' + (x - 110) + 'px,' + (y - 20) + 'px) rotate(' + rot + 'deg)';
   s.style.opacity = '0';
   document.body.appendChild(s);
@@ -2350,10 +2351,12 @@ function skyLoop(t) { requestAnimationFrame(skyLoop); if ((warping && !warpHold)
 if (!reduce) requestAnimationFrame(skyLoop);
 scheduleStar(true);
 let showerOn = false, showerLoop = null;
-function showerStars() { if (!showerOn) return; spawnStar(true); showerLoop = setTimeout(showerStars, 450 + Math.random() * 650); }
+let showerRp = null;
+function newRadiant() { return { x: window.innerWidth * (0.25 + Math.random() * 0.5), y: window.innerHeight * (-0.1 + Math.random() * 0.25) }; }
+function showerStars() { if (!showerOn) return; spawnStar(true, false, showerRp); showerLoop = setTimeout(showerStars, 450 + Math.random() * 650); }
 function showerTick() {
   const sh = showerNow(), a = state.myShower || 0, b = otherShower(), now = Date.now(), btn = $('showerBtn'), dn = showerDone();
-  if (sh && !showerOn) { showerOn = true; showToast('Sternschnuppenschauer! Solange er läuft, hast du drei Wünsche frei.'); showerStars(); }
+  if (sh && !showerOn) { showerOn = true; showerRp = newRadiant(); showToast('Sternschnuppenschauer! Solange er läuft, hast du drei Wünsche frei.'); showerStars(); }
   if (!sh && showerOn) { showerOn = false; clearTimeout(showerLoop); showToast('Der Sternschnuppenschauer ist vorbei.'); }
   const declined = a > 0 && otherNo() === a;
   if (declined && state.showerDeclSeen !== a) { state.showerDeclSeen = a; showToast((otherName() || 'Die andere Person') + ' möchte gerade keinen Sternschnuppenschauer. Vielleicht später.'); }
@@ -2366,7 +2369,7 @@ function showerTick() {
 }
 $('showerYes').addEventListener('click', () => { const now = Date.now(); state.myShower = now; writeOwn({ shower: now }); showerTick(); });
 $('showerNo').addEventListener('click', () => { const b = otherShower(); state.myShowerNo = b; writeOwn({ showerNo: b }); showerTick(); showToast('Abgelehnt. ' + (otherName() || 'Die andere Person') + ' bekommt Bescheid.'); });
-function funStars(n) { let i = 0; (function go() { spawnStar(false, true); if (++i < n) setTimeout(go, 250 + Math.random() * 550); })(); }
+function funStars(n) { let i = 0; const rp = newRadiant(); (function go() { spawnStar(false, true, rp); if (++i < n) setTimeout(go, 250 + Math.random() * 550); })(); }
 $('funOneBtn').addEventListener('click', () => spawnStar(false, true));
 $('funShowerBtn').addEventListener('click', () => funStars(10));
 $('warpSkyBtn').addEventListener('click', () => { if (warping || warpHold) return; if (document.body.classList.contains('skyonly')) $('skyBtn').click(); startWarp(); });
