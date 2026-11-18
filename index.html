@@ -376,20 +376,13 @@ body.skyonly #logBtn { display: none; }
 .showerrow { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
 .showerrow button { padding: 8px 14px; border-radius: 10px; border: 1px solid var(--gold); background: transparent; color: inherit; font: inherit; cursor: pointer; }
 .showerrow #showerYes { background: var(--gold); color: #1b1436; }
-body.skyonly #skyBtn, body.skyonly #showerBtn, body.skyonly #funShowerBtn, body.skyonly #funOneBtn, body.skyonly #meteorBtn, body.skyonly #showBtn, body.skyonly #warpSkyBtn { bottom: 14px !important; width: 44px; height: 44px; }
+body.skyonly #skyBtn, body.skyonly #showerBtn, body.skyonly #funShowerBtn, body.skyonly #funOneBtn, body.skyonly #showBtn, body.skyonly #warpSkyBtn { bottom: 14px !important; width: 44px; height: 44px; }
 body.skyonly #skyBtn { left: 10px; }
 body.skyonly #showerBtn { left: 60px; }
 body.skyonly #funShowerBtn { left: 110px; }
 body.skyonly #funOneBtn { left: 160px; }
-body.skyonly #meteorBtn { left: 210px; }
-body.skyonly #showBtn { left: 260px; }
-body.skyonly #warpSkyBtn { left: 310px; }
-.meteor { position: fixed; left: 0; top: 0; width: 240px; height: 28px; z-index: 25; pointer-events: none; transform-origin: 100% 50%; opacity: 0; will-change: transform; }
-.meteor .mt { position: absolute; right: 10px; top: 11px; width: 230px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, rgba(255, 120, 40, 0), rgba(255, 150, 60, 0.55) 60%, rgba(255, 235, 200, 0.95)); filter: blur(1px); }
-.meteor .mh { position: absolute; right: 0; top: 3px; width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle, #fff 0, #ffe7b0 35%, rgba(255, 150, 50, 0.9) 60%, rgba(255, 100, 30, 0) 72%); box-shadow: 0 0 22px 8px rgba(255, 170, 70, 0.6); }
-.mfrag { position: fixed; left: 0; top: 0; width: 80px; height: 3px; z-index: 25; pointer-events: none; transform-origin: 100% 50%; border-radius: 2px; background: linear-gradient(90deg, rgba(255, 150, 60, 0), rgba(255, 220, 170, 0.95)); box-shadow: 0 0 8px rgba(255, 170, 80, 0.7); }
-.mflash { position: fixed; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 240, 210, 0.95), rgba(255, 160, 70, 0.4) 40%, rgba(255, 120, 40, 0) 70%); z-index: 25; pointer-events: none; }
-.asteroid { position: fixed; left: 0; top: 0; z-index: 25; pointer-events: none; }
+body.skyonly #showBtn { left: 210px; }
+body.skyonly #warpSkyBtn { left: 260px; }
 #showCv { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 24; pointer-events: none; }
 #funShowerBtn { bottom: 186px !important; }
 #funOneBtn { bottom: 244px !important; }
@@ -592,7 +585,6 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
 <button class="logbtn skybtn showerbtn" id="showerBtn" type="button" aria-label="Sternschnuppenschauer auslösen">🌠</button>
 <button class="logbtn skybtn showerbtn" id="funOneBtn" type="button" aria-label="Eine Sternschnuppe zum Anschauen"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20 L16 8" opacity="0.7"/><path d="M17.5 3.5l1.1 2.4 2.6.3-1.9 1.8.5 2.6-2.3-1.3-2.3 1.3.5-2.6-1.9-1.8 2.6-.3z" fill="currentColor" stroke="none"/></svg></button>
 <button class="logbtn skybtn showerbtn" id="funShowerBtn" type="button" aria-label="Einen Sternschnuppenschauer zum Anschauen"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 11 L11 3" opacity="0.6"/><path d="M3 19 L19 3"/><path d="M11 21 L21 11" opacity="0.6"/><circle cx="19.5" cy="3.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="11.5" cy="2.5" r="1" fill="currentColor" stroke="none"/><circle cx="21.5" cy="10.5" r="1" fill="currentColor" stroke="none"/></svg></button>
-<button class="logbtn skybtn showerbtn" id="meteorBtn" type="button" aria-label="Meteorit oder Asteroid vorbeifliegen lassen"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6 L13 12" opacity="0.5"/><path d="M3 11 L13 14" opacity="0.8"/><path d="M4 16 L12 16" opacity="0.5"/><path d="M14.5 10.5l3-1.5 3.5 1.5 1 3.5-2 3-3.5.5-2.5-2.5z" fill="currentColor" fill-opacity="0.35"/></svg></button>
 <button class="logbtn skybtn showerbtn" id="showBtn" type="button" aria-label="Ein Spektakel am Himmel"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/><path d="M19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" opacity="0.8"/><path d="M5 2.5l.6 1.6 1.6.6-1.6.6L5 6.9l-.6-1.6L2.8 4.7l1.6-.6z" opacity="0.7"/></svg></button>
 <button class="logbtn skybtn showerbtn" id="warpSkyBtn" type="button" aria-label="Zeitreise starten">⏳</button>
 <button class="logbtn skybtn" id="skyBtn" type="button" aria-label="Nur den Sternenhimmel zeigen" aria-pressed="false">🌙</button>
@@ -2413,41 +2405,6 @@ function showerTick() {
 }
 $('showerYes').addEventListener('click', () => { const now = Date.now(); state.myShower = now; writeOwn({ shower: now }); showerTick(); });
 $('showerNo').addEventListener('click', () => { const b = otherShower(); state.myShowerNo = b; writeOwn({ showerNo: b }); showerTick(); showToast('Abgelehnt. ' + (otherName() || 'Die andere Person') + ' bekommt Bescheid.'); });
-function meteorShot() {
-  if (warping || document.hidden) return;
-  if (Math.random() < 0.3) { asteroidPass(); return; }
-  const vw = window.innerWidth, vh = window.innerHeight, right = Math.random() < 0.5;
-  const sx = right ? vw + 60 : -60, sy = vh * (0.05 + Math.random() * 0.35), a = 12 + Math.random() * 24, rad = a * Math.PI / 180;
-  const dx = (right ? -1 : 1) * Math.cos(rad), dy = Math.sin(rad), rot = Math.atan2(dy, dx) * 180 / Math.PI, L = Math.max(vw, vh) * 1.35, dur = 2800 + Math.random() * 900;
-  const tr = (x, y) => 'translate(' + (x - 240) + 'px,' + (y - 14) + 'px) rotate(' + rot + 'deg)';
-  const el = document.createElement('div'); el.className = 'meteor'; el.innerHTML = '<span class="mt"></span><span class="mh"></span>'; document.body.appendChild(el);
-  const fx = sx + dx * L * 0.5, fy = sy + dy * L * 0.5;
-  const an = el.animate([
-    { transform: tr(sx, sy), opacity: 0, offset: 0 }, { transform: tr(sx + dx * L * 0.04, sy + dy * L * 0.04), opacity: 1, offset: 0.08 },
-    { transform: tr(fx, fy), opacity: 1, offset: 0.5 }, { transform: tr(fx + dx * L * 0.05, fy + dy * L * 0.05), opacity: 0, offset: 0.56 },
-    { transform: tr(fx + dx * L * 0.05, fy + dy * L * 0.05), opacity: 0, offset: 1 }], { duration: dur, easing: 'linear' });
-  an.onfinish = () => el.remove();
-  setTimeout(() => {
-    const fl = document.createElement('div'); fl.className = 'mflash'; fl.style.left = fx + 'px'; fl.style.top = fy + 'px'; document.body.appendChild(fl);
-    const fa = fl.animate([{ opacity: 1, transform: 'scale(0.3)' }, { opacity: 0, transform: 'scale(2.2)' }], { duration: 700, easing: 'ease-out' }); fa.onfinish = () => fl.remove();
-    for (let i = 0; i < 7; i++) {
-      const f = document.createElement('div'); f.className = 'mfrag'; document.body.appendChild(f);
-      const ang = rot + (Math.random() - 0.5) * 70, r2 = ang * Math.PI / 180, d = 160 + Math.random() * 260, w = 40 + Math.random() * 50; f.style.width = w + 'px';
-      const t2 = (x, y) => 'translate(' + (x - w) + 'px,' + (y - 1.5) + 'px) rotate(' + ang + 'deg)';
-      const an2 = f.animate([{ transform: t2(fx, fy), opacity: 1 }, { transform: t2(fx + Math.cos(r2) * d, fy + Math.sin(r2) * d), opacity: 0 }], { duration: 800 + Math.random() * 700, easing: 'ease-out' }); an2.onfinish = () => f.remove();
-    }
-  }, dur * 0.5);
-}
-function asteroidPass() {
-  const vw = window.innerWidth, vh = window.innerHeight, right = Math.random() < 0.5, sz = 54 + Math.random() * 60;
-  const sy = vh * (0.08 + Math.random() * 0.45), ey = vh * (0.08 + Math.random() * 0.45), sx = right ? vw + sz : -sz, ex = right ? -sz : vw + sz, spin = (Math.random() < 0.5 ? -1 : 1) * (240 + Math.random() * 300);
-  const el = document.createElement('div'); el.className = 'asteroid';
-  el.innerHTML = '<svg width="' + sz + '" height="' + sz + '" viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="asg" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#b3a995"/><stop offset="0.55" stop-color="#6e655a"/><stop offset="1" stop-color="#2b2723"/></radialGradient></defs><path d="M18 40 L32 16 L58 10 L84 26 L92 54 L76 82 L48 92 L22 78 L10 58 Z" fill="url(#asg)" stroke="#d9cfba" stroke-opacity="0.35" stroke-width="1.5"/><circle cx="40" cy="38" r="9" fill="#4a443c" fill-opacity="0.7"/><circle cx="66" cy="58" r="12" fill="#4a443c" fill-opacity="0.6"/><circle cx="36" cy="68" r="6" fill="#4a443c" fill-opacity="0.6"/><circle cx="70" cy="30" r="5" fill="#4a443c" fill-opacity="0.5"/></svg>';
-  document.body.appendChild(el);
-  const tr = (x, y, r, sc) => 'translate(' + (x - sz / 2) + 'px,' + (y - sz / 2) + 'px) rotate(' + r + 'deg) scale(' + sc + ')';
-  const an = el.animate([{ transform: tr(sx, sy, 0, 0.8), opacity: 0 }, { opacity: 1, offset: 0.08 }, { opacity: 1, offset: 0.92 }, { transform: tr(ex, ey, spin, 1.3), opacity: 0 }], { duration: 8500 + Math.random() * 3000, easing: 'linear' });
-  an.onfinish = () => el.remove();
-}
 let showRun = false;
 function skySpectacle() {
   if (showRun || warping || document.hidden) return; showRun = true;
@@ -2504,7 +2461,6 @@ function skySpectacle() {
     if (t < DUR && !document.hidden || (document.hidden && t < DUR)) requestAnimationFrame(frame); else { c.remove(); showRun = false; }
   })(t0);
 }
-$('meteorBtn').addEventListener('click', meteorShot);
 $('showBtn').addEventListener('click', skySpectacle);
 function funStars(n) { let i = 0; const rp = newRadiant(); (function go() { spawnStar(false, true, rp); if (++i < n) setTimeout(go, 250 + Math.random() * 550); })(); }
 $('funOneBtn').addEventListener('click', () => spawnStar(false, true));
