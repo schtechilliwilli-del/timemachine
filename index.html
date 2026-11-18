@@ -376,14 +376,12 @@ body.skyonly #logBtn { display: none; }
 .showerrow { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
 .showerrow button { padding: 8px 14px; border-radius: 10px; border: 1px solid var(--gold); background: transparent; color: inherit; font: inherit; cursor: pointer; }
 .showerrow #showerYes { background: var(--gold); color: #1b1436; }
-body.skyonly #skyBtn, body.skyonly #showerBtn, body.skyonly #funShowerBtn, body.skyonly #funOneBtn, body.skyonly #showBtn, body.skyonly #warpSkyBtn { bottom: 14px !important; width: 44px; height: 44px; }
+body.skyonly #skyBtn, body.skyonly #showerBtn, body.skyonly #funShowerBtn, body.skyonly #funOneBtn, body.skyonly #warpSkyBtn { bottom: 14px !important; width: 44px; height: 44px; }
 body.skyonly #skyBtn { left: 10px; }
 body.skyonly #showerBtn { left: 60px; }
 body.skyonly #funShowerBtn { left: 110px; }
 body.skyonly #funOneBtn { left: 160px; }
-body.skyonly #showBtn { left: 210px; }
-body.skyonly #warpSkyBtn { left: 260px; }
-#showCv { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 24; pointer-events: none; }
+body.skyonly #warpSkyBtn { left: 210px; }
 #funShowerBtn { bottom: 186px !important; }
 #funOneBtn { bottom: 244px !important; }
 #warpSkyBtn { bottom: 302px !important; }
@@ -585,7 +583,6 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
 <button class="logbtn skybtn showerbtn" id="showerBtn" type="button" aria-label="Sternschnuppenschauer auslösen">🌠</button>
 <button class="logbtn skybtn showerbtn" id="funOneBtn" type="button" aria-label="Eine Sternschnuppe zum Anschauen"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20 L16 8" opacity="0.7"/><path d="M17.5 3.5l1.1 2.4 2.6.3-1.9 1.8.5 2.6-2.3-1.3-2.3 1.3.5-2.6-1.9-1.8 2.6-.3z" fill="currentColor" stroke="none"/></svg></button>
 <button class="logbtn skybtn showerbtn" id="funShowerBtn" type="button" aria-label="Einen Sternschnuppenschauer zum Anschauen"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 11 L11 3" opacity="0.6"/><path d="M3 19 L19 3"/><path d="M11 21 L21 11" opacity="0.6"/><circle cx="19.5" cy="3.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="11.5" cy="2.5" r="1" fill="currentColor" stroke="none"/><circle cx="21.5" cy="10.5" r="1" fill="currentColor" stroke="none"/></svg></button>
-<button class="logbtn skybtn showerbtn" id="showBtn" type="button" aria-label="Ein Spektakel am Himmel"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/><path d="M19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" opacity="0.8"/><path d="M5 2.5l.6 1.6 1.6.6-1.6.6L5 6.9l-.6-1.6L2.8 4.7l1.6-.6z" opacity="0.7"/></svg></button>
 <button class="logbtn skybtn showerbtn" id="warpSkyBtn" type="button" aria-label="Zeitreise starten">⏳</button>
 <button class="logbtn skybtn" id="skyBtn" type="button" aria-label="Nur den Sternenhimmel zeigen" aria-pressed="false">🌙</button>
 <div class="pop" id="logPop" role="dialog" aria-modal="true" aria-labelledby="logH" hidden>
@@ -2405,63 +2402,6 @@ function showerTick() {
 }
 $('showerYes').addEventListener('click', () => { const now = Date.now(); state.myShower = now; writeOwn({ shower: now }); showerTick(); });
 $('showerNo').addEventListener('click', () => { const b = otherShower(); state.myShowerNo = b; writeOwn({ showerNo: b }); showerTick(); showToast('Abgelehnt. ' + (otherName() || 'Die andere Person') + ' bekommt Bescheid.'); });
-let showRun = false;
-function skySpectacle() {
-  if (showRun || warping || document.hidden) return; showRun = true;
-  const c = document.createElement('canvas'); c.id = 'showCv'; document.body.appendChild(c);
-  const dpr = Math.min(2, window.devicePixelRatio || 1), w = window.innerWidth, h = window.innerHeight;
-  c.width = w * dpr; c.height = h * dpr; const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const DUR = 16000, t0 = performance.now(), parts = [], bursts = [];
-  const bands = [{ c: '90,255,170', y: 0.1, a: 0.5, f: 0.011, sp: 0.0009, ph: 0 }, { c: '110,190,255', y: 0.15, a: 0.45, f: 0.008, sp: 0.0007, ph: 2 }, { c: '200,130,255', y: 0.07, a: 0.4, f: 0.013, sp: 0.0011, ph: 4 }, { c: '120,255,220', y: 0.2, a: 0.35, f: 0.009, sp: 0.0008, ph: 1 }];
-  const env = (t, a, b, fi, fo) => Math.max(0, Math.min(1, (t - a) / fi, (b - t) / fo));
-  const cp = { x0: -40, y0: h * 0.12, cx: w * 0.55, cy: -h * 0.1, x1: w + 60, y1: h * 0.62 };
-  let nextBurst = 6200, bi = 0;
-  function burst(heart) {
-    const x = w * (0.2 + Math.random() * 0.6), y = h * (0.15 + Math.random() * 0.4), cols = [['255,225,150', '255,190,90'], ['255,170,200', '255,120,170'], ['190,225,255', '140,190,255']][bi++ % 3];
-    if (heart) {
-      for (let i = 0; i < 90; i++) { const hp = heartPt({ t: i / 90 * 6.2832, j: 0 }), sc = Math.min(w, h) / 390 * 6; parts.push({ x, y, vx: hp[0] * sc, vy: hp[1] * sc, life: 0, max: 2200 + Math.random() * 500, col: i % 2 ? cols[0] : cols[1], sz: 2.2, grav: 0, drag: 0.94 }); }
-      for (let i = 0; i < 24; i++) { const a = Math.random() * 6.2832, v = 0.5 + Math.random() * 2; parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: 1200, col: '255,245,220', sz: 1.5, grav: 0.01, drag: 0.97 }); }
-    } else {
-      for (let i = 0; i < 80; i++) { const a = Math.random() * 6.2832, v = 1 + Math.random() * 4.2; parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: 1300 + Math.random() * 900, col: Math.random() < 0.5 ? cols[0] : cols[1], sz: 1.6 + Math.random() * 1.4, grav: 0.03, drag: 0.965 }); }
-    }
-    bursts.push({ x, y, t: 0 });
-  }
-  let last = t0;
-  (function frame(now) {
-    const t = now - t0, dt = Math.min(48, now - last); last = now;
-    g.clearRect(0, 0, w, h); g.globalCompositeOperation = 'lighter';
-    const ae = env(t, 0, DUR, 2500, 3500);
-    bands.forEach((b, bi2) => {
-      const top = [], h0 = h * b.y, amp = h * 0.05;
-      for (let x = 0; x <= w; x += 8) top.push(h0 + Math.sin(x * b.f + t * b.sp + b.ph) * amp + Math.sin(x * b.f * 2.3 - t * b.sp * 1.4) * amp * 0.4);
-      const gr = g.createLinearGradient(0, 0, 0, h * 0.62); gr.addColorStop(0, 'rgba(' + b.c + ',0)'); gr.addColorStop(0.3, 'rgba(' + b.c + ',' + (b.a * ae).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(' + b.c + ',0)');
-      g.fillStyle = gr; g.beginPath(); g.moveTo(0, top[0]);
-      top.forEach((y, i) => g.lineTo(i * 8, y)); for (let i = top.length - 1; i >= 0; i--) g.lineTo(i * 8, top[i] + h * (0.22 + 0.06 * Math.sin(i * 0.3 + t * 0.0013 + bi2))); g.closePath(); g.fill();
-      g.strokeStyle = 'rgba(' + b.c + ',' + (0.07 * ae).toFixed(3) + ')'; g.lineWidth = 2;
-      for (let i = 0; i < top.length; i += 2) { g.beginPath(); g.moveTo(i * 8, top[i]); g.lineTo(i * 8, top[i] + h * 0.3 * (0.6 + 0.4 * Math.sin(i * 0.7 + t * 0.002))); g.stroke(); }
-    });
-    // Komet
-    const ct = (t - 3000) / 4600;
-    if (ct >= 0 && ct <= 1) {
-      const u = ct, x = (1 - u) * (1 - u) * cp.x0 + 2 * (1 - u) * u * cp.cx + u * u * cp.x1, y = (1 - u) * (1 - u) * cp.y0 + 2 * (1 - u) * u * cp.cy + u * u * cp.y1;
-      for (let i = 0; i < 5; i++) parts.push({ x: x + (Math.random() - 0.5) * 6, y: y + (Math.random() - 0.5) * 6, vx: (Math.random() - 0.5) * 0.6 - 0.5, vy: (Math.random() - 0.5) * 0.6 + 0.2, life: 0, max: 1300 + Math.random() * 600, col: Math.random() < 0.5 ? '170,215,255' : '255,235,190', sz: 1.2 + Math.random() * 2, grav: 0, drag: 0.99 });
-      const gh = g.createRadialGradient(x, y, 0, x, y, 40); gh.addColorStop(0, 'rgba(255,255,255,0.95)'); gh.addColorStop(0.3, 'rgba(190,225,255,0.5)'); gh.addColorStop(1, 'rgba(190,225,255,0)');
-      g.fillStyle = gh; g.beginPath(); g.arc(x, y, 40, 0, 6.2832); g.fill();
-    }
-    if (t >= nextBurst && t < 13500) { burst(bi % 3 === 1); nextBurst += 900 + Math.random() * 500; }
-    for (let i = parts.length - 1; i >= 0; i--) {
-      const p = parts[i]; p.life += dt; if (p.life > p.max) { parts.splice(i, 1); continue; }
-      const k = dt / 16; p.vx *= Math.pow(p.drag, k); p.vy = p.vy * Math.pow(p.drag, k) + p.grav * k; p.x += p.vx * k; p.y += p.vy * k;
-      const al = Math.pow(1 - p.life / p.max, 1.4);
-      g.fillStyle = 'rgba(' + p.col + ',' + (al * 0.25).toFixed(3) + ')'; g.beginPath(); g.arc(p.x, p.y, p.sz * 3, 0, 6.2832); g.fill();
-      g.fillStyle = 'rgba(' + p.col + ',' + al.toFixed(3) + ')'; g.beginPath(); g.arc(p.x, p.y, p.sz, 0, 6.2832); g.fill();
-    }
-    for (let i = bursts.length - 1; i >= 0; i--) { const b = bursts[i]; b.t += dt; if (b.t > 450) { bursts.splice(i, 1); continue; } const f = b.t / 450, r = 10 + f * 90, gb = g.createRadialGradient(b.x, b.y, 0, b.x, b.y, r); gb.addColorStop(0, 'rgba(255,245,220,' + (0.7 * (1 - f)).toFixed(3) + ')'); gb.addColorStop(1, 'rgba(255,245,220,0)'); g.fillStyle = gb; g.beginPath(); g.arc(b.x, b.y, r, 0, 6.2832); g.fill(); }
-    g.globalCompositeOperation = 'source-over';
-    if (t < DUR && !document.hidden || (document.hidden && t < DUR)) requestAnimationFrame(frame); else { c.remove(); showRun = false; }
-  })(t0);
-}
-$('showBtn').addEventListener('click', skySpectacle);
 function funStars(n) { let i = 0; const rp = newRadiant(); (function go() { spawnStar(false, true, rp); if (++i < n) setTimeout(go, 250 + Math.random() * 550); })(); }
 $('funOneBtn').addEventListener('click', () => spawnStar(false, true));
 $('funShowerBtn').addEventListener('click', () => funStars(10));
