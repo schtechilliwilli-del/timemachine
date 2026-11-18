@@ -2222,7 +2222,13 @@ function renderWishBanner() {
       l.append(el('p', '', x.who + ' wünscht sich: ' + x.e.wish));
       if (canShare()) {
         const b = el('button', 'btn solid', 'Wunsch erfüllen'); b.type = 'button';
-        b.addEventListener('click', () => { state.fulfilKey = ackKey(x.id, x.k); state.pendingDiary = false; renderDiary(true); $('diaryList').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); const t = $('diaryList').querySelector('textarea'); if (t) t.focus({ preventScroll: true }); });
+        b.addEventListener('click', () => {
+          const key = ackKey(x.id, x.k); state.fulfilKey = key; state.pendingDiary = false; renderDiary(true);
+          let en = findEntry([key]);
+          if (!en && dfSel.size) { dfSel.clear(); dfSave(); renderDiary(true); en = findEntry([key]); }
+          if (!en) { showToast('Dieser Wunsch steht nicht mehr in der Liste.'); return; }
+          setTimeout(() => { flashEl(en); const ta = en.querySelector('textarea'); if (ta) ta.focus({ preventScroll: true }); }, 60);
+        });
         l.append(b);
       }
     }
