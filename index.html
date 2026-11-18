@@ -320,6 +320,11 @@ footer { text-align: center; color: var(--gold); font-family: var(--display); fo
 .diary form { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
 .diary .row { display: flex; gap: 8px; flex-wrap: wrap; }
 .diary input[type="file"] { display: none; }
+.dayg { margin-top: 10px; }
+.dayhead { width: 100%; display: flex; align-items: baseline; gap: 4px; text-align: left; padding: 10px 2px 6px; background: none; border: 0; border-bottom: 1px solid var(--line); color: inherit; font: inherit; font-size: 15px; cursor: pointer; }
+.dayhead .dayname { font-weight: 600; }
+.dayhead .daycount { opacity: 0.6; font-size: 13px; }
+.daybody[hidden] { display: none; }
 .entry { border-top: 1px solid var(--line); padding: 12px 0; display: flex; flex-direction: column; gap: 6px; }
 .entry .meta { font-family: var(--mono); font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
 .entry .badge { color: var(--gold); }
@@ -2032,6 +2037,20 @@ async function addEntry(entry) {
 }
 function doorStart(n) { return Date.UTC(2026, 10, 14 + n, 0, 0) - 3600000; }
 function pron(who) { return who === 'Masüsel' ? 'er' : 'sie'; }
+const dayOpen = (() => { try { return JSON.parse(localStorage.getItem('zm_dayopen') || '{}') || {}; } catch (e) { return {}; } })();
+function daySave() { try { localStorage.setItem('zm_dayopen', JSON.stringify(dayOpen)); } catch (e) { /* egal */ } }
+const dayLblFmt = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', weekday: 'short', day: 'numeric', month: 'numeric' });
+function dayIsOpen(dk) { if (dk in dayOpen) return !!dayOpen[dk]; const now = Date.now(); return dk === berlinDay(now) || dk === berlinDay(now - 86400000); }
+function setDayOpen(g, on) { g.classList.toggle('closed', !on); g.querySelector('.daybody').hidden = !on; const b = g.querySelector('.dayhead'); b.setAttribute('aria-expanded', on ? 'true' : 'false'); b.firstChild.textContent = on ? '▾ ' : '▸ '; }
+function makeDayGroup(dk, n, parent) {
+  const now = Date.now(), lbl = dk === berlinDay(now) ? 'Heute' : dk === berlinDay(now - 86400000) ? 'Gestern' : dayLblFmt.format(new Date(dk + 'T12:00:00Z'));
+  const g = el('div', 'dayg'); g.dataset.day = dk;
+  const h = el('button', 'dayhead'); h.type = 'button'; h.append(document.createTextNode('▾ '), el('span', 'dayname', lbl), el('span', 'daycount', ' · ' + n + (n === 1 ? ' Eintrag' : ' Einträge')));
+  const body = el('div', 'daybody'); g.append(h, body);
+  h.addEventListener('click', () => { const on = g.classList.contains('closed'); dayOpen[dk] = on; daySave(); setDayOpen(g, on); });
+  parent.append(g); setDayOpen(g, dayIsOpen(dk));
+  return body;
+}
 const removedKeys = new Set();
 function usedAsProof(x) {
   const chk = sl => sl && sl.via && sl.via.u === x.id && sl.via.k === x.k;
@@ -2294,8 +2313,11 @@ function renderDiary(force) {
   const entries = shown.slice(0, 80);
   if (!entries.length) frag.append(el('p', 'muted', allE.length ? 'Dazu gibt es noch nichts. Wähle oben einen anderen Filter.' : 'Noch keine Einträge. Der erste gehört uns.'));
   const openMine = allE.filter(w => w.kind === 'star' && w.mine && w.id !== 'local' && !getAck(w.id, w.k));
+  const dcount = {}; entries.forEach(x => { const dk = berlinDay(x.e.t); dcount[dk] = (dcount[dk] || 0) + 1; });
+  let curDay = null, tgt = frag;
   entries.forEach(x => {
-    if (x.kind === 'oracle' || x.kind === 'oracle2') { const oe = oracleEntry(x); if (x.id !== 'local') oe.dataset.lkey = ackKey(x.id, x.k); frag.append(oe); return; }
+    const dkx = berlinDay(x.e.t); if (dkx !== curDay) { curDay = dkx; tgt = makeDayGroup(dkx, dcount[dkx], frag); }
+    if (x.kind === 'oracle' || x.kind === 'oracle2') { const oe = oracleEntry(x); if (x.id !== 'local') oe.dataset.lkey = ackKey(x.id, x.k); tgt.append(oe); return; }
     const isW = x.kind === 'star' && x.id !== 'local', ackW = isW && getAck(x.id, x.k), sealedW = ackW && getSeal(x.id, x.k);
     const box = el('div', 'entry' + (x.kind === 'star' ? ' star' : x.kind === 'door' ? ' door' : '') + (sealedW ? ' sealed' : isW ? ' wishing' : '')); if (x.id !== 'local') box.dataset.lkey = ackKey(x.id, x.k);
     const meta = el('div', 'meta');
@@ -2359,7 +2381,7 @@ function renderDiary(force) {
       } else { const rb = el('button', 'btn', 'Entfernen'); rb.type = 'button'; rb.addEventListener('click', () => { state.delAsk = dk; renderDiary(true); }); box.append(rb); }
     }
     if (x.id !== 'local' && canShare()) box.append(reactNode(x));
-    frag.append(box);
+    tgt.append(box);
   });
   list.replaceChildren(frag);
   $('diaryAttach').hidden = !state.assets;
@@ -2585,7 +2607,8 @@ $('skyBtn').addEventListener('click', () => {
 });
 $('logBtn').addEventListener('click', () => { logNewSince = logSeen(); logMarkSeen(); $('logN').hidden = true; $('logPop').hidden = false; renderLog(); $('logList').scrollTop = 0; });
 function closeLog() { $('logPop').hidden = true; }
-function flashEl(e) { e.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); e.classList.remove('flash'); void e.offsetWidth; e.classList.add('flash'); setTimeout(() => e.classList.remove('flash'), 2800); }
+function flashEl(e) { const gb = e.closest && e.closest('.daybody'); if (gb && gb.hidden) { const g = gb.parentNode; dayOpen[g.dataset.day] = true; daySave(); setDayOpen(g, true); }
+   e.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); e.classList.remove('flash'); void e.offsetWidth; e.classList.add('flash'); setTimeout(() => e.classList.remove('flash'), 2800); }
 function findEntry(keys) { const l = $('diaryList').querySelectorAll('[data-lkey]'); for (let i = 0; i < l.length; i++) if (keys.indexOf(l[i].dataset.lkey) >= 0) return l[i]; return null; }
 function logGo(g) {
   closeLog();
