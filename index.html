@@ -2113,9 +2113,10 @@ function imgNode(imgId) {
   if (state.fb) { fillImg(imgId, im); return im; }
   const a = document.createElement('a'); a.href = '/_blob/' + imgId; a.target = '_blank'; a.rel = 'noopener'; im.src = '/_blob/' + imgId; a.append(im); return a;
 }
-async function sendFulfil(x, text, file, info, btn) {
+async function sendFulfil(x, text, file, info, btn, riddle) {
   const d = { t: Date.now() };
   if (text) d.text = text;
+  if (riddle) d.rz = true;
   btn.disabled = true;
   try {
     if (file && state.assets) { info.textContent = 'Bild wird hochgeladen ...'; d.img = (await state.assets.upload(await shrink(file))).id; }
@@ -2193,15 +2194,16 @@ function myRzFor(x) { const k = ackKey(x.id, x.k); const r = state.myRz[k] = Obj
 function saveRz() { return writeOwn({ rz: Object.assign({}, state.myRz) }); }
 function sendAnswer(x, text) { const r = myRzFor(x); r.a = Object.assign({}, r.a); r.a['a' + Date.now()] = { t: Date.now(), x: text }; state.rzKey = null; state.rzdraft = ''; renderDiary(true); showToast('Deine Lösung ist unterwegs.'); return saveRz(); }
 function judgeAnswer(x, a, ok) { const r = myRzFor(x); r.v = Object.assign({}, r.v); r.v[a] = { t: Date.now(), ok }; renderDiary(true); return saveRz(); }
-function rzNode(x, sealed) {
+function rzNode(x, sealed, riddle) {
   const list = rzData(x), key = ackKey(x.id, x.k), wrap = el('div', 'rzwrap');
   const solved = list.some(o => o.ve && o.ve.ok), canJudge = !x.mine && canShare();
   if (list.length) {
     const box = el('div', 'rzlist');
     list.forEach(o => {
       const d = el('div', 'rz' + (o.ve ? (o.ve.ok ? ' ok' : ' no') : ''));
-      d.append(el('b', '', (x.mine ? 'Deine Lösung' : x.who + 's Lösung') + ': '), document.createTextNode(o.x));
+      d.append(el('b', '', (riddle ? (x.mine ? 'Deine Lösung' : x.who + 's Lösung') : (x.mine ? 'Deine Antwort' : x.who + 's Antwort')) + ': '), document.createTextNode(o.x));
       if (o.ve) d.append(el('span', 'rzv', o.ve.ok ? ' ✓ Richtig' : ' ✗ Leider falsch'));
+      else if (!riddle) { /* kein Rätsel: Antwort bleibt ohne Urteil stehen */ }
       else if (canJudge) {
         const row = el('div', 'row'), y = el('button', 'btn solid', 'Richtig ✓'), n = el('button', 'btn', 'Falsch ✗'); y.type = 'button'; n.type = 'button';
         y.addEventListener('click', () => judgeAnswer(x, o.a, true)); n.addEventListener('click', () => judgeAnswer(x, o.a, false));
@@ -2211,7 +2213,7 @@ function rzNode(x, sealed) {
     });
     wrap.append(box);
   }
-  if (x.mine && canShare() && !solved && !sealed) {
+  if (riddle && x.mine && canShare() && !solved && !sealed) {
     if (state.rzKey === key) {
       const f = el('div', 'cmform'), ta = el('textarea'); ta.maxLength = 300; ta.rows = 2; ta.placeholder = 'Deine Lösung ...'; ta.setAttribute('aria-label', 'Deine Lösung'); ta.value = state.rzdraft;
       ta.addEventListener('input', () => { state.rzdraft = ta.value; });
@@ -2338,7 +2340,7 @@ function renderDiary(force) {
           if (dd.text) box.append(el('p', '', dd.text));
           const n = imgNode(dd.img); if (n) box.append(n);
           const sl = getSeal(x.id, x.k);
-          { const rn = rzNode(x, !!sl); if (rn.childNodes.length) box.append(rn); }
+          { const rn = rzNode(x, !!sl, !!dd.rz); if (rn.childNodes.length) box.append(rn); }
           if (sl) box.append(sealNode(sl, x.mine ? nameOf(x.id, state.notes[x.id]) : x.who));
           else if (x.mine && canShare()) { const sb = el('button', 'btn solid', 'Wunsch offiziell bestätigen'); sb.type = 'button'; sb.addEventListener('click', () => sealWish(x)); box.append(sb); }
         } else if (!x.mine && canShare()) {
@@ -2349,11 +2351,12 @@ function renderDiary(force) {
             const fl = el('label', 'btn', 'Foto anhängen'); fl.setAttribute('for', fid); fl.hidden = !state.assets;
             const fi = document.createElement('input'); fi.type = 'file'; fi.accept = 'image/*'; fi.id = fid;
             fi.addEventListener('change', () => { info.textContent = fi.files[0] ? 'Foto bereit: ' + fi.files[0].name : 'Text und Foto sind freiwillig, du kannst den Wunsch auch ohne beides erfüllen.'; });
+            const rl = el('label', 'muted small'), rc = document.createElement('input'); rc.type = 'checkbox'; rl.append(rc, document.createTextNode(' 🧩 Als Rätsel stellen: ' + (x.who || 'die andere Person') + ' gibt eine Lösung ab, du sagst richtig oder falsch.')); rl.style.display = 'block';
             const go = el('button', 'btn solid', 'Wunsch erfüllen'); go.type = 'button';
-            go.addEventListener('click', () => { sendFulfil(x, ta.value.trim(), fi.files[0], info, go); });
+            go.addEventListener('click', () => { sendFulfil(x, ta.value.trim(), fi.files[0], info, go, rc.checked); });
             const cn = el('button', 'btn', 'Abbrechen'); cn.type = 'button';
             cn.addEventListener('click', () => { state.fulfilKey = null; renderDiary(true); });
-            row.append(fl, fi, go, cn); box.append(ta, row, info);
+            row.append(fl, fi, go, cn); box.append(ta, rl, row, info);
           } else {
             const b = el('button', 'btn', 'Wunsch erfüllen'); b.type = 'button';
             b.addEventListener('click', () => { state.fulfilKey = key; renderDiary(true); });
