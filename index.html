@@ -208,6 +208,7 @@ p { margin: 0; }
 .count span { font-size: 12px; color: var(--muted); }
 .arrived { display: none; text-align: center; font-family: var(--display); font-size: 30px; color: var(--gold); padding: 12px 0 4px; }
 body.done .arrived { display: block; }
+body.done .km { display: none; }
 
 /* Tempo */
 .speed { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
@@ -628,6 +629,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
 <script>
 /*CORE*/
 const TARGET = Date.UTC(2026, 10, 26, 13, 10, 0);   // 26.11.2026 14:10 Uhr MEZ
+const TOGETHER_END = Date.UTC(2026, 11, 1, 23, 0, 0);   // bis 2.12.2026 0:00 Uhr MEZ zaehlt der Timer hoch
 const START  = Date.UTC(2026, 10, 5, 23, 0, 0);     // 6.11.2026 00:00 Uhr MEZ, Tag der Buchung
 const TOTAL_KM = 500;
 const SPEED = TOTAL_KM / ((TARGET - START) / 3600000);   // km/h
@@ -825,14 +827,16 @@ let lastKey = '';
 function renderAll(force) {
   if (warping) return;
   const now = Date.now();
-  renderCount(TARGET - now);
+  const together = now >= TARGET;
+  renderCount(together ? Math.min(now, TOGETHER_END) - TARGET : TARGET - now);
   renderKm(kmLeft(now));
   renderRoute(1 - kmLeft(now) / TOTAL_KM);
   renderLadder(now >= TARGET ? 0.05 : SPEED);
   const doneKm = TOTAL_KM - kmLeft(now);
-  $('doneKm').textContent = now >= TARGET ? '' : 'Seit der Buchung am 6. November schon ' + Math.round(doneKm) + ' Kilometer geschafft.';
+  $('doneKm').textContent = together ? (now > TOGETHER_END ? 'So lange waren wir zusammen, vom 26.11. um 14:10 Uhr bis zum Abschied.' : 'So lange sind wir schon zusammen, seit dem 26.11. um 14:10 Uhr.') : 'Seit der Buchung am 6. November schon ' + Math.round(doneKm) + ' Kilometer geschafft.';
   document.body.classList.toggle('done', now >= TARGET);
-  $('jh').textContent = now >= TARGET ? 'Angekommen' : 'Noch unterwegs';
+  $('jh').textContent = together ? (now > TOGETHER_END ? 'Zusammen gewesen' : 'Zusammen') : 'Noch unterwegs';
+  const ey = document.querySelector('.eyebrow'); if (ey) ey.textContent = together ? 'Zusammen seit dem 26.11.2026 um 14:10 Uhr' : 'Wiedersehen am 26.11.2026 um 14:10 Uhr';
   // Tuerchen und Himmel nur neu zeichnen, wenn sich der Tag oder die Vorschau aendert, damit Taps nicht verloren gehen
   const key = berlinDay(now) + '|' + state.preview;
   if (force === true || key !== lastKey) {
