@@ -1626,7 +1626,7 @@ $('toast').addEventListener('click', () => { $('toast').hidden = true; });
 /* ---- Postfach (Briefroman) ---- */
 const bookS = { my: {}, local: {}, myTitle: null };
 const rateS = { my: {} };
-const mailS = { view: 'list', cur: null, reply: null, draft: {}, folder: 'in', draftId: null };
+const mailS = { view: 'list', cur: null, reply: null, draft: {}, folder: 'in', draftId: null, toQueen: false, qcur: null };
 function draftsLoad() { try { const o = JSON.parse(localStorage.getItem('zm_drafts') || '{}'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } }
 function draftsSave(o) { try { localStorage.setItem('zm_drafts', JSON.stringify(o)); } catch (e) { /* egal */ } }
 function draftList() { const o = draftsLoad(); return Object.keys(o).map(k => Object.assign({ id: k }, o[k])).filter(d => d && d.text && d.text.trim()).sort((a, b) => b.t - a.t); }
@@ -1634,7 +1634,7 @@ function draftPut(sub, text) {
   const o = draftsLoad();
   if (!text.trim()) { if (mailS.draftId) { delete o[mailS.draftId]; draftsSave(o); } return; }
   if (!mailS.draftId) mailS.draftId = 'e' + Date.now();
-  o[mailS.draftId] = { t: Date.now(), sub: sub, text: text }; draftsSave(o);
+  o[mailS.draftId] = { t: Date.now(), sub: sub, text: text }; if (mailS.toQueen) { o[mailS.draftId].q = 1; o[mailS.draftId].qk = mailS.qcur || null; } draftsSave(o);
 }
 function draftDrop() { if (!mailS.draftId) return; const o = draftsLoad(); delete o[mailS.draftId]; draftsSave(o); mailS.draftId = null; }
 const QUEEN = [
@@ -1682,14 +1682,14 @@ function allBook() {
   ids.forEach(id => {
     const v = state.notes[id] || {}; const mine = id === state.uid; const who = nameOf(id, v);
     const bb = mine ? Object.assign({}, v.book || {}, bookS.my) : (v.book || {});
-    for (const k in bb) { const e = bb[k]; if (e && typeof e.t === 'number' && e.text) out.push({ id, k, key: id + '|' + k, who, mine, e }); }
+    for (const k in bb) { const e = bb[k]; if (e && typeof e.t === 'number' && e.text) out.push({ id, k, key: id + '|' + k, who, mine, e, qr: !!e.qr }); }
   });
   for (const k in bookS.local) { const e = bookS.local[k]; out.push({ id: 'local', k, key: 'local|' + k, who: 'Du', mine: true, e }); }
   const now = Date.now();
   QUEEN.forEach(q => { if (q.t <= now) out.push({ id: 'queen', k: q.k, key: 'queen|' + q.k, who: 'Die Feenkönigin', mine: false, queen: true, to: q.to, e: { t: q.t, text: q.text, sub: q.sub } }); });
   return out.sort((a, b) => a.e.t - b.e.t);
 }
-function realMails(list) { return list.filter(x => !x.queen); }
+function realMails(list) { return list.filter(x => !x.queen && !x.qr); }
 function allRates() {
   const out = [];
   const ids = Object.keys(state.notes); if (state.uid && ids.indexOf(state.uid) < 0) ids.push(state.uid);
@@ -1754,8 +1754,8 @@ const ADDR = { fee: ['Mafifee', 'mafifee@feen.staub'], esel: ['Masüsel', 'masue
 const SUBRE = /^((AW|RE):\s*)+/i;
 function addrStr(a) { return a[0] + ' <' + a[1] + '>'; }
 function fromOf(x) { if (x.queen) return ADDR.queen; return ADDR[(x.mine ? myRole() : (x.who === 'Mafifee' ? 'fee' : 'esel'))]; }
-function toOf(x) { if (x.queen) return x.to === 'fee' ? [ADDR.fee] : [ADDR.fee, ADDR.esel]; return [fromOf(x) === ADDR.fee ? ADDR.esel : ADDR.fee]; }
-function ccOf(x) { return x.queen && x.to === 'fee' ? [ADDR.esel] : []; }
+function toOf(x) { if (x.qr) return [ADDR.queen]; if (x.queen) return x.to === 'fee' ? [ADDR.fee] : [ADDR.fee, ADDR.esel]; return [fromOf(x) === ADDR.fee ? ADDR.esel : ADDR.fee]; }
+function ccOf(x) { if (x.qr) return [fromOf(x) === ADDR.fee ? ADDR.esel : ADDR.fee]; return x.queen && x.to === 'fee' ? [ADDR.esel] : []; }
 function headRows(x) {
   const r = [['Von:', addrStr(fromOf(x))], ['An:', toOf(x).map(addrStr).join(', ')]];
   const cc = ccOf(x); if (cc.length) r.push(['Kopie:', cc.map(addrStr).join(', ')]);
@@ -1835,7 +1835,7 @@ function renderMail() {
         const av = el('div', 'mav', '✎'); av.setAttribute('aria-hidden', 'true');
         const c = el('div', 'mc'), l1 = el('div', 'l1'); l1.append(el('span', 'nm', 'Entwurf'), el('span', 'tm', mailWhen(d.t)));
         c.append(l1, el('div', 'sj', d.sub || '(ohne Betreff)'), el('div', 'pv', d.text.replace(/\s+/g, ' ').slice(0, 100))); row.append(av, c);
-        const open = () => { mailS.view = 'compose'; mailS.draftId = d.id; mailS.reply = d.sub || null; renderCompose(); };
+        const open = () => { mailS.view = 'compose'; mailS.draftId = d.id; mailS.reply = d.sub || null; mailS.toQueen = !!d.q; mailS.qcur = d.qk || null; renderCompose(); };
         row.addEventListener('click', open); row.addEventListener('keydown', ev => { if (ev.key === 'Enter') open(); });
         body.append(row);
       });
@@ -1860,7 +1860,7 @@ function renderMail() {
       const row = el('div', 'mrow' + (unread ? ' unread' : '') + (x.queen ? ' queenrow' : '')); row.tabIndex = 0; row.setAttribute('role', 'button');
       const c = el('div', 'mc'); const l1 = el('div', 'l1');
       const tmS = el('span', 'tm', mailWhen(x.e.t));
-      l1.append(el('span', 'nm', x.mine ? 'Ich' : x.who), tmS);
+      l1.append(el('span', 'nm', (x.mine ? 'Ich' : x.who) + (x.qr ? ', an die Krone' : '')), tmS);
       c.append(l1, el('div', 'sj', x.e.sub || '(ohne Betreff)'), el('div', 'pv', x.e.text.replace(/\s+/g, ' ').slice(0, 100)));
       row.append(avatar(x), c);
       const open = () => { mailS.view = 'read'; mailS.cur = x.key; mailMarkRead(x.key); shareRead(x); renderBook(); body.scrollTop = 0; };
@@ -1874,14 +1874,19 @@ function renderMail() {
     const box = el('div', 'mread' + (x.queen ? ' royal' : '')); box.append(el('h2', '', x.e.sub || '(ohne Betreff)'), mailHead(x));
     box.append(x.queen ? letterNode(x.e.text, 'txt let') : el('div', 'txt', x.e.text));
     const acts = el('div', 'acts');
-    if (!x.queen) {
+    if (x.queen) {
+      const qb = el('button', 'mbtn main', '↩ An die Krone antworten'); qb.type = 'button';
+      qb.addEventListener('click', () => { mailS.view = 'compose'; mailS.draftId = null; mailS.toQueen = true; mailS.qcur = x.key; mailS.reply = 'AW: ' + (x.e.sub || '(ohne Betreff)').replace(SUBRE, ''); renderCompose(); });
+      acts.append(qb);
+    }
+    if (!x.queen && !x.qr) {
       const rb = el('button', 'mbtn main', '↩ Antworten'); rb.type = 'button';
-      rb.addEventListener('click', () => { mailS.view = 'compose'; mailS.draftId = null; mailS.reply = 'AW: ' + (x.e.sub || '(ohne Betreff)').replace(SUBRE, ''); renderCompose(); });
+      rb.addEventListener('click', () => { mailS.view = 'compose'; mailS.draftId = null; mailS.toQueen = false; mailS.qcur = null; mailS.reply = 'AW: ' + (x.e.sub || '(ohne Betreff)').replace(SUBRE, ''); renderCompose(); });
       acts.append(rb);
     }
     if (!x.mine) { const ub = el('button', 'mbtn', '✉ Als ungelesen markieren'); ub.type = 'button'; ub.addEventListener('click', () => { mailMarkUnread(x.key); mailS.view = 'list'; renderBook(); showToast('Als ungelesen markiert.'); }); acts.append(ub); }
     box.append(acts);
-    if (!x.queen) {
+    if (!x.queen && !x.qr) {
       const rmm = realMails(list), ix = rmm.findIndex(y => y.key === x.key);
       rmm.slice(Math.max(0, ix - 3), Math.max(0, ix)).reverse().forEach(pm => box.append(quoteNode(pm)));
     }
@@ -1929,23 +1934,27 @@ function renderMail() {
 function renderCompose() {
   const list = allBook(), body = $('mBody'); mailSetHeader('Neue Mail', ''); body.textContent = '';
   const f = el('form', 'mform');
-  f.append(el('div', 'to', 'Von: ' + addrStr(ADDR[myRole()])), el('div', 'to', 'An: ' + addrStr(mailOther() === 'Mafifee' ? ADDR.fee : ADDR.esel)));
-  const sub = el('input'); sub.id = 'mSub2'; sub.type = 'text'; sub.maxLength = 80; sub.placeholder = 'Betreff'; sub.value = mailS.reply || (realMails(list).length ? bookDefaultSub(list) : ''); sub.setAttribute('aria-label', 'Betreff');
+  const tq = !!mailS.toQueen, oth = mailOther() === 'Mafifee' ? ADDR.fee : ADDR.esel;
+  f.append(el('div', 'to', 'Von: ' + addrStr(ADDR[myRole()])), el('div', 'to', 'An: ' + addrStr(tq ? ADDR.queen : oth)));
+  if (tq) f.append(el('div', 'to', 'Kopie: ' + addrStr(oth)));
+  const sub = el('input'); sub.id = 'mSub2'; sub.type = 'text'; sub.maxLength = 80; sub.placeholder = 'Betreff'; sub.value = mailS.reply || (!mailS.toQueen && realMails(list).length ? bookDefaultSub(list) : ''); sub.setAttribute('aria-label', 'Betreff');
   const tx = el('textarea'); tx.id = 'mText'; tx.maxLength = 8000; tx.placeholder = 'Liebe/r ...'; tx.setAttribute('aria-label', 'Nachricht');
   { const dd = mailS.draftId ? draftsLoad()[mailS.draftId] : null; if (dd) { tx.value = dd.text || ''; if (dd.sub) sub.value = dd.sub; } }
   const autosave = () => draftPut(sub.value.trim(), tx.value); tx.addEventListener('input', autosave); sub.addEventListener('input', autosave);
-  const hint = el('div', 'hint'); hint.id = 'mHint'; hint.setAttribute('aria-live', 'polite'); if (!realMails(list).length && myRole() === 'esel') hint.textContent = 'Die Fee eröffnet die Prüfung und ist zuerst dran.';
+  const hint = el('div', 'hint'); hint.id = 'mHint'; hint.setAttribute('aria-live', 'polite'); if (tq) hint.textContent = 'Diese Mail geht an die Krone. ' + mailOther() + ' liest in Kopie mit.'; else if (!realMails(list).length && myRole() === 'esel') hint.textContent = 'Die Fee eröffnet die Prüfung und ist zuerst dran.';
   const acts = el('div', 'acts'); const go = el('button', 'mbtn main', 'Senden'); go.type = 'submit'; const ca = el('button', 'mbtn', 'Abbrechen'); ca.type = 'button';
   ca.textContent = 'Speichern und schließen'; ca.addEventListener('click', () => { const kept = tx.value.trim() && mailS.draftId; mailS.view = 'list'; mailS.reply = null; mailS.draftId = null; mailS.folder = kept ? 'draft' : mailS.folder; renderMail(); showToast(kept ? 'Als Entwurf gespeichert.' : 'Nichts zu speichern, die Mail ist leer.'); });
   const dx = el('button', 'mbtn', 'Verwerfen'); dx.type = 'button'; dx.addEventListener('click', () => { draftDrop(); mailS.view = 'list'; mailS.reply = null; renderMail(); });
   acts.append(go, ca, dx);
-  const rm = realMails(list).slice().reverse().slice(0, 3);
-  if (rm.length) { const th = el('details', 'mthread'); th.open = true; th.append(el('summary', '', 'Bisheriger Verlauf (' + rm.length + ')')); const inner = el('div', 'mctx'); rm.forEach(x => inner.append(quoteNode(x))); th.append(inner); f.append(sub, th, tx); } else f.append(sub, tx);
+  const qx = tq && mailS.qcur ? list.find(y => y.key === mailS.qcur) : null;
+  const rm = tq ? (qx ? [qx] : []) : realMails(list).slice().reverse().slice(0, 3);
+  if (rm.length) { const th = el('details', 'mthread'); th.open = true; th.append(el('summary', '', tq ? 'Brief der Krone' : 'Bisheriger Verlauf (' + rm.length + ')')); const inner = el('div', 'mctx'); rm.forEach(x => inner.append(quoteNode(x))); th.append(inner); f.append(sub, th, tx); } else f.append(sub, tx);
   f.append(hint, acts); body.append(f);
   f.addEventListener('submit', async ev => {
     ev.preventDefault();
     const text = tx.value.trim(); if (!text) { hint.textContent = 'Schreib erst etwas hinein.'; return; }
-    const t = Date.now(), id = 'b' + t, entry = { t, text, sub: sub.value.trim() || bookDefaultSub(allBook()) };
+    const t = Date.now(), id = 'b' + t, entry = { t, text, sub: sub.value.trim() || (tq ? 'AW: Bescheid der Krone' : bookDefaultSub(allBook())) };
+    if (tq) entry.qr = 1;
     go.disabled = true;
     if (canShare()) { bookS.my[id] = entry; await writeOwn({ book: Object.assign({}, bookS.my) }); } else { bookS.local[id] = entry; }
     mailMarkRead((canShare() ? state.uid : 'local') + '|' + id);
@@ -2012,7 +2021,7 @@ $('mBack').addEventListener('click', () => {
   if (mailS.view === 'list') { location.hash = ''; mailClose(); }
   else { const kept = mailS.view === 'compose' && mailS.draftId; mailS.view = 'list'; mailS.reply = null; mailS.draftId = null; if (kept) { mailS.folder = 'draft'; } renderMail(); if (kept) showToast('Als Entwurf gespeichert.'); }
 });
-$('mFab').addEventListener('click', () => { mailS.view = 'compose'; mailS.draftId = null; mailS.reply = null; renderCompose(); });
+$('mFab').addEventListener('click', () => { mailS.view = 'compose'; mailS.draftId = null; mailS.reply = null; mailS.toQueen = false; mailS.qcur = null; renderCompose(); });
 $('mMenu').addEventListener('click', () => { $('mMenuBox').hidden = !$('mMenuBox').hidden; });
 $('mMenuBox').addEventListener('click', ev => {
   const b = ev.target.closest('button'); if (!b) return; $('mMenuBox').hidden = true;
