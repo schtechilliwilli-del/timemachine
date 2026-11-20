@@ -2386,7 +2386,7 @@ function renderDiary(force) {
         box.append(lw);
       }
     }
-    if (x.mine && x.kind === 'note' && (x.id === 'local' || canShare())) {
+    if (x.mine && x.kind === 'note' && !x.e.heart && (x.id === 'local' || canShare())) {
       const dk = x.id + ':' + x.k;
       if (usedAsProof(x)) box.append(el('p', 'muted small', 'Dieser Eintrag belegt einen erfüllten Wunsch und bleibt deshalb stehen.'));
       else if (state.delAsk === dk) {
