@@ -224,6 +224,8 @@ body.done .km { display: none; }
 .ladder li .num { font-size: 14px; }
 .ladder li[data-k] { cursor: pointer; }
 .ladder li.detail { display: block; background: rgba(242, 196, 109, 0.1); border: 1px dashed var(--gold); color: var(--ink); font-size: 14px; line-height: 1.4; }
+.ladder[hidden] { display: none; }
+#ladderTog { align-self: flex-start; margin-top: 4px; }
 .ladder li.you { background: var(--gold); color: #1a1530; font-weight: 700; }
 
 /* Knopf */
@@ -499,7 +501,8 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
   <section class="card" aria-labelledby="sh">
     <h2 id="sh">Tempo</h2>
     <div class="speed"><span class="big num" id="speed">1,8 km/h</span><span class="muted">so schnell nähern wir uns</span></div>
-    <ul class="ladder" id="ladder"></ul>
+    <button class="btn" id="ladderTog" type="button" aria-expanded="false" aria-controls="ladder">▸ Vergleich mit ICE, Auto und Co. zeigen</button>
+    <ul class="ladder" id="ladder" hidden></ul>
     <p class="muted small">Tipp: Tipp auf eine Zeile, dann siehst du, wann du mit diesem Tempo da wärst.</p>
   </section>
 
@@ -1635,6 +1638,7 @@ $('wishPop').addEventListener('touchstart', e => { wishTx = e.target.tagName ===
 $('wishPop').addEventListener('touchend', e => { if (wishTx == null) return; const dx = e.changedTouches[0].clientX - wishTx; wishTx = null; if (Math.abs(dx) > 50) { wishPos += dx < 0 ? 1 : -1; showWish(); } });
 document.addEventListener('keydown', e => { if ($('wishPop').hidden || e.target.tagName === 'TEXTAREA') return; if (e.key === 'ArrowRight') { wishPos++; showWish(); } else if (e.key === 'ArrowLeft') { wishPos--; showWish(); } });
 $('wishClose').addEventListener('click', closeWish);
+$('ladderTog').addEventListener('click', () => { const o = $('ladder').hidden; $('ladder').hidden = !o; $('ladderTog').setAttribute('aria-expanded', String(o)); $('ladderTog').textContent = (o ? '▾ Vergleich ausblenden' : '▸ Vergleich mit ICE, Auto und Co. zeigen'); });
 $('gnBtn').addEventListener('click', () => { $('gnPop').hidden = false; });
 $('gnClose').addEventListener('click', () => { $('gnPop').hidden = true; });
 $('gnPop').addEventListener('click', e => { if (e.target === $('gnPop')) $('gnPop').hidden = true; });
