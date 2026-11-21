@@ -46,6 +46,12 @@ p { margin: 0; }
 .gnbtn .gt b { font-family: var(--display); font-size: 21px; color: var(--gold); font-weight: 600; }
 .gnbtn .gt span { font-size: 15px; opacity: 0.8; }
 .gnbtn .gb { flex: none; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--rose); color: var(--rose); }
+.fbrow { text-align: center; margin: 4px 0 8px; }
+#fbPop textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: rgba(0, 0, 0, 0.25); color: var(--ink); font: inherit; font-size: 16px; }
+.fbitem { border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.fbitem p { font-size: 15px; white-space: pre-wrap; margin: 0; }
+.fbitem.done { opacity: 0.5; }
+#fbListBox { display: flex; flex-direction: column; gap: 10px; }
 .gnnote { border: 1px dashed var(--rose); border-radius: 12px; padding: 10px 12px; font-size: 15px; color: var(--muted); }
 .gnnote b { color: var(--rose); }
 .gnapp { position: fixed; inset: 0; z-index: 36; display: flex; flex-direction: column; background: #0d1030; color: var(--ink); }
@@ -601,6 +607,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <div id="diaryList"></div>
   </section>
 
+  <p class="fbrow"><button class="btn" id="fbHome" type="button">🐞 Fehler melden · 💡 Wunsch äußern</button></p>
   <p class="muted small" id="whoLine" hidden style="text-align:center"></p>
 
   <footer>Masüsel und Mafifee unter demselben Mond.</footer>
@@ -618,6 +625,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <button type="button" data-act="title">Titel ändern</button>
     <button type="button" data-act="pdf">Als PDF speichern oder drucken</button>
     <button type="button" data-act="txt">Als Textdatei speichern</button>
+    <button type="button" id="fbMail">🐞 Fehler melden · 💡 Wunsch äußern</button>
   </div>
   <div class="mbody" id="mBody"></div>
   <button class="mfab" id="mFab" type="button">&#9998; Neue Mail</button>
@@ -640,8 +648,19 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
 </div>
 <div class="pop imgpop" id="imgPop" role="dialog" aria-modal="true" aria-label="Bild groß" hidden><img id="imgPopImg" alt="Bild im Tagebuch"><button class="btn" id="imgPopClose" type="button">Schließen</button></div>
 <div class="gnapp" id="gnApp" role="dialog" aria-label="Gute Nacht Gedanken" hidden>
-  <header class="gntop"><button class="btn" id="gnBack" type="button" aria-label="Schließen">✕</button><h2>🌙 Gute Nacht Gedanken</h2></header>
+  <header class="gntop"><button class="btn" id="gnBack" type="button" aria-label="Schließen">✕</button><h2>🌙 Gute Nacht Gedanken</h2><button class="btn" id="fbGn" type="button" aria-label="Fehler melden oder Wunsch äußern" style="margin-left:auto">🐞💡</button></header>
   <div class="gnbody" id="gnBody"></div>
+</div>
+<div class="pop" id="fbPop" role="dialog" aria-modal="true" aria-labelledby="fbH" hidden>
+  <div class="popbox">
+    <h3 id="fbH">Rückmeldung</h3>
+    <div class="wcats" role="group" aria-label="Art der Meldung"><button class="btn solid" id="fbBug" type="button">🐞 Fehler</button><button class="btn" id="fbWish" type="button">💡 Wunsch</button></div>
+    <p class="muted small" id="fbWhere"></p>
+    <textarea id="fbText" maxlength="1500" rows="5" aria-label="Deine Meldung"></textarea>
+    <div class="popbtns"><button class="btn solid" id="fbGo" type="button">Abschicken</button><button class="btn" id="fbList" type="button">Alle Meldungen ansehen</button><button class="btn" id="fbClose" type="button">Schließen</button></div>
+    <p class="muted small" id="fbInfo" aria-live="polite"></p>
+    <div id="fbListBox" hidden></div>
+  </div>
 </div>
 <div class="pop" id="wishPop" role="dialog" aria-modal="true" aria-labelledby="wishH" hidden>
   <div class="popbox">
@@ -3005,6 +3024,58 @@ function gnClose() { if (location.hash === '#gedanken') location.hash = ''; else
 function gnHide() { gnS.open = false; $('gnApp').hidden = true; if ($('mailApp').hidden) document.body.style.overflow = ''; for (const k in gnS.players) { try { gnS.players[k].au.pause(); } catch (e) { /* egal */ } } gnS.playing = null; }
 gnSyncHash();
 
+/* ---- Rückmeldung: Fehler melden und Wünsche ---- */
+const fbS = { kind: 'bug', myRep: {}, list: false };
+function fbLoad(v) { if (v.rep) fbS.myRep = Object.assign({}, fbS.myRep, v.rep); }
+function fbWhere() {
+  if (!$('gnApp').hidden) return 'Gute Nacht Gedanken';
+  if (!$('mailApp').hidden) return 'Postfach (' + ({ list: 'Liste', read: 'Mail lesen', compose: 'Mail schreiben', tasks: 'Aufgaben', book: 'Buch', rate: 'Bewertung', title: 'Titel' }[mailS.view] || mailS.view) + ')';
+  return document.body.classList.contains('skyonly') ? 'Hauptseite (Himmelsmodus)' : 'Hauptseite';
+}
+function fbAll() {
+  const out = [];
+  gnIds().forEach(id => { const r = id === state.uid ? Object.assign({}, (state.notes[id] || {}).rep || {}, fbS.myRep) : ((state.notes[id] || {}).rep || {}); for (const k in r) { const e = r[k]; if (e && typeof e.t === 'number' && e.text) out.push({ id, k, e, mine: id === state.uid, who: id === state.uid ? 'Du' : nameOf(id, state.notes[id]) }); } });
+  return out.sort((a, b) => b.e.t - a.e.t);
+}
+function fbCopyText() {
+  return fbAll().filter(x => !x.e.done).map(x => (x.e.kind === 'bug' ? 'FEHLER' : 'WUNSCH') + ' von ' + (x.mine ? nameOf(state.uid, state.notes[state.uid]) : x.who) + ', ' + entFmt.format(new Date(x.e.t)) + ' Uhr, ' + (x.e.where || '') + (x.e.ua ? ' [' + x.e.ua + ']' : '') + ':\n' + x.e.text).join('\n\n');
+}
+function fbRender() {
+  const kb = $('fbBug'), kw = $('fbWish'); kb.classList.toggle('solid', fbS.kind === 'bug'); kw.classList.toggle('solid', fbS.kind === 'wish');
+  $('fbText').placeholder = fbS.kind === 'bug' ? 'Was ist passiert? Was hast du erwartet? Wo genau?' : 'Was wünschst du dir für die Seite?';
+  $('fbWhere').textContent = 'Gemeldet von: ' + fbWhere();
+  const box = $('fbListBox'); box.hidden = !fbS.list; $('fbList').textContent = fbS.list ? 'Liste ausblenden' : 'Alle Meldungen ansehen';
+  if (!fbS.list) return;
+  box.textContent = ''; const all = fbAll();
+  if (!all.length) box.append(el('p', 'muted small', 'Noch keine Meldungen.'));
+  else {
+    const cp = el('button', 'btn', '📋 Offene Meldungen kopieren'); cp.type = 'button';
+    cp.addEventListener('click', async () => { const t = fbCopyText(); try { await navigator.clipboard.writeText(t); showToast('Kopiert. Füg es bei Claude ein.'); } catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.append(ta); ta.select(); try { document.execCommand('copy'); showToast('Kopiert.'); } catch (er) { showToast('Kopieren hat nicht geklappt.'); } ta.remove(); } });
+    box.append(cp);
+  }
+  all.forEach(x => {
+    const c = el('div', 'fbitem' + (x.e.done ? ' done' : ''));
+    c.append(el('b', '', (x.e.kind === 'bug' ? '🐞 ' : '💡 ') + x.who + ', ' + entFmt.format(new Date(x.e.t))), el('span', 'muted small', x.e.where || ''), el('p', '', x.e.text));
+    if (x.mine) { const d = el('button', 'btn', x.e.done ? 'Wieder öffnen' : 'Erledigt'); d.type = 'button'; d.addEventListener('click', () => { fbS.myRep[x.k] = Object.assign({}, x.e, { done: x.e.done ? 0 : 1 }); writeOwn({ rep: Object.assign({}, fbS.myRep) }); fbRender(); }); c.append(d); }
+    box.append(c);
+  });
+}
+function fbOpen() { $('fbPop').hidden = false; $('fbInfo').textContent = ''; fbRender(); setTimeout(() => $('fbText').focus(), 50); }
+$('fbBug').addEventListener('click', () => { fbS.kind = 'bug'; fbRender(); });
+$('fbWish').addEventListener('click', () => { fbS.kind = 'wish'; fbRender(); });
+$('fbList').addEventListener('click', () => { fbS.list = !fbS.list; fbRender(); });
+$('fbClose').addEventListener('click', () => { $('fbPop').hidden = true; });
+$('fbPop').addEventListener('click', e => { if (e.target === $('fbPop')) $('fbPop').hidden = true; });
+$('fbGo').addEventListener('click', async () => {
+  const text = $('fbText').value.trim(); if (!text) { $('fbInfo').textContent = 'Schreib erst etwas hinein.'; return; }
+  if (!canShare()) { $('fbInfo').textContent = 'Gerade geht das Speichern nicht. Versuch es später noch einmal.'; return; }
+  const k = 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  fbS.myRep[k] = { t: Date.now(), kind: fbS.kind, text, where: fbWhere(), ua: String(navigator.userAgent || '').replace(/^Mozilla\/5\.0 /, '').slice(0, 90) };
+  $('fbGo').disabled = true; await writeOwn({ rep: Object.assign({}, fbS.myRep) }); $('fbGo').disabled = false;
+  $('fbText').value = ''; $('fbInfo').textContent = fbS.kind === 'bug' ? 'Danke, der Fehler ist notiert.' : 'Danke, dein Wunsch ist notiert.'; fbRender();
+});
+['fbHome', 'fbMail', 'fbGn'].forEach(id => { const b = $(id); if (b) b.addEventListener('click', ev => { ev.preventDefault(); $('mMenuBox').hidden = true; fbOpen(); }); });
+
 function startNotes(db) {
   const timer = setTimeout(() => { state.dbSlow = true; renderPanel(); }, 10000);
   db.collection('notes').onSnapshot(snap => {
@@ -3013,7 +3084,7 @@ function startNotes(db) {
     const fresh = [];
     for (const id in m) {
       const v = m[id] || {};
-      if (id === state.uid) { if (v.diary) { state.myDiary = Object.assign({}, state.myDiary, v.diary); removedKeys.forEach(k => { delete state.myDiary[k]; }); } if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.rej) state.myRej = Object.assign({}, state.myRej, v.rej); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (v.figs && typeof v.figs === 'object') { for (const fid in v.figs) { const m = v.figs[fid]; if (Array.isArray(m) && m.length >= 4 && (!state.myFigs[fid] || m[3] > state.myFigs[fid][3])) state.myFigs[fid] = m; } } if (Array.isArray(v.moon) && v.moon.length >= 4 && (!state.myMoon || v.moon[3] > state.myMoon[3])) state.myMoon = v.moon; if (typeof v.shower === 'number') state.myShower = Math.max(state.myShower || 0, v.shower); if (typeof v.showerNo === 'number') state.myShowerNo = Math.max(state.myShowerNo || 0, v.showerNo); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; gnLoad(v); continue; }
+      if (id === state.uid) { if (v.diary) { state.myDiary = Object.assign({}, state.myDiary, v.diary); removedKeys.forEach(k => { delete state.myDiary[k]; }); } if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.rej) state.myRej = Object.assign({}, state.myRej, v.rej); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (v.figs && typeof v.figs === 'object') { for (const fid in v.figs) { const m = v.figs[fid]; if (Array.isArray(m) && m.length >= 4 && (!state.myFigs[fid] || m[3] > state.myFigs[fid][3])) state.myFigs[fid] = m; } } if (Array.isArray(v.moon) && v.moon.length >= 4 && (!state.myMoon || v.moon[3] > state.myMoon[3])) state.myMoon = v.moon; if (typeof v.shower === 'number') state.myShower = Math.max(state.myShower || 0, v.shower); if (typeof v.showerNo === 'number') state.myShowerNo = Math.max(state.myShowerNo || 0, v.showerNo); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; gnLoad(v); fbLoad(v); continue; }
       for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz, weil ' + pron(nameOf(id, v)) + ' an dich denken musste ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       for (const k in (v.book || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.book[k]; if (state.seen && e && e.text) fresh.push(nameOf(id, v) + ' hat dir im Buch geschrieben: ' + (e.sub || '(ohne Betreff)')); } }
       for (const k in (v.gn || {})) { const key = id + '|gn|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.gn[k]; if (state.seen && e && !e.del && typeof e.t === 'number') fresh.push(nameOf(id, v) + (e.kind === 'i' ? ' hat ein Bild zu den Gute Nacht Gedanken gelegt.' : ' hat neue Gute Nacht Gedanken aufgenommen: ' + (e.title || ''))); } }
