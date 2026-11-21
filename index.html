@@ -1174,7 +1174,7 @@ $('warpX').addEventListener('click', () => { if (warpHold) endWarp(); });
 $('warp').addEventListener('click', () => { if (warpHold) endWarp(); else startWarp(); });
 
 /* ---- Tuerchen und gemeinsame Daten ---- */
-const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRej: {}, myExs: {}, myRe: {}, myRz: {}, myHpos: {}, myMoon: null, myFigs: {}, myShower: 0, myShowerNo: 0, rzKey: null, rzdraft: '', mySeal: {}, myOdone: {}, myOc: {}, myRead: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
+const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRej: {}, myRe: {}, myRz: {}, myHpos: {}, myMoon: null, myFigs: {}, myShower: 0, myShowerNo: 0, rzKey: null, rzdraft: '', mySeal: {}, myOdone: {}, myOc: {}, myRead: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
 let writeChain = Promise.resolve();
 function writeOwn(patch) {
   if (!state.db || !state.uid) return Promise.resolve();
@@ -1626,7 +1626,7 @@ $('toast').addEventListener('click', () => { $('toast').hidden = true; });
 /* ---- Postfach (Briefroman) ---- */
 const bookS = { my: {}, local: {}, myTitle: null };
 const rateS = { my: {} };
-const mailS = { view: 'list', cur: null, reply: null, draft: {}, folder: 'in', draftId: null, toQueen: false, qcur: null };
+const mailS = { exam: null, view: 'list', cur: null, reply: null, draft: {}, folder: 'in', draftId: null, toQueen: false, qcur: null };
 function draftsLoad() { try { const o = JSON.parse(localStorage.getItem('zm_drafts') || '{}'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } }
 function draftsSave(o) { try { localStorage.setItem('zm_drafts', JSON.stringify(o)); } catch (e) { /* egal */ } }
 function draftList() { const o = draftsLoad(); return Object.keys(o).map(k => Object.assign({ id: k }, o[k])).filter(d => d && d.text && d.text.trim()).sort((a, b) => b.t - a.t); }
@@ -1634,7 +1634,7 @@ function draftPut(sub, text) {
   const o = draftsLoad();
   if (!text.trim()) { if (mailS.draftId) { delete o[mailS.draftId]; draftsSave(o); } return; }
   if (!mailS.draftId) mailS.draftId = 'e' + Date.now();
-  o[mailS.draftId] = { t: Date.now(), sub: sub, text: text }; if (mailS.toQueen) { o[mailS.draftId].q = 1; o[mailS.draftId].qk = mailS.qcur || null; } draftsSave(o);
+  o[mailS.draftId] = { t: Date.now(), sub: sub, text: text }; if (mailS.toQueen) { o[mailS.draftId].q = 1; o[mailS.draftId].qk = mailS.qcur || null; } if (typeof mailS.exam === 'number') o[mailS.draftId].ex = mailS.exam; draftsSave(o);
 }
 function draftDrop() { if (!mailS.draftId) return; const o = draftsLoad(); delete o[mailS.draftId]; draftsSave(o); mailS.draftId = null; }
 const QUEEN = [
@@ -1797,17 +1797,7 @@ function el(tag, cls, txt) { const n = document.createElement(tag); if (cls) n.c
 function avatar(x) { const a = el('div', 'mav' + (x.queen ? ' queen' : x.who === 'Mafifee' ? ' her' : ''), x.queen ? '♛' : (x.who || '?').charAt(0).toUpperCase()); a.setAttribute('aria-hidden', 'true'); return a; }
 function mailOther() { return nameOf(state.uid, state.notes[state.uid]) === 'Masüsel' ? 'Mafifee' : 'Masüsel'; }
 function mailSetHeader(title, sub) { $('mTitle').textContent = title; $('mSub').textContent = sub || ''; $('mFab').hidden = mailS.view !== 'list' && mailS.view !== 'tasks'; }
-function examStart(i) {
-  let best = 0; const k = 'd' + i;
-  const take = r => { if (r && typeof r.t === 'number' && (!best || r.t < best)) best = r.t; };
-  for (const id in state.notes) { const v = state.notes[id]; if (v && v.exs) take(v.exs[k]); }
-  take(state.myExs[k]); return best;
-}
-function startExam(i) {
-  const t = Date.now(); state.myExs['d' + i] = { t };
-  showToast('Prüfung gestartet. Ab jetzt zählt die nächste Mail als Antwort.'); renderBook();
-  return writeOwn({ exs: Object.assign({}, state.myExs) });
-}
+function startExam(i) { mailS.view = 'compose'; mailS.draftId = null; mailS.toQueen = false; mailS.qcur = null; mailS.exam = i; mailS.reply = 'Prüfung: ' + TASKS[i].d; renderCompose(); }
 function taskCard(i, list) {
   const T = TASKS[i], role = myRole(), rs = allRates();
   const c = el('div', 'mtask ' + role);
@@ -1816,15 +1806,16 @@ function taskCard(i, list) {
   if (T.lead !== 'fee' && T.lead !== 'esel') return c;
   const ic = rateIcon(i), rater = T.lead, r = rs.find(x => x.day === i);
   if (r) { const res = el('div', 'res', 'Bewertung von ' + (r.mine ? 'dir' : r.who) + ': ' + rateIcons(i, r.n) + (r.c ? ', „' + r.c + '“' : '')); if (r.n >= 3) res.append(passBadge()); c.append(res); return c; }
-  const st0 = examStart(i);
-  if (!st0) {
-    c.append(el('div', 'rl', 'Diese Prüfung läuft erst, wenn ihr sie startet. Mails davor zählen nicht dazu.'));
-    if (canShare()) { const sb = el('button', 'mbtn main', '▶ Prüfung starten'); sb.type = 'button'; sb.addEventListener('click', () => startExam(i)); c.append(sb); }
+  const answerer = rater === 'fee' ? 'esel' : 'fee', exMails = realMails(list).filter(x => x.e.ex === i);
+  const exFromOther = exMails.some(x => !x.mine), exMine = exMails.some(x => x.mine);
+  if (role === answerer) {
+    if (!exMine) {
+      c.append(el('div', 'rl', 'Starte die Prüfung, dann öffnet sich die Mail dazu. Nur diese Mail wird bewertet.'));
+      if (canShare()) { const sb = el('button', 'mbtn main', '▶ Prüfung starten'); sb.type = 'button'; sb.addEventListener('click', () => startExam(i)); c.append(sb); }
+    } else c.append(el('div', 'rl', 'Deine Prüfungsmail ist abgeschickt. Die Bewertung vergibt ' + (rater === 'fee' ? 'die Fee' : 'der Esel') + '.'));
     return c;
   }
-  if (rater !== role) { c.append(el('div', 'rl', 'Die Bewertung vergibt ' + (rater === 'fee' ? 'die Fee' : 'der Esel') + ' nach deiner Antwort.')); return c; }
-  const has = realMails(list).some(x => !x.mine && x.e.t >= st0);
-  if (!has) { c.append(el('div', 'rl', 'Sobald ' + mailOther() + ' zu dieser Aufgabe geschrieben hat, kannst du bewerten.')); return c; }
+  if (!exFromOther) { c.append(el('div', 'rl', 'Warte, bis ' + mailOther() + ' die Prüfung startet und die Prüfungsmail schickt. Dann kannst du bewerten.')); return c; }
   const d = mailS.draft[i] || (mailS.draft[i] = { n: null, c: '' });
   const w = el('div', 'mrate'); w.append(el('div', 'rl', 'Deine Bewertung für ' + mailOther() + ':'));
   const row = el('div', 'ic'); const btns = [];
@@ -1875,7 +1866,7 @@ function renderMail() {
         const av = el('div', 'mav', '✎'); av.setAttribute('aria-hidden', 'true');
         const c = el('div', 'mc'), l1 = el('div', 'l1'); l1.append(el('span', 'nm', 'Entwurf'), el('span', 'tm', mailWhen(d.t)));
         c.append(l1, el('div', 'sj', d.sub || '(ohne Betreff)'), el('div', 'pv', d.text.replace(/\s+/g, ' ').slice(0, 100))); row.append(av, c);
-        const open = () => { mailS.view = 'compose'; mailS.draftId = d.id; mailS.reply = d.sub || null; mailS.toQueen = !!d.q; mailS.qcur = d.qk || null; renderCompose(); };
+        const open = () => { mailS.view = 'compose'; mailS.exam = typeof d.ex === 'number' ? d.ex : null; mailS.draftId = d.id; mailS.reply = d.sub || null; mailS.toQueen = !!d.q; mailS.qcur = d.qk || null; renderCompose(); };
         row.addEventListener('click', open); row.addEventListener('keydown', ev => { if (ev.key === 'Enter') open(); });
         body.append(row);
       });
@@ -1916,12 +1907,12 @@ function renderMail() {
     const acts = el('div', 'acts');
     if (x.queen) {
       const qb = el('button', 'mbtn main', '↩ An die Krone antworten'); qb.type = 'button';
-      qb.addEventListener('click', () => { mailS.view = 'compose'; mailS.draftId = null; mailS.toQueen = true; mailS.qcur = x.key; mailS.reply = 'AW: ' + (x.e.sub || '(ohne Betreff)').replace(SUBRE, ''); renderCompose(); });
+      qb.addEventListener('click', () => { mailS.view = 'compose'; mailS.exam = null; mailS.draftId = null; mailS.toQueen = true; mailS.qcur = x.key; mailS.reply = 'AW: ' + (x.e.sub || '(ohne Betreff)').replace(SUBRE, ''); renderCompose(); });
       acts.append(qb);
     }
     if (!x.queen && !x.qr) {
       const rb = el('button', 'mbtn main', '↩ Antworten'); rb.type = 'button';
-      rb.addEventListener('click', () => { mailS.view = 'compose'; mailS.draftId = null; mailS.toQueen = false; mailS.qcur = null; mailS.reply = 'AW: ' + (x.e.sub || '(ohne Betreff)').replace(SUBRE, ''); renderCompose(); });
+      rb.addEventListener('click', () => { mailS.view = 'compose'; mailS.exam = null; mailS.draftId = null; mailS.toQueen = false; mailS.qcur = null; mailS.reply = 'AW: ' + (x.e.sub || '(ohne Betreff)').replace(SUBRE, ''); renderCompose(); });
       acts.append(rb);
     }
     if (!x.mine) { const ub = el('button', 'mbtn', '✉ Als ungelesen markieren'); ub.type = 'button'; ub.addEventListener('click', () => { mailMarkUnread(x.key); mailS.view = 'list'; renderBook(); showToast('Als ungelesen markiert.'); }); acts.append(ub); }
@@ -1977,14 +1968,16 @@ function renderCompose() {
   const tq = !!mailS.toQueen, oth = mailOther() === 'Mafifee' ? ADDR.fee : ADDR.esel;
   f.append(el('div', 'to', 'Von: ' + addrStr(ADDR[myRole()])), el('div', 'to', 'An: ' + addrStr(tq ? ADDR.queen : oth)));
   if (tq) f.append(el('div', 'to', 'Kopie: ' + addrStr(oth)));
+  const exI = !tq && typeof mailS.exam === 'number' ? mailS.exam : null;
+  if (exI != null) { const eb = el('div', 'mctx'); eb.append(el('b', '', 'Prüfung: ' + TASKS[exI].d), el('p', '', myRole() === 'fee' ? TASKS[exI].f : TASKS[exI].e)); f.append(eb); }
   const sub = el('input'); sub.id = 'mSub2'; sub.type = 'text'; sub.maxLength = 80; sub.placeholder = 'Betreff'; sub.value = mailS.reply || (!mailS.toQueen && realMails(list).length ? bookDefaultSub(list) : ''); sub.setAttribute('aria-label', 'Betreff');
   const tx = el('textarea'); tx.id = 'mText'; tx.maxLength = 8000; tx.placeholder = 'Liebe/r ...'; tx.setAttribute('aria-label', 'Nachricht');
   { const dd = mailS.draftId ? draftsLoad()[mailS.draftId] : null; if (dd) { tx.value = dd.text || ''; if (dd.sub) sub.value = dd.sub; } }
   const autosave = () => draftPut(sub.value.trim(), tx.value); tx.addEventListener('input', autosave); sub.addEventListener('input', autosave);
   const hint = el('div', 'hint'); hint.id = 'mHint'; hint.setAttribute('aria-live', 'polite'); if (tq) hint.textContent = 'Diese Mail geht an die Krone. ' + mailOther() + ' liest in Kopie mit.'; else if (!realMails(list).length && myRole() === 'esel') hint.textContent = 'Die Fee eröffnet die Prüfung und ist zuerst dran.';
   const acts = el('div', 'acts'); const go = el('button', 'mbtn main', 'Senden'); go.type = 'submit'; const ca = el('button', 'mbtn', 'Abbrechen'); ca.type = 'button';
-  ca.textContent = 'Speichern und schließen'; ca.addEventListener('click', () => { const kept = tx.value.trim() && mailS.draftId; mailS.view = 'list'; mailS.reply = null; mailS.draftId = null; mailS.folder = kept ? 'draft' : mailS.folder; renderMail(); showToast(kept ? 'Als Entwurf gespeichert.' : 'Nichts zu speichern, die Mail ist leer.'); });
-  const dx = el('button', 'mbtn', 'Verwerfen'); dx.type = 'button'; dx.addEventListener('click', () => { draftDrop(); mailS.view = 'list'; mailS.reply = null; renderMail(); });
+  ca.textContent = 'Speichern und schließen'; ca.addEventListener('click', () => { const kept = tx.value.trim() && mailS.draftId; mailS.exam = null; mailS.view = 'list'; mailS.reply = null; mailS.draftId = null; mailS.folder = kept ? 'draft' : mailS.folder; renderMail(); showToast(kept ? 'Als Entwurf gespeichert.' : 'Nichts zu speichern, die Mail ist leer.'); });
+  const dx = el('button', 'mbtn', 'Verwerfen'); dx.type = 'button'; dx.addEventListener('click', () => { draftDrop(); mailS.exam = null; mailS.view = 'list'; mailS.reply = null; renderMail(); });
   acts.append(go, ca, dx);
   const qx = tq && mailS.qcur ? list.find(y => y.key === mailS.qcur) : null;
   const rm = tq ? (qx ? [qx] : []) : realMails(list).slice().reverse().slice(0, 3);
@@ -1995,10 +1988,11 @@ function renderCompose() {
     const text = tx.value.trim(); if (!text) { hint.textContent = 'Schreib erst etwas hinein.'; return; }
     const t = Date.now(), id = 'b' + t, entry = { t, text, sub: sub.value.trim() || (tq ? 'AW: Bescheid der Krone' : bookDefaultSub(allBook())) };
     if (tq) entry.qr = 1;
+    if (exI != null) entry.ex = exI;
     go.disabled = true;
     if (canShare()) { bookS.my[id] = entry; await writeOwn({ book: Object.assign({}, bookS.my) }); } else { bookS.local[id] = entry; }
     mailMarkRead((canShare() ? state.uid : 'local') + '|' + id);
-    draftDrop(); mailS.folder = 'sent';
+    draftDrop(); mailS.folder = 'sent'; mailS.exam = null;
     mailS.view = 'list'; mailS.reply = null; renderBook();
     if (state.err) showToast(state.err);
   });
@@ -2061,7 +2055,7 @@ $('mBack').addEventListener('click', () => {
   if (mailS.view === 'list') { location.hash = ''; mailClose(); }
   else { const kept = mailS.view === 'compose' && mailS.draftId; mailS.view = 'list'; mailS.reply = null; mailS.draftId = null; if (kept) { mailS.folder = 'draft'; } renderMail(); if (kept) showToast('Als Entwurf gespeichert.'); }
 });
-$('mFab').addEventListener('click', () => { mailS.view = 'compose'; mailS.draftId = null; mailS.reply = null; mailS.toQueen = false; mailS.qcur = null; renderCompose(); });
+$('mFab').addEventListener('click', () => { mailS.view = 'compose'; mailS.exam = null; mailS.draftId = null; mailS.reply = null; mailS.toQueen = false; mailS.qcur = null; renderCompose(); });
 $('mMenu').addEventListener('click', () => { $('mMenuBox').hidden = !$('mMenuBox').hidden; });
 $('mMenuBox').addEventListener('click', ev => {
   const b = ev.target.closest('button'); if (!b) return; $('mMenuBox').hidden = true;
@@ -2719,7 +2713,7 @@ function startNotes(db) {
     const fresh = [];
     for (const id in m) {
       const v = m[id] || {};
-      if (id === state.uid) { if (v.diary) { state.myDiary = Object.assign({}, state.myDiary, v.diary); removedKeys.forEach(k => { delete state.myDiary[k]; }); } if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.rej) state.myRej = Object.assign({}, state.myRej, v.rej); if (v.exs) state.myExs = Object.assign({}, state.myExs, v.exs); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (v.figs && typeof v.figs === 'object') { for (const fid in v.figs) { const m = v.figs[fid]; if (Array.isArray(m) && m.length >= 4 && (!state.myFigs[fid] || m[3] > state.myFigs[fid][3])) state.myFigs[fid] = m; } } if (Array.isArray(v.moon) && v.moon.length >= 4 && (!state.myMoon || v.moon[3] > state.myMoon[3])) state.myMoon = v.moon; if (typeof v.shower === 'number') state.myShower = Math.max(state.myShower || 0, v.shower); if (typeof v.showerNo === 'number') state.myShowerNo = Math.max(state.myShowerNo || 0, v.showerNo); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
+      if (id === state.uid) { if (v.diary) { state.myDiary = Object.assign({}, state.myDiary, v.diary); removedKeys.forEach(k => { delete state.myDiary[k]; }); } if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.rej) state.myRej = Object.assign({}, state.myRej, v.rej); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (v.figs && typeof v.figs === 'object') { for (const fid in v.figs) { const m = v.figs[fid]; if (Array.isArray(m) && m.length >= 4 && (!state.myFigs[fid] || m[3] > state.myFigs[fid][3])) state.myFigs[fid] = m; } } if (Array.isArray(v.moon) && v.moon.length >= 4 && (!state.myMoon || v.moon[3] > state.myMoon[3])) state.myMoon = v.moon; if (typeof v.shower === 'number') state.myShower = Math.max(state.myShower || 0, v.shower); if (typeof v.showerNo === 'number') state.myShowerNo = Math.max(state.myShowerNo || 0, v.showerNo); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
       for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz, weil ' + pron(nameOf(id, v)) + ' an dich denken musste ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       for (const k in (v.book || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.book[k]; if (state.seen && e && e.text) fresh.push(nameOf(id, v) + ' hat dir im Buch geschrieben: ' + (e.sub || '(ohne Betreff)')); } }
       for (const k in (v.rate || {})) { const key = id + '|r|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const r = v.rate[k], m = /^d(\d+)$/.exec(k); if (state.seen && r && m) fresh.push(nameOf(id, v) + ' hat dich bewertet: ' + rateIcons(Number(m[1]), r.n)); } }
