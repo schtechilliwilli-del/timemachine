@@ -40,6 +40,12 @@ h3 { font-size: 22px; line-height: 1.2; }
 p { margin: 0; }
 .hrow { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .bookbtn { position: relative; flex: none; margin-top: 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 14px 12px; border: 1px solid var(--gold); border-radius: 18px; background: rgba(11, 14, 32, 0.55); color: var(--gold); text-decoration: none; font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; }
+.gnbtn { display: flex; align-items: center; gap: 14px; width: 100%; box-sizing: border-box; padding: 16px 18px; border: 1px solid var(--gold); border-radius: 18px; background: linear-gradient(135deg, rgba(40, 34, 84, 0.78), rgba(21, 26, 58, 0.72)); color: inherit; font: inherit; text-align: left; cursor: pointer; box-shadow: 0 0 26px rgba(242, 196, 109, 0.16); }
+.gnbtn .gi { font-size: 38px; line-height: 1; }
+.gnbtn .gt { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.gnbtn .gt b { font-family: var(--display); font-size: 21px; color: var(--gold); font-weight: 600; }
+.gnbtn .gt span { font-size: 15px; opacity: 0.8; }
+.gnbtn .gb { flex: none; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--rose); color: var(--rose); }
 .bookbtn .bi { font-size: 44px; line-height: 1; }
 .bookbtn .bi { display: inline-block; transform-origin: 50% 80%; }
 .bookbtn.new .bi { animation: wiggle 1.3s ease-in-out infinite; }
@@ -502,6 +508,10 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <p class="warp-note" id="warpNote" aria-live="polite"></p>
   </section>
 
+  <section aria-label="Gute Nacht Geschichten">
+    <button class="gnbtn" id="gnBtn" type="button"><span class="gi" aria-hidden="true">🌙</span><span class="gt"><b>Gute Nacht Geschichten</b><span>Zum Einschlafen, mit Masüsels Stimme</span></span><span class="gb">Im Aufbau</span></button>
+  </section>
+
   <section class="card" aria-labelledby="mh">
     <h2 id="mh">Der Himmel heute</h2>
     <div class="sky-row">
@@ -599,6 +609,15 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
   </div>
 </div>
 <div class="pop imgpop" id="imgPop" role="dialog" aria-modal="true" aria-label="Bild groß" hidden><img id="imgPopImg" alt="Bild im Tagebuch"><button class="btn" id="imgPopClose" type="button">Schließen</button></div>
+<div class="pop" id="gnPop" role="dialog" aria-modal="true" aria-labelledby="gnH" hidden>
+  <div class="popbox">
+    <span class="kind">Im Aufbau</span>
+    <h3 id="gnH">🌙 Gute Nacht Geschichten</h3>
+    <p>Hier entsteht gerade etwas für die Nächte, in denen wir weit voneinander weg sind.</p>
+    <p class="muted small">Geplant: Geschichten als Sprachnachrichten, jede mit Titel. Ein Logbuch, wann, wie oft und wie lange gehört wurde. Bewertung, Lieblingsstellen als Punkte direkt beim Zuhören und ein Transkript zum Mitlesen.</p>
+    <div class="popbtns"><button class="btn solid" id="gnClose" type="button">Okay, ich warte</button></div>
+  </div>
+</div>
 <div class="pop" id="wishPop" role="dialog" aria-modal="true" aria-labelledby="wishH" hidden>
   <div class="popbox">
     <span class="kind">Gefangen</span>
@@ -1616,6 +1635,9 @@ $('wishPop').addEventListener('touchstart', e => { wishTx = e.target.tagName ===
 $('wishPop').addEventListener('touchend', e => { if (wishTx == null) return; const dx = e.changedTouches[0].clientX - wishTx; wishTx = null; if (Math.abs(dx) > 50) { wishPos += dx < 0 ? 1 : -1; showWish(); } });
 document.addEventListener('keydown', e => { if ($('wishPop').hidden || e.target.tagName === 'TEXTAREA') return; if (e.key === 'ArrowRight') { wishPos++; showWish(); } else if (e.key === 'ArrowLeft') { wishPos--; showWish(); } });
 $('wishClose').addEventListener('click', closeWish);
+$('gnBtn').addEventListener('click', () => { $('gnPop').hidden = false; });
+$('gnClose').addEventListener('click', () => { $('gnPop').hidden = true; });
+$('gnPop').addEventListener('click', e => { if (e.target === $('gnPop')) $('gnPop').hidden = true; });
 $('wishGo').addEventListener('click', async () => { const own = $('wishOwn').value.trim(); const w = own || WISHES[wishIdx].t; closeWish(); showToast('Dein Wunsch steht im Tagebuch.' + (otherName() ? ' ' + otherName() + ' erfährt davon.' : '')); await addEntry({ star: true, wish: w }); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('wishPop').hidden) closeWish(); });
 
