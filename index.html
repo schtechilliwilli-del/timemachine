@@ -45,11 +45,14 @@ p { margin: 0; }
 .gnbtn .gt { display: flex; flex-direction: column; gap: 3px; flex: 1; }
 .gnbtn .gt b { font-family: var(--display); font-size: 21px; color: var(--gold); font-weight: 600; }
 .gnbtn .gt span { font-size: 15px; opacity: 0.8; }
+.gnbtn .gb { flex: none; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--rose); color: var(--rose); }
+.gnnote { border: 1px dashed var(--rose); border-radius: 12px; padding: 10px 12px; font-size: 15px; color: var(--muted); }
+.gnnote b { color: var(--rose); }
 .gnapp { position: fixed; inset: 0; z-index: 36; display: flex; flex-direction: column; background: #0d1030; color: var(--ink); }
 .gnapp[hidden] { display: none; }
 .gntop { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
 .gntop h2 { margin: 0; font-size: 22px; }
-.gnbody { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.gnbody { flex: 1; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
 .gncard { background: rgba(21, 26, 58, 0.8); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .gncard.form { border-color: var(--gold); }
 .gnh { display: flex; flex-direction: column; gap: 2px; }
@@ -536,7 +539,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
   </section>
 
   <section aria-label="Gute Nacht Gedanken">
-    <button class="gnbtn" id="gnBtn" type="button"><span class="gi" aria-hidden="true">🌙</span><span class="gt"><b>Gute Nacht Gedanken</b><span>Zum Einschlafen, mit Masüsels Stimme</span></span></button>
+    <button class="gnbtn" id="gnBtn" type="button"><span class="gi" aria-hidden="true">🌙</span><span class="gt"><b>Gute Nacht Gedanken</b><span>Zum Einschlafen, mit Masüsels Stimme</span></span><span class="gb">Im Aufbau</span></button>
   </section>
 
   <section class="card" aria-labelledby="mh">
@@ -2984,6 +2987,7 @@ function renderGn(force) {
   if (gnS.playing && !force) return;
   const body = $('gnBody'); body.textContent = '';
   const role = myRole(), items = gnItems();
+  { const nt = el('div', 'gnnote'); nt.append(el('b', '', 'Im Aufbau. '), document.createTextNode('Du kannst schon aufnehmen, anhören, bewerten und Lieblingsstellen setzen. Es wird aber noch weitergebaut, manches kann sich noch ändern.')); body.append(nt); }
   if (canShare() && (role === 'esel' || role === 'fee')) {
     if (gnS.form) { const box = el('div', 'gncard form'); box.append(el('b', '', role === 'esel' ? 'Neue Gute Nacht Gedanken' : 'Neues Bild'), role === 'esel' ? gnFormAudio() : gnFormImage()); const cn = el('button', 'btn', 'Abbrechen'); cn.type = 'button'; cn.addEventListener('click', () => { gnS.form = false; renderGn(true); }); box.append(cn); body.append(box); }
     else { const nb = el('button', 'btn solid', role === 'esel' ? '＋ Neue Aufnahme' : '＋ Bild hinzufügen'); nb.type = 'button'; nb.addEventListener('click', () => { gnS.form = true; renderGn(true); }); body.append(nb); }
@@ -2993,8 +2997,13 @@ function renderGn(force) {
   if (!items.length) body.append(el('p', 'muted', role === 'esel' ? 'Noch nichts da. Nimm den ersten Gedanken auf.' : 'Noch nichts da. Sobald Masüsel etwas aufnimmt, liegt es hier.'));
   items.forEach(it => body.append(gnCard(it, () => renderGn(true))));
 }
-function gnOpen() { gnS.open = true; $('gnApp').hidden = false; renderGn(true); }
-function gnClose() { gnS.open = false; $('gnApp').hidden = true; for (const k in gnS.players) { try { gnS.players[k].au.pause(); } catch (e) { /* egal */ } } gnS.playing = null; }
+function gnShow() { gnS.open = true; $('gnApp').hidden = false; document.body.style.overflow = 'hidden'; renderGn(true); }
+function gnOpen() { if (location.hash === '#gedanken') gnShow(); else location.hash = '#gedanken'; }
+function gnSyncHash() { if (location.hash === '#gedanken') { if (!gnS.open) gnShow(); } else if (gnS.open) gnHide(); }
+window.addEventListener('hashchange', gnSyncHash);
+function gnClose() { if (location.hash === '#gedanken') location.hash = ''; else gnHide(); }
+function gnHide() { gnS.open = false; $('gnApp').hidden = true; if ($('mailApp').hidden) document.body.style.overflow = ''; for (const k in gnS.players) { try { gnS.players[k].au.pause(); } catch (e) { /* egal */ } } gnS.playing = null; }
+gnSyncHash();
 
 function startNotes(db) {
   const timer = setTimeout(() => { state.dbSlow = true; renderPanel(); }, 10000);
