@@ -839,6 +839,7 @@ function ladderDetail(label, v) {
 }
 function renderLadder(v) {
   ladderV = v;
+  if ($('ladder').hidden) return;
   const ul = $('ladder'); const frag = document.createDocumentFragment(); let placed = false;
   function row(label, val, cls) {
     const li = document.createElement('li'); if (cls) li.className = cls; li.dataset.k = label; li.tabIndex = 0; li.setAttribute('role', 'button'); li.setAttribute('aria-expanded', state.ladderSel === label ? 'true' : 'false');
@@ -892,12 +893,31 @@ function renderAll(force) {
 const cv = $('sky'), ctx = cv.getContext('2d');
 let W = 0, H = 0, calm = [], arrP = 1, gatherP = 0;
 function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+const glowCache = {};
+function glowSprite(rgb) {
+  let c = glowCache[rgb]; if (c) return c;
+  c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(' + rgb + ',0.85)'); gr.addColorStop(0.35, 'rgba(' + rgb + ',0.3)'); gr.addColorStop(1, 'rgba(' + rgb + ',0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return (glowCache[rgb] = c);
+}
+let bgCache = null;
+function buildBg(dpr) {
+  bgCache = document.createElement('canvas'); bgCache.width = cv.width; bgCache.height = cv.height;
+  const b = bgCache.getContext('2d'); b.setTransform(dpr, 0, 0, dpr, 0, 0);
+  b.fillStyle = '#0b0e20'; b.fillRect(0, 0, W, H);
+  const g = b.createRadialGradient(W / 2, 0, 0, W / 2, 0, H * 0.7);
+  g.addColorStop(0, 'rgba(40,48,110,0.55)'); g.addColorStop(1, 'rgba(11,14,32,0)');
+  b.fillStyle = g; b.fillRect(0, 0, W, H);
+}
 function drawCalm(t) {
   t = t || 0;
-  ctx.fillStyle = '#0b0e20'; ctx.fillRect(0, 0, W, H);
-  const g = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, H * 0.7);
-  g.addColorStop(0, 'rgba(40,48,110,0.55)'); g.addColorStop(1, 'rgba(11,14,32,0)');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  if (bgCache) ctx.drawImage(bgCache, 0, 0, W, H);
+  else {
+    ctx.fillStyle = '#0b0e20'; ctx.fillRect(0, 0, W, H);
+    const g = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, H * 0.7);
+    g.addColorStop(0, 'rgba(40,48,110,0.55)'); g.addColorStop(1, 'rgba(11,14,32,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  }
   const bx = W / 2, by = H * 0.5;
   calm.forEach(s => { const a = s.a * arrP * (0.35 + 0.65 * Math.abs(Math.sin(t * s.sp + s.ph))); ctx.fillStyle = 'rgba(236,233,247,' + a.toFixed(3) + ')'; ctx.beginPath(); ctx.arc(bx + (s.x * W - bx) * arrP, by + (s.y * H - by) * arrP, s.r, 0, 6.2832); ctx.fill(); });
   drawBgMoon(t);
@@ -918,9 +938,8 @@ function drawHeartStars(t) {
     const pulse = 1 + 0.2 * Math.sin(t / 500 + o.x * 20), r = 7.5 * pulse;
     ctx.save(); ctx.globalAlpha = Math.max(0, Math.min(1, arrP * 1.4));
     if (age < 1000) { ctx.strokeStyle = 'rgba(' + rgb + ',' + (0.8 * (1 - age / 1000)).toFixed(3) + ')'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 6 + age / 14, 0, 6.2832); ctx.stroke(); }
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r * 5); g.addColorStop(0, 'rgba(' + rgb + ',0.8)'); g.addColorStop(1, 'rgba(' + rgb + ',0)');
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * 5, 0, 6.2832); ctx.fill();
-    ctx.shadowColor = 'rgba(' + rgb + ',1)'; ctx.shadowBlur = 20; ctx.fillStyle = '#fff';
+    ctx.drawImage(glowSprite(rgb), x - r * 5, y - r * 5, r * 10, r * 10);
+    ctx.fillStyle = '#fff';
     const L = r * 2.6, w = r * 0.55;
     ctx.beginPath(); ctx.moveTo(x, y - L); ctx.lineTo(x + w, y - w); ctx.lineTo(x + L, y); ctx.lineTo(x + w, y + w); ctx.lineTo(x, y + L); ctx.lineTo(x - w, y + w); ctx.lineTo(x - L, y); ctx.lineTo(x - w, y - w); ctx.closePath(); ctx.fill();
     ctx.restore();
@@ -1078,29 +1097,31 @@ function drawBgMoon(t) {
   const R = onlySky ? mg.R : sk ? Math.max(32, Math.min(W * 0.11, 60)) : Math.max(60, Math.min(W * 0.3, H * 0.2)), cx = onlySky ? mg.cx : sk ? W - R - 18 : W / 2, cy = onlySky ? mg.cy : sk ? R + 26 : H * 0.6, pulse = 1 + 0.04 * Math.sin(t / 1500);
   const g = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R * 2.1 * pulse);
   g.addColorStop(0, 'rgba(243,236,210,0.16)'); g.addColorStop(1, 'rgba(243,236,210,0)');
-  ctx.save(); ctx.globalAlpha = arrP; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore();
+  const Rg = R * 2.1 * pulse; ctx.save(); ctx.globalAlpha = arrP; ctx.fillStyle = g; ctx.fillRect(cx - Rg, cy - Rg, Rg * 2, Rg * 2); ctx.restore();
   if (moonImg && moonImg.complete && moonImg.naturalWidth) { ctx.globalAlpha = (sk ? 0.85 : 0.5) * arrP * arrP; ctx.drawImage(moonImg, cx - R, cy - R, R * 2, R * 2); ctx.globalAlpha = 1; }
 }
 function bgFig(f, ox, oy, k, rgb, t, off) {
   t = t || 0; off = off || 0;
-  ctx.save(); ctx.globalAlpha = arrP * arrP;
-  ctx.lineWidth = 1.7; ctx.lineCap = 'round';
-  ctx.strokeStyle = 'rgba(' + rgb + ',' + (0.62 + 0.2 * Math.sin(t / 1100 + off)).toFixed(3) + ')';
-  ctx.shadowColor = 'rgba(' + rgb + ',0.9)'; ctx.shadowBlur = 8;
-  f.lines.forEach(l => { const a = f.pts[l[0]], b = f.pts[l[1]]; ctx.beginPath(); ctx.moveTo(ox + a[0] * k, oy + a[1] * k); ctx.lineTo(ox + b[0] * k, oy + b[1] * k); ctx.stroke(); });
+  ctx.save(); ctx.globalAlpha = arrP * arrP; ctx.lineCap = 'round';
+  const al = 0.62 + 0.2 * Math.sin(t / 1100 + off);
+  ctx.beginPath();
+  f.lines.forEach(l => { const a = f.pts[l[0]], b = f.pts[l[1]]; ctx.moveTo(ox + a[0] * k, oy + a[1] * k); ctx.lineTo(ox + b[0] * k, oy + b[1] * k); });
+  ctx.strokeStyle = 'rgba(' + rgb + ',' + (al * 0.22).toFixed(3) + ')'; ctx.lineWidth = 5; ctx.stroke();
+  ctx.strokeStyle = 'rgba(' + rgb + ',' + al.toFixed(3) + ')'; ctx.lineWidth = 1.7; ctx.stroke();
+  const gs = glowSprite(rgb);
   f.pts.forEach((p, i) => {
     const tw = 1 + 0.45 * Math.sin(t / 420 + i * 1.7 + off), x = ox + p[0] * k, y = oy + p[1] * k, r = (i === 0 ? 4 : 3) * tw;
-    ctx.shadowBlur = 14; ctx.shadowColor = 'rgba(' + rgb + ',1)';
+    ctx.drawImage(gs, x - r * 4, y - r * 4, r * 8, r * 8);
     ctx.fillStyle = 'rgba(255,248,226,1)'; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
-    ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(255,248,226,' + (0.35 * tw).toFixed(3) + ')'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(255,248,226,' + (0.35 * tw).toFixed(3) + ')'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(x - r * 2.6, y); ctx.lineTo(x + r * 2.6, y); ctx.moveTo(x, y - r * 2.6); ctx.lineTo(x, y + r * 2.6); ctx.stroke();
   });
   ctx.restore();
 }
 function sizeSky() {
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const dpr = Math.min(1.5, window.devicePixelRatio || 1);
   W = window.innerWidth; H = window.innerHeight;
-  cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); buildBg(dpr);
   const R = rng(42); calm = [];
   for (let i = 0; i < 150; i++) calm.push({ x: R(), y: R(), r: 0.5 + R() * 1.3, a: 0.35 + R() * 0.65, sp: 0.0015 + R() * 0.004, ph: R() * 6.28 });
   if (!warping) drawCalm();
@@ -1657,7 +1678,7 @@ $('wishPop').addEventListener('touchstart', e => { wishTx = e.target.tagName ===
 $('wishPop').addEventListener('touchend', e => { if (wishTx == null) return; const dx = e.changedTouches[0].clientX - wishTx; wishTx = null; if (Math.abs(dx) > 50) { wishPos += dx < 0 ? 1 : -1; showWish(); } });
 document.addEventListener('keydown', e => { if ($('wishPop').hidden || e.target.tagName === 'TEXTAREA') return; if (e.key === 'ArrowRight') { wishPos++; showWish(); } else if (e.key === 'ArrowLeft') { wishPos--; showWish(); } });
 $('wishClose').addEventListener('click', closeWish);
-$('ladderTog').addEventListener('click', () => { const o = $('ladder').hidden; $('ladder').hidden = !o; $('ladderTog').setAttribute('aria-expanded', String(o)); $('ladderTog').textContent = (o ? '▾ Vergleich ausblenden' : '▸ Vergleich mit ICE, Auto und Co. zeigen'); });
+$('ladderTog').addEventListener('click', () => { const o = $('ladder').hidden; $('ladder').hidden = !o; if (o) renderLadder(ladderV); $('ladderTog').setAttribute('aria-expanded', String(o)); $('ladderTog').textContent = (o ? '▾ Vergleich ausblenden' : '▸ Vergleich mit ICE, Auto und Co. zeigen'); });
 $('gnBtn').addEventListener('click', () => gnOpen());
 $('gnBack').addEventListener('click', () => gnClose());
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && gnS.open && $('imgPop').hidden) gnClose(); });
@@ -2564,7 +2585,7 @@ renderDiary();
 renderBook();
 mailSyncHash();
 let lastDraw = 0;
-function skyLoop(t) { requestAnimationFrame(skyLoop); if ((warping && !warpHold) || reduce || document.hidden || t - lastDraw < 40) return; lastDraw = t; if (warpHold) drawArrival(t); else drawCalm(t); }
+function skyLoop(t) { requestAnimationFrame(skyLoop); if ((warping && !warpHold) || reduce || document.hidden || t - lastDraw < 40) return; if (!$('mailApp').hidden || !$('gnApp').hidden) return; lastDraw = t; if (warpHold) drawArrival(t); else drawCalm(t); }
 if (!reduce) requestAnimationFrame(skyLoop);
 scheduleStar(true);
 let showerOn = false, showerLoop = null;
