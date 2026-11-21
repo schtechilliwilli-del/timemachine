@@ -1174,7 +1174,7 @@ $('warpX').addEventListener('click', () => { if (warpHold) endWarp(); });
 $('warp').addEventListener('click', () => { if (warpHold) endWarp(); else startWarp(); });
 
 /* ---- Tuerchen und gemeinsame Daten ---- */
-const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRe: {}, myRz: {}, myHpos: {}, myMoon: null, myFigs: {}, myShower: 0, myShowerNo: 0, rzKey: null, rzdraft: '', mySeal: {}, myOdone: {}, myOc: {}, myRead: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
+const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRej: {}, myRe: {}, myRz: {}, myHpos: {}, myMoon: null, myFigs: {}, myShower: 0, myShowerNo: 0, rzKey: null, rzdraft: '', mySeal: {}, myOdone: {}, myOc: {}, myRead: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
 let writeChain = Promise.resolve();
 function writeOwn(patch) {
   if (!state.db || !state.uid) return Promise.resolve();
@@ -2101,10 +2101,15 @@ function allEntries() {
   return out.sort((a, b) => b.e.t - a.e.t);
 }
 const entFmt = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+function ackRejected(id, key, d) {
+  const at = d && typeof d === 'object' ? (d.t || 0) : (d || 0);
+  const rj = (id === state.uid ? state.myRej[key] : null) || ((state.notes[id] || {}).rej || {})[key];
+  return !!(rj && (rj.t || 0) >= at);
+}
 function getAck(id, k) {
   const key = ackKey(id, k);
-  for (const o in state.notes) { if (o !== id && state.notes[o] && state.notes[o].ack && state.notes[o].ack[key]) return { who: nameOf(o, state.notes[o]), me: o === state.uid, d: state.notes[o].ack[key] }; }
-  if (id !== state.uid && state.myAck[key]) return { who: 'Du', me: true, d: state.myAck[key] };
+  for (const o in state.notes) { if (o !== id && state.notes[o] && state.notes[o].ack && state.notes[o].ack[key] && !ackRejected(id, key, state.notes[o].ack[key])) return { who: nameOf(o, state.notes[o]), me: o === state.uid, d: state.notes[o].ack[key] }; }
+  if (id !== state.uid && state.myAck[key] && !ackRejected(id, key, state.myAck[key])) return { who: 'Du', me: true, d: state.myAck[key] };
   const sl0 = getSeal(id, k);
   if (sl0 && sl0.via && sl0.via.u && sl0.via.k) {
     const u = sl0.via.u, v = state.notes[u] || {}, e = (v.diary || {})[sl0.via.k] || (u === state.uid ? state.myDiary[sl0.via.k] : null);
@@ -2241,6 +2246,22 @@ function sealWish(x) {
   state.mySeal[ackKey(x.id, x.k)] = { t: Date.now() }; renderDiary(true); showToast('Der Wunsch ist offiziell erfüllt. Das Siegel ist gesetzt.');
   return writeOwn({ seal: Object.assign({}, state.mySeal) });
 }
+function rejectAck(x) {
+  const ak = getAck(x.id, x.k); if (!ak) return Promise.resolve();
+  const at = typeof ak.d === 'object' ? (ak.d.t || 0) : (ak.d || 0);
+  state.myRej[ackKey(x.id, x.k)] = { t: Math.max(Date.now(), at + 1) }; state.rejAsk = null; renderDiary(true); renderWishBanner();
+  showToast('Zurückgesetzt. ' + ak.who + ' kann den Wunsch neu erfüllen.');
+  return writeOwn({ rej: Object.assign({}, state.myRej) });
+}
+function rejectBtn(x) {
+  const k = ackKey(x.id, x.k), w = el('span', 'row');
+  if (state.rejAsk === k) {
+    const y = el('button', 'btn solid', 'Ja, zurücksetzen'); y.type = 'button'; y.addEventListener('click', () => rejectAck(x));
+    const n = el('button', 'btn', 'Abbrechen'); n.type = 'button'; n.addEventListener('click', () => { state.rejAsk = null; renderDiary(true); renderWishBanner(); });
+    w.append(el('span', 'muted small', 'Wunsch zurücksetzen, damit er neu erfüllt werden kann?'), y, n);
+  } else { const b = el('button', 'btn', 'Nochmal einreichen lassen'); b.type = 'button'; b.addEventListener('click', () => { state.rejAsk = k; renderDiary(true); renderWishBanner(); }); w.append(b); }
+  return w;
+}
 function linkWish(w, x) {
   state.mySeal[ackKey(w.id, w.k)] = { t: Date.now(), via: { u: x.id, k: x.k } }; state.linkKey = null; renderDiary(true);
   showToast('Der Wunsch ist erfüllt und besiegelt.');
@@ -2262,7 +2283,7 @@ function renderWishBanner() {
     const l = el('div', 'wl' + (x.mine ? ' mine' : ''));
     if (x.mine && ak0) {
       l.append(el('p', '', ak0.who + ' hat deinen Wunsch erfüllt: ' + x.e.wish + ' Stimmt das?'));
-      if (canShare()) { const b = el('button', 'btn solid', 'Ja, Wunsch offiziell erfüllt'); b.type = 'button'; b.addEventListener('click', () => sealWish(x)); l.append(b); }
+      if (canShare()) { const b = el('button', 'btn solid', 'Ja, Wunsch offiziell erfüllt'); b.type = 'button'; b.addEventListener('click', () => sealWish(x)); l.append(b, rejectBtn(x)); }
     }
     else if (x.mine) l.append(el('p', '', 'Dein Wunsch ist noch offen: ' + x.e.wish));
     else {
@@ -2351,7 +2372,7 @@ function renderDiary(force) {
           const sl = getSeal(x.id, x.k);
           { const rn = rzNode(x, !!sl, !!dd.rz); if (rn.childNodes.length) box.append(rn); }
           if (sl) box.append(sealNode(sl, x.mine ? nameOf(x.id, state.notes[x.id]) : x.who));
-          else if (x.mine && canShare()) { const sb = el('button', 'btn solid', 'Wunsch offiziell bestätigen'); sb.type = 'button'; sb.addEventListener('click', () => sealWish(x)); box.append(sb); }
+          else if (x.mine && canShare()) { const sb = el('button', 'btn solid', 'Wunsch offiziell bestätigen'); sb.type = 'button'; sb.addEventListener('click', () => sealWish(x)); box.append(sb, rejectBtn(x)); }
         } else if (!x.mine && canShare()) {
           const key = ackKey(x.id, x.k);
           if (state.fulfilKey === key) {
@@ -2658,7 +2679,7 @@ function startNotes(db) {
     const fresh = [];
     for (const id in m) {
       const v = m[id] || {};
-      if (id === state.uid) { if (v.diary) { state.myDiary = Object.assign({}, state.myDiary, v.diary); removedKeys.forEach(k => { delete state.myDiary[k]; }); } if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (v.figs && typeof v.figs === 'object') { for (const fid in v.figs) { const m = v.figs[fid]; if (Array.isArray(m) && m.length >= 4 && (!state.myFigs[fid] || m[3] > state.myFigs[fid][3])) state.myFigs[fid] = m; } } if (Array.isArray(v.moon) && v.moon.length >= 4 && (!state.myMoon || v.moon[3] > state.myMoon[3])) state.myMoon = v.moon; if (typeof v.shower === 'number') state.myShower = Math.max(state.myShower || 0, v.shower); if (typeof v.showerNo === 'number') state.myShowerNo = Math.max(state.myShowerNo || 0, v.showerNo); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
+      if (id === state.uid) { if (v.diary) { state.myDiary = Object.assign({}, state.myDiary, v.diary); removedKeys.forEach(k => { delete state.myDiary[k]; }); } if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.rej) state.myRej = Object.assign({}, state.myRej, v.rej); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (v.figs && typeof v.figs === 'object') { for (const fid in v.figs) { const m = v.figs[fid]; if (Array.isArray(m) && m.length >= 4 && (!state.myFigs[fid] || m[3] > state.myFigs[fid][3])) state.myFigs[fid] = m; } } if (Array.isArray(v.moon) && v.moon.length >= 4 && (!state.myMoon || v.moon[3] > state.myMoon[3])) state.myMoon = v.moon; if (typeof v.shower === 'number') state.myShower = Math.max(state.myShower || 0, v.shower); if (typeof v.showerNo === 'number') state.myShowerNo = Math.max(state.myShowerNo || 0, v.showerNo); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
       for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz, weil ' + pron(nameOf(id, v)) + ' an dich denken musste ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       for (const k in (v.book || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.book[k]; if (state.seen && e && e.text) fresh.push(nameOf(id, v) + ' hat dir im Buch geschrieben: ' + (e.sub || '(ohne Betreff)')); } }
       for (const k in (v.rate || {})) { const key = id + '|r|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const r = v.rate[k], m = /^d(\d+)$/.exec(k); if (state.seen && r && m) fresh.push(nameOf(id, v) + ' hat dich bewertet: ' + rateIcons(Number(m[1]), r.n)); } }
