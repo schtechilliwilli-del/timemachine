@@ -1674,6 +1674,11 @@ const TASKS = [
   { d: 'Das Happy End', lead: 'after', f: 'Schreibt das Ende. Ihr entscheidet beide, wie es ausgeht.', e: 'Schreibt das Ende. Du steuerst deinen Teil bei, und wo du widersprechen willst, tust du es.' }
 ];
 function dayIdx(now) { const n = Math.round((Date.parse(berlinDay(now) + 'T12:00:00Z') - Date.parse('2026-11-15T12:00:00Z')) / 86400000); return Math.max(0, Math.min(TASKS.length - 1, n)); }
+function taskCur() {
+  const today = dayIdx(Date.now()), rs = allRates();
+  for (let i = 0; i <= today; i++) { const L = TASKS[i].lead; if ((L === 'fee' || L === 'esel') && !rs.some(x => x.day === i)) return i; }
+  return today;
+}
 function dayDate(i) { return berlinDay(Date.UTC(2026, 10, 15 + i, 12)); }
 function myRole() { return nameOf(state.uid, state.notes[state.uid]) === 'Mafifee' ? 'fee' : 'esel'; }
 function allBook() {
@@ -1786,7 +1791,8 @@ function taskCard(i, list) {
   const ic = rateIcon(i), rater = T.lead, r = rs.find(x => x.day === i);
   if (r) { const res = el('div', 'res', 'Bewertung von ' + (r.mine ? 'dir' : r.who) + ': ' + rateIcons(i, r.n) + (r.c ? ', „' + r.c + '“' : '')); if (r.n >= 3) res.append(passBadge()); c.append(res); return c; }
   if (rater !== role) { c.append(el('div', 'rl', 'Die Bewertung vergibt ' + (rater === 'fee' ? 'die Fee' : 'der Esel') + ' nach deiner Antwort.')); return c; }
-  const has = realMails(list).some(x => !x.mine && berlinDay(x.e.t) >= dayDate(i));
+  const lastRate = rs.reduce((m, x) => x.day < i ? Math.max(m, x.t || 0) : m, 0);
+  const has = realMails(list).some(x => !x.mine && berlinDay(x.e.t) >= dayDate(i) && x.e.t > lastRate);
   if (!has) { c.append(el('div', 'rl', 'Sobald ' + mailOther() + ' zu dieser Aufgabe geschrieben hat, kannst du bewerten. Das geht auch noch an einem späteren Tag.')); return c; }
   const d = mailS.draft[i] || (mailS.draft[i] = { n: null, c: '' });
   const w = el('div', 'mrate'); w.append(el('div', 'rl', 'Deine Bewertung für ' + mailOther() + ':'));
@@ -1818,7 +1824,7 @@ function renderMail() {
     const last = rm[rm.length - 1];
     const turn = !last ? (myRole() === 'fee' ? 'Du bist dran: Die Fee eröffnet die Prüfung.' : 'Die Fee eröffnet die Prüfung. Wir warten auf Mafifee.') : last.mine ? 'Wir warten auf die Antwort von ' + mailOther() + '.' : 'Du bist dran, ' + last.who + ' hat zuletzt geschrieben.';
     if (bar.length) body.append(el('div', 'mturn', bar.join('   ')));
-    const today = dayIdx(Date.now());
+    const today = taskCur();
     if (v === 'tasks') { for (let i = today; i >= 0; i--) body.append(taskCard(i, list)); return; }
     const rd = mailReadSet(), fo = mailS.folder || 'in', dr = draftList();
     const unreadN = list.filter(x => !x.mine && !rd.has(x.key)).length;
@@ -1829,8 +1835,7 @@ function renderMail() {
     });
     body.append(fb);
     if (fo === 'all' || fo === 'in' || fo === 'exam') {
-      const rsAll = allRates(); body.append(taskCard(today, list));
-      for (let i = today - 1; i >= 0; i--) { const L = TASKS[i].lead; if ((L === 'fee' || L === 'esel') && !rsAll.some(x => x.day === i)) body.append(taskCard(i, list)); }
+      body.append(taskCard(today, list));
     }
     if (fo === 'draft') {
       if (!dr.length) body.append(el('div', 'mempty', 'Keine Entwürfe. Wenn du eine Mail anfängst und nicht abschickst, bleibt sie hier liegen. Entwürfe bleiben nur auf diesem Gerät.'));
