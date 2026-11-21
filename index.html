@@ -1174,7 +1174,7 @@ $('warpX').addEventListener('click', () => { if (warpHold) endWarp(); });
 $('warp').addEventListener('click', () => { if (warpHold) endWarp(); else startWarp(); });
 
 /* ---- Tuerchen und gemeinsame Daten ---- */
-const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRej: {}, myRe: {}, myRz: {}, myHpos: {}, myMoon: null, myFigs: {}, myShower: 0, myShowerNo: 0, rzKey: null, rzdraft: '', mySeal: {}, myOdone: {}, myOc: {}, myRead: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
+const state = { seen: false, seenE: new Set(), seenA: new Set(), myDiary: {}, myAck: {}, myRej: {}, myExs: {}, myRe: {}, myRz: {}, myHpos: {}, myMoon: null, myFigs: {}, myShower: 0, myShowerNo: 0, rzKey: null, rzdraft: '', mySeal: {}, myOdone: {}, myOc: {}, myRead: {}, ocDraft: {}, ocFile: null, hCardSig: '', commentKey: null, pickKey: null, cdraft: '', localDiary: {}, assets: null, connectDone: false, hday: null, db: null, uid: null, canWrite: null, owner: false, notes: {}, sel: null, preview: false, err: '', dbSlow: false, oracleIdx: -1 };
 let writeChain = Promise.resolve();
 function writeOwn(patch) {
   if (!state.db || !state.uid) return Promise.resolve();
@@ -1797,6 +1797,17 @@ function el(tag, cls, txt) { const n = document.createElement(tag); if (cls) n.c
 function avatar(x) { const a = el('div', 'mav' + (x.queen ? ' queen' : x.who === 'Mafifee' ? ' her' : ''), x.queen ? '♛' : (x.who || '?').charAt(0).toUpperCase()); a.setAttribute('aria-hidden', 'true'); return a; }
 function mailOther() { return nameOf(state.uid, state.notes[state.uid]) === 'Masüsel' ? 'Mafifee' : 'Masüsel'; }
 function mailSetHeader(title, sub) { $('mTitle').textContent = title; $('mSub').textContent = sub || ''; $('mFab').hidden = mailS.view !== 'list' && mailS.view !== 'tasks'; }
+function examStart(i) {
+  let best = 0; const k = 'd' + i;
+  const take = r => { if (r && typeof r.t === 'number' && (!best || r.t < best)) best = r.t; };
+  for (const id in state.notes) { const v = state.notes[id]; if (v && v.exs) take(v.exs[k]); }
+  take(state.myExs[k]); return best;
+}
+function startExam(i) {
+  const t = Date.now(); state.myExs['d' + i] = { t };
+  showToast('Prüfung gestartet. Ab jetzt zählt die nächste Mail als Antwort.'); renderBook();
+  return writeOwn({ exs: Object.assign({}, state.myExs) });
+}
 function taskCard(i, list) {
   const T = TASKS[i], role = myRole(), rs = allRates();
   const c = el('div', 'mtask ' + role);
@@ -1805,9 +1816,14 @@ function taskCard(i, list) {
   if (T.lead !== 'fee' && T.lead !== 'esel') return c;
   const ic = rateIcon(i), rater = T.lead, r = rs.find(x => x.day === i);
   if (r) { const res = el('div', 'res', 'Bewertung von ' + (r.mine ? 'dir' : r.who) + ': ' + rateIcons(i, r.n) + (r.c ? ', „' + r.c + '“' : '')); if (r.n >= 3) res.append(passBadge()); c.append(res); return c; }
+  const st0 = examStart(i);
+  if (!st0) {
+    c.append(el('div', 'rl', 'Diese Prüfung läuft erst, wenn ihr sie startet. Mails davor zählen nicht dazu.'));
+    if (canShare()) { const sb = el('button', 'mbtn main', '▶ Prüfung starten'); sb.type = 'button'; sb.addEventListener('click', () => startExam(i)); c.append(sb); }
+    return c;
+  }
   if (rater !== role) { c.append(el('div', 'rl', 'Die Bewertung vergibt ' + (rater === 'fee' ? 'die Fee' : 'der Esel') + ' nach deiner Antwort.')); return c; }
-  const lastRate = rs.reduce((m, x) => x.day < i ? Math.max(m, x.t || 0) : m, 0);
-  const has = realMails(list).some(x => !x.mine && x.e.t > lastRate);
+  const has = realMails(list).some(x => !x.mine && x.e.t >= st0);
   if (!has) { c.append(el('div', 'rl', 'Sobald ' + mailOther() + ' zu dieser Aufgabe geschrieben hat, kannst du bewerten.')); return c; }
   const d = mailS.draft[i] || (mailS.draft[i] = { n: null, c: '' });
   const w = el('div', 'mrate'); w.append(el('div', 'rl', 'Deine Bewertung für ' + mailOther() + ':'));
@@ -2703,7 +2719,7 @@ function startNotes(db) {
     const fresh = [];
     for (const id in m) {
       const v = m[id] || {};
-      if (id === state.uid) { if (v.diary) { state.myDiary = Object.assign({}, state.myDiary, v.diary); removedKeys.forEach(k => { delete state.myDiary[k]; }); } if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.rej) state.myRej = Object.assign({}, state.myRej, v.rej); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (v.figs && typeof v.figs === 'object') { for (const fid in v.figs) { const m = v.figs[fid]; if (Array.isArray(m) && m.length >= 4 && (!state.myFigs[fid] || m[3] > state.myFigs[fid][3])) state.myFigs[fid] = m; } } if (Array.isArray(v.moon) && v.moon.length >= 4 && (!state.myMoon || v.moon[3] > state.myMoon[3])) state.myMoon = v.moon; if (typeof v.shower === 'number') state.myShower = Math.max(state.myShower || 0, v.shower); if (typeof v.showerNo === 'number') state.myShowerNo = Math.max(state.myShowerNo || 0, v.showerNo); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
+      if (id === state.uid) { if (v.diary) { state.myDiary = Object.assign({}, state.myDiary, v.diary); removedKeys.forEach(k => { delete state.myDiary[k]; }); } if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.rej) state.myRej = Object.assign({}, state.myRej, v.rej); if (v.exs) state.myExs = Object.assign({}, state.myExs, v.exs); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (v.figs && typeof v.figs === 'object') { for (const fid in v.figs) { const m = v.figs[fid]; if (Array.isArray(m) && m.length >= 4 && (!state.myFigs[fid] || m[3] > state.myFigs[fid][3])) state.myFigs[fid] = m; } } if (Array.isArray(v.moon) && v.moon.length >= 4 && (!state.myMoon || v.moon[3] > state.myMoon[3])) state.myMoon = v.moon; if (typeof v.shower === 'number') state.myShower = Math.max(state.myShower || 0, v.shower); if (typeof v.showerNo === 'number') state.myShowerNo = Math.max(state.myShowerNo || 0, v.showerNo); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
       for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz, weil ' + pron(nameOf(id, v)) + ' an dich denken musste ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       for (const k in (v.book || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.book[k]; if (state.seen && e && e.text) fresh.push(nameOf(id, v) + ' hat dir im Buch geschrieben: ' + (e.sub || '(ohne Betreff)')); } }
       for (const k in (v.rate || {})) { const key = id + '|r|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const r = v.rate[k], m = /^d(\d+)$/.exec(k); if (state.seen && r && m) fresh.push(nameOf(id, v) + ' hat dich bewertet: ' + rateIcons(Number(m[1]), r.n)); } }
