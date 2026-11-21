@@ -1708,7 +1708,8 @@ function rateStats() {
   for (let i = 0; i <= today; i++) {
     const L = TASKS[i].lead; if (L !== 'fee' && L !== 'esel') continue;
     const r = rs.find(x => x.day === i);
-    if (L === 'fee') { cm += 5; if (r) cs += r.n; } else { sm += 5; if (r) ss += r.n; }
+    if (!r) continue;
+    if (L === 'fee') { cm += 5; cs += r.n; } else { sm += 5; ss += r.n; }
   }
   return { cs, cm, ss, sm };
 }
@@ -1785,8 +1786,8 @@ function taskCard(i, list) {
   const ic = rateIcon(i), rater = T.lead, r = rs.find(x => x.day === i);
   if (r) { const res = el('div', 'res', 'Bewertung von ' + (r.mine ? 'dir' : r.who) + ': ' + rateIcons(i, r.n) + (r.c ? ', „' + r.c + '“' : '')); if (r.n >= 3) res.append(passBadge()); c.append(res); return c; }
   if (rater !== role) { c.append(el('div', 'rl', 'Die Bewertung vergibt ' + (rater === 'fee' ? 'die Fee' : 'der Esel') + ' nach deiner Antwort.')); return c; }
-  const has = realMails(list).some(x => !x.mine && berlinDay(x.e.t) === dayDate(i));
-  if (!has) { c.append(el('div', 'rl', 'Sobald ' + mailOther() + ' an diesem Tag geschrieben hat, kannst du bewerten.')); return c; }
+  const has = realMails(list).some(x => !x.mine && berlinDay(x.e.t) >= dayDate(i));
+  if (!has) { c.append(el('div', 'rl', 'Sobald ' + mailOther() + ' zu dieser Aufgabe geschrieben hat, kannst du bewerten. Das geht auch noch an einem späteren Tag.')); return c; }
   const d = mailS.draft[i] || (mailS.draft[i] = { n: null, c: '' });
   const w = el('div', 'mrate'); w.append(el('div', 'rl', 'Deine Bewertung für ' + mailOther() + ':'));
   const row = el('div', 'ic'); const btns = [];
@@ -1827,7 +1828,10 @@ function renderMail() {
       bt.addEventListener('click', () => { mailS.folder = f[0]; renderMail(); body.scrollTop = 0; }); fb.append(bt);
     });
     body.append(fb);
-    if (fo === 'all' || fo === 'in' || fo === 'exam') body.append(taskCard(today, list));
+    if (fo === 'all' || fo === 'in' || fo === 'exam') {
+      const rsAll = allRates(); body.append(taskCard(today, list));
+      for (let i = today - 1; i >= 0; i--) { const L = TASKS[i].lead; if ((L === 'fee' || L === 'esel') && !rsAll.some(x => x.day === i)) body.append(taskCard(i, list)); }
+    }
     if (fo === 'draft') {
       if (!dr.length) body.append(el('div', 'mempty', 'Keine Entwürfe. Wenn du eine Mail anfängst und nicht abschickst, bleibt sie hier liegen. Entwürfe bleiben nur auf diesem Gerät.'));
       dr.forEach(d => {
