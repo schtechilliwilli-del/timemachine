@@ -2813,7 +2813,8 @@ async function gnLoadUrl(e) {
   if (gnS.cache[e.aid]) return gnS.cache[e.aid];
   if (!state.fb) throw new Error('nofb');
   const fs = state.fb.fs, fsM = state.fb.fsM; let data = '';
-  for (let i = 0; i < e.n; i++) { const sn = await fsM.getDoc(fsM.doc(fs, 'images/' + e.aid + '_' + i)); if (!sn.exists()) throw new Error('missing'); data += sn.data().data; }
+  const parts = await Promise.all(Array.from({ length: e.n }, (_, i) => fsM.getDoc(fsM.doc(fs, 'images/' + e.aid + '_' + i))));
+  parts.forEach(sn => { if (!sn.exists()) throw new Error('missing'); data += sn.data().data; });
   const blob = await (await fetch(data)).blob();
   return (gnS.cache[e.aid] = URL.createObjectURL(blob));
 }
@@ -2920,12 +2921,13 @@ function gnFormAudio(info) {
     mr.ondataavailable = ev => { if (ev.data && ev.data.size) chunks.push(ev.data); };
     mr.onstop = () => { clearInterval(timer); stream.getTracks().forEach(t => t.stop()); recBtn.textContent = '🎙️ Neu aufnehmen'; show(new Blob(chunks, { type: mr.mimeType || mime || 'audio/webm' }), (Date.now() - t0) / 1000); msg.textContent = 'Aufnahme bereit, hör sie dir an.'; };
     mr.start(); recBtn.textContent = '⏹ Stopp 0:00'; msg.textContent = 'Aufnahme läuft.';
-    timer = setInterval(() => { recBtn.textContent = '⏹ Stopp ' + gnFmt((Date.now() - t0) / 1000); }, 500);
+    timer = setInterval(() => { const sec = (Date.now() - t0) / 1000; recBtn.textContent = '⏹ Stopp ' + gnFmt(sec); if (sec >= 1800 && mr.state === 'recording') mr.stop(); }, 500);
   });
   f.addEventListener('submit', async ev => {
     ev.preventDefault();
     if (!blob) { msg.textContent = 'Nimm erst etwas auf oder wähl eine Datei.'; return; }
-    if (blob.size > 8 * 1024 * 1024) { msg.textContent = 'Die Datei ist zu groß (mehr als 8 MB). Kürze sie oder nimm sie in niedrigerer Qualität auf.'; return; }
+    if (durSec > 1830) { msg.textContent = 'Die Aufnahme ist länger als 30 Minuten. Teile sie in zwei Teile.'; return; }
+    if (blob.size > 36 * 1024 * 1024) { msg.textContent = 'Die Datei ist zu groß (mehr als 36 MB). Nimm sie in niedrigerer Qualität auf oder kürze sie.'; return; }
     if (!canShare() || !state.fb) { msg.textContent = 'Hochladen geht nur auf der Live-Seite mit Verbindung.'; return; }
     go.disabled = true;
     try {
