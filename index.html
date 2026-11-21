@@ -91,7 +91,9 @@ p { margin: 0; }
 .gnrate { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .gnrate button { background: transparent; border: 0; font-size: 22px; padding: 2px; cursor: pointer; opacity: 0.35; }
 .gnrate button.on { opacity: 1; }
-.gntr { white-space: pre-wrap; font-size: 16px; line-height: 1.55; }
+.gntr { white-space: pre-wrap; font-size: 16px; line-height: 1.55; max-height: 45vh; overflow-y: auto; position: relative; }
+.gnw { cursor: pointer; border-radius: 4px; padding: 0 1px; transition: background 0.15s, color 0.15s; }
+.gnw.cur { background: rgba(242, 196, 109, 0.3); color: var(--gold); }
 .bookbtn .bi { font-size: 44px; line-height: 1; }
 .bookbtn .bi { display: inline-block; transform-origin: 50% 80%; }
 .bookbtn.new .bi { animation: wiggle 1.3s ease-in-out infinite; }
@@ -2826,7 +2828,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('logPop
 renderLogBadge();
 
 /* ---- Gute Nacht Gedanken ---- */
-const gnS = { myGn: {}, myLog: {}, myFav: {}, myRate: {}, cache: {}, players: {}, playing: null, open: false, delAsk: null, trEdit: null };
+const gnS = { myGn: {}, myLog: {}, myFav: {}, myRate: {}, cache: {}, players: {}, trLive: {}, playing: null, open: false, delAsk: null, trEdit: null };
 function gnFmt(sec) { sec = Math.max(0, Math.round(sec || 0)); const m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
 function gnLoad(v) {
   if (v.gn) gnS.myGn = Object.assign({}, gnS.myGn, v.gn);
@@ -2877,6 +2879,35 @@ async function gnLoadUrl(e) {
   return (gnS.cache[e.aid] = URL.createObjectURL(blob));
 }
 function gnSaveFav() { return writeOwn({ gnfav: JSON.parse(JSON.stringify(gnS.myFav)) }); }
+function gnTrNode(it) {
+  const p = el('p', 'gntr'), toks = String(it.e.tr || '').match(/\S+|\s+/g) || [], spans = [], w = [];
+  let nextGap = 0;
+  toks.forEach((t, i) => {
+    if (/^\s+$/.test(t)) { if (spans.length) { const nl = (t.match(/\n/g) || []).length; w[w.length - 1] += nl > 1 ? 6 : nl === 1 ? 3 : 0; } p.append(document.createTextNode(t)); return; }
+    const letters = t.replace(/[^\p{L}\p{N}]/gu, '').length, pause = /[.!?…]["»“”']*$/.test(t) ? 6 : /[,;:]["»“”']*$/.test(t) ? 3 : 0;
+    const sp = el('span', 'gnw', t); spans.push(sp); w.push(Math.max(2, letters) + pause); p.append(sp);
+  });
+  const tot = w.reduce((a, x) => a + x, 0) || 1, fr = []; let c = 0;
+  w.forEach(x => { fr.push(c / tot); c += x; });
+  spans.forEach((sp, i) => sp.addEventListener('click', () => {
+    const pl = gnS.players[it.key]; if (!pl) { showToast('Drück erst auf Anhören.'); return; }
+    const d = (isFinite(pl.au.duration) && pl.au.duration > 0 ? pl.au.duration : it.e.dur) || 0; if (!d) return;
+    pl.au.currentTime = fr[i] * d; pl.au.play().catch(() => { });
+  }));
+  gnS.trLive[it.key] = { spans, fr, cur: -1, box: p, det: null, dur: it.e.dur || 0 };
+  return p;
+}
+function gnTrSync(key, au) {
+  const L = gnS.trLive[key]; if (!L || !L.spans.length) return;
+  const d = (isFinite(au.duration) && au.duration > 0 ? au.duration : L.dur) || 0; if (!d) return;
+  const f = au.currentTime / d; let lo = 0, hi = L.fr.length - 1;
+  while (lo < hi) { const m = (lo + hi + 1) >> 1; if (L.fr[m] <= f) lo = m; else hi = m - 1; }
+  if (lo === L.cur) return;
+  if (L.cur >= 0 && L.spans[L.cur]) L.spans[L.cur].classList.remove('cur');
+  L.cur = lo; const sp = L.spans[lo]; sp.classList.add('cur');
+  if (L.det && !L.det.open) L.det.open = true;
+  const b = L.box; if (b.scrollHeight > b.clientHeight) { const top = sp.offsetTop - b.offsetTop; if (top < b.scrollTop + 20 || top > b.scrollTop + b.clientHeight - 40) b.scrollTop = Math.max(0, top - b.clientHeight / 3); }
+}
 function gnMount(it, wrap, url, repaintAll) {
   const key = it.key, au = document.createElement('audio'); au.controls = true; au.src = url; au.preload = 'metadata'; au.style.width = '100%';
   const bar = el('div', 'gnbar'), chips = el('div', 'gnchips'), fb = el('button', 'btn heart', '♥ Lieblingsstelle hier setzen'); fb.type = 'button';
@@ -2898,6 +2929,11 @@ function gnMount(it, wrap, url, repaintAll) {
   au.addEventListener('play', () => { if (!sess || (pausedAt && Date.now() - pausedAt > 600000)) sess = { lid: 'l' + Date.now().toString(36), t: Date.now(), s: 0 }; last = au.currentTime; gnS.playing = key; });
   au.addEventListener('timeupdate', () => { const dl = au.currentTime - last; if (sess && dl > 0 && dl < 1.6) sess.s += dl; last = au.currentTime; if (sess && Date.now() - lastFlush > 15000 && sess.s >= 1) flush(); });
   const stop = () => { pausedAt = Date.now(); if (gnS.playing === key) gnS.playing = null; flush(); setTimeout(repaintAll, 400); };
+  let raf = 0; const tick = () => { gnTrSync(key, au); raf = requestAnimationFrame(tick); };
+  au.addEventListener('play', () => { cancelAnimationFrame(raf); tick(); });
+  au.addEventListener('seeked', () => gnTrSync(key, au));
+  au.addEventListener('pause', () => cancelAnimationFrame(raf));
+  au.addEventListener('ended', () => cancelAnimationFrame(raf));
   au.addEventListener('pause', stop);
   au.addEventListener('ended', () => { stop(); sess = null; });
   document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
@@ -2945,7 +2981,7 @@ function gnCard(it, repaintAll) {
         fi.addEventListener('change', async () => { if (fi.files[0]) ta.value = (await fi.files[0].text()).slice(0, 20000); });
         d.append(ta, el('div', 'row'), sv, fl); d.open = true;
       } else {
-        if (e.tr) d.append(el('p', 'gntr', e.tr)); else d.append(el('p', 'muted small', 'Noch kein Transkript.'));
+        if (e.tr) { d.append(gnTrNode(it)); gnS.trLive[it.key].det = d; if (gnS.players[it.key] && !gnS.players[it.key].au.paused) d.open = true; } else d.append(el('p', 'muted small', 'Noch kein Transkript.'));
         if (it.mine) { const eb = el('button', 'btn', e.tr ? 'Transkript ändern' : 'Transkript hinzufügen'); eb.type = 'button'; eb.addEventListener('click', () => { gnS.trEdit = it.key; renderGn(true); }); d.append(eb); }
       }
       c.append(d);
