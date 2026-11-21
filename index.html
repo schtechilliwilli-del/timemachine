@@ -48,10 +48,14 @@ p { margin: 0; }
 .gnbtn .gb { flex: none; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--rose); color: var(--rose); }
 .fbrow { text-align: center; margin: 4px 0 8px; }
 #fbPop textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: rgba(0, 0, 0, 0.25); color: var(--ink); font: inherit; font-size: 16px; }
-.fbitem { border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 4px; }
-.fbitem p { font-size: 15px; white-space: pre-wrap; margin: 0; }
-.fbitem.done { opacity: 0.5; }
+.fbh { margin: 6px 0 0; font-size: 16px; color: var(--gold); }
+.fbitem { display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid var(--line); padding-top: 8px; cursor: pointer; }
+.fbitem input { width: 22px; height: 22px; flex: none; margin-top: 2px; }
+.fbtx { display: flex; flex-direction: column; gap: 3px; font-size: 15px; white-space: pre-wrap; }
+.fbitem.done .fbtx > span:first-child { text-decoration: line-through; }
+.fbitem.done { opacity: 0.55; }
 #fbListBox { display: flex; flex-direction: column; gap: 10px; }
+#fbListBox[hidden] { display: none; }
 .gnnote { border: 1px dashed var(--rose); border-radius: 12px; padding: 10px 12px; font-size: 15px; color: var(--muted); }
 .gnnote b { color: var(--rose); }
 .gnapp { position: fixed; inset: 0; z-index: 36; display: flex; flex-direction: column; background: #0d1030; color: var(--ink); }
@@ -657,7 +661,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <div class="wcats" role="group" aria-label="Art der Meldung"><button class="btn solid" id="fbBug" type="button">🐞 Fehler</button><button class="btn" id="fbWish" type="button">💡 Wunsch</button></div>
     <p class="muted small" id="fbWhere"></p>
     <textarea id="fbText" maxlength="1500" rows="5" aria-label="Deine Meldung"></textarea>
-    <div class="popbtns"><button class="btn solid" id="fbGo" type="button">Abschicken</button><button class="btn" id="fbList" type="button">Alle Meldungen ansehen</button><button class="btn" id="fbClose" type="button">Schließen</button></div>
+    <div class="popbtns"><button class="btn solid" id="fbGo" type="button">Abschicken</button><button class="btn" id="fbClose" type="button">Schließen</button></div>
     <p class="muted small" id="fbInfo" aria-live="polite"></p>
     <div id="fbListBox" hidden></div>
   </div>
@@ -3025,8 +3029,13 @@ function gnHide() { gnS.open = false; $('gnApp').hidden = true; if ($('mailApp')
 gnSyncHash();
 
 /* ---- Rückmeldung: Fehler melden und Wünsche ---- */
-const fbS = { kind: 'bug', myRep: {}, list: false };
-function fbLoad(v) { if (v.rep) fbS.myRep = Object.assign({}, fbS.myRep, v.rep); }
+const fbS = { kind: 'bug', myRep: {}, myDone: {} };
+function fbLoad(v) { if (v.rep) fbS.myRep = Object.assign({}, fbS.myRep, v.rep); if (v.repdone) fbS.myDone = Object.assign({}, fbS.myDone, v.repdone); }
+function fbDone(x) {
+  const key = ackKey(x.id, x.k); let best = null;
+  gnIds().forEach(id => { const r = (id === state.uid ? Object.assign({}, (state.notes[id] || {}).repdone || {}, fbS.myDone) : ((state.notes[id] || {}).repdone || {}))[key]; if (r && (!best || r.t > best.t)) best = r; });
+  return best ? !!best.d : !!x.e.done;
+}
 function fbWhere() {
   if (!$('gnApp').hidden) return 'Gute Nacht Gedanken';
   if (!$('mailApp').hidden) return 'Postfach (' + ({ list: 'Liste', read: 'Mail lesen', compose: 'Mail schreiben', tasks: 'Aufgaben', book: 'Buch', rate: 'Bewertung', title: 'Titel' }[mailS.view] || mailS.view) + ')';
@@ -3038,32 +3047,32 @@ function fbAll() {
   return out.sort((a, b) => b.e.t - a.e.t);
 }
 function fbCopyText() {
-  return fbAll().filter(x => !x.e.done).map(x => (x.e.kind === 'bug' ? 'FEHLER' : 'WUNSCH') + ' von ' + (x.mine ? nameOf(state.uid, state.notes[state.uid]) : x.who) + ', ' + entFmt.format(new Date(x.e.t)) + ' Uhr, ' + (x.e.where || '') + (x.e.ua ? ' [' + x.e.ua + ']' : '') + ':\n' + x.e.text).join('\n\n');
+  return fbAll().filter(x => !fbDone(x)).map(x => (x.e.kind === 'bug' ? 'FEHLER' : 'WUNSCH') + ' von ' + (x.mine ? nameOf(state.uid, state.notes[state.uid]) : x.who) + ', ' + entFmt.format(new Date(x.e.t)) + ' Uhr, ' + (x.e.where || '') + (x.e.ua ? ' [' + x.e.ua + ']' : '') + ':\n' + x.e.text).join('\n\n');
 }
 function fbRender() {
   const kb = $('fbBug'), kw = $('fbWish'); kb.classList.toggle('solid', fbS.kind === 'bug'); kw.classList.toggle('solid', fbS.kind === 'wish');
-  $('fbText').placeholder = fbS.kind === 'bug' ? 'Was ist passiert? Was hast du erwartet? Wo genau?' : 'Was wünschst du dir für die Seite?';
+  $('fbText').placeholder = fbS.kind === 'bug' ? 'Fehlerbeschreibung: Was ist passiert? Was hast du erwartet? Wo genau?' : 'Gewünschtes Feature: Was soll die Seite können?';
   $('fbWhere').textContent = 'Gemeldet von: ' + fbWhere();
-  const box = $('fbListBox'); box.hidden = !fbS.list; $('fbList').textContent = fbS.list ? 'Liste ausblenden' : 'Alle Meldungen ansehen';
-  if (!fbS.list) return;
-  box.textContent = ''; const all = fbAll();
-  if (!all.length) box.append(el('p', 'muted small', 'Noch keine Meldungen.'));
-  else {
-    const cp = el('button', 'btn', '📋 Offene Meldungen kopieren'); cp.type = 'button';
-    cp.addEventListener('click', async () => { const t = fbCopyText(); try { await navigator.clipboard.writeText(t); showToast('Kopiert. Füg es bei Claude ein.'); } catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.append(ta); ta.select(); try { document.execCommand('copy'); showToast('Kopiert.'); } catch (er) { showToast('Kopieren hat nicht geklappt.'); } ta.remove(); } });
-    box.append(cp);
-  }
-  all.forEach(x => {
-    const c = el('div', 'fbitem' + (x.e.done ? ' done' : ''));
-    c.append(el('b', '', (x.e.kind === 'bug' ? '🐞 ' : '💡 ') + x.who + ', ' + entFmt.format(new Date(x.e.t))), el('span', 'muted small', x.e.where || ''), el('p', '', x.e.text));
-    if (x.mine) { const d = el('button', 'btn', x.e.done ? 'Wieder öffnen' : 'Erledigt'); d.type = 'button'; d.addEventListener('click', () => { fbS.myRep[x.k] = Object.assign({}, x.e, { done: x.e.done ? 0 : 1 }); writeOwn({ rep: Object.assign({}, fbS.myRep) }); fbRender(); }); c.append(d); }
-    box.append(c);
+  const box = $('fbListBox'); box.textContent = ''; const all = fbAll(); box.hidden = !all.length;
+  if (!all.length) return;
+  const cp = el('button', 'btn', '📋 Offene Punkte kopieren'); cp.type = 'button';
+  cp.addEventListener('click', async () => { const t = fbCopyText(); try { await navigator.clipboard.writeText(t); showToast('Kopiert. Füg es bei Claude ein.'); } catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.append(ta); ta.select(); try { document.execCommand('copy'); showToast('Kopiert.'); } catch (er) { showToast('Kopieren hat nicht geklappt.'); } ta.remove(); } });
+  box.append(cp);
+  [['bug', '🐞 Fehler'], ['wish', '💡 Gewünschte Features']].forEach(([kind, title]) => {
+    const items = all.filter(x => (x.e.kind || 'bug') === kind); if (!items.length) return;
+    const open = items.filter(x => !fbDone(x)), done = items.filter(x => fbDone(x));
+    box.append(el('h4', 'fbh', title + ' (' + open.length + ' offen)'));
+    open.concat(done).forEach(x => {
+      const isDone = fbDone(x), row = el('label', 'fbitem' + (isDone ? ' done' : '')), cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = isDone; cb.setAttribute('aria-label', 'Erledigt');
+      cb.addEventListener('change', () => { fbS.myDone[ackKey(x.id, x.k)] = { d: cb.checked ? 1 : 0, t: Date.now() }; writeOwn({ repdone: Object.assign({}, fbS.myDone) }); fbRender(); });
+      const tx = el('span', 'fbtx'); tx.append(el('span', '', x.e.text), el('span', 'muted small', x.who + ', ' + entFmt.format(new Date(x.e.t)) + (x.e.where ? ' · ' + x.e.where : '')));
+      row.append(cb, tx); box.append(row);
+    });
   });
 }
 function fbOpen() { $('fbPop').hidden = false; $('fbInfo').textContent = ''; fbRender(); setTimeout(() => $('fbText').focus(), 50); }
 $('fbBug').addEventListener('click', () => { fbS.kind = 'bug'; fbRender(); });
 $('fbWish').addEventListener('click', () => { fbS.kind = 'wish'; fbRender(); });
-$('fbList').addEventListener('click', () => { fbS.list = !fbS.list; fbRender(); });
 $('fbClose').addEventListener('click', () => { $('fbPop').hidden = true; });
 $('fbPop').addEventListener('click', e => { if (e.target === $('fbPop')) $('fbPop').hidden = true; });
 $('fbGo').addEventListener('click', async () => {
