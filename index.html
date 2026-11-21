@@ -45,7 +45,31 @@ p { margin: 0; }
 .gnbtn .gt { display: flex; flex-direction: column; gap: 3px; flex: 1; }
 .gnbtn .gt b { font-family: var(--display); font-size: 21px; color: var(--gold); font-weight: 600; }
 .gnbtn .gt span { font-size: 15px; opacity: 0.8; }
-.gnbtn .gb { flex: none; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--rose); color: var(--rose); }
+.gnapp { position: fixed; inset: 0; z-index: 36; display: flex; flex-direction: column; background: #0d1030; color: var(--ink); }
+.gnapp[hidden] { display: none; }
+.gntop { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.gntop h2 { margin: 0; font-size: 22px; }
+.gnbody { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.gncard { background: rgba(21, 26, 58, 0.8); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.gncard.form { border-color: var(--gold); }
+.gnh { display: flex; flex-direction: column; gap: 2px; }
+.gnh b { font-family: var(--display); font-size: 19px; font-weight: 600; color: var(--gold); }
+.gncard img { max-width: 100%; border-radius: 12px; }
+.gnform { display: flex; flex-direction: column; gap: 10px; }
+.gnform input[type="text"], .gnform textarea, .gncard textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: rgba(0, 0, 0, 0.25); color: var(--ink); font: inherit; }
+.gnform .row, .gncard .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.gnpl { display: flex; flex-direction: column; gap: 10px; }
+.gnbar { position: relative; height: 18px; border-radius: 9px; background: rgba(255, 255, 255, 0.08); }
+.gndot { position: absolute; top: 1px; width: 16px; height: 16px; margin-left: -8px; padding: 0; border-radius: 50%; border: 2px solid var(--rose); background: #2b0f19; cursor: pointer; }
+.gndot.mine { border-color: var(--gold); background: #3a2b0a; }
+.gnchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.gnchip { display: inline-flex; border: 1px solid var(--rose); border-radius: 999px; overflow: hidden; }
+.gnchip.mine { border-color: var(--gold); }
+.gnchip button { background: transparent; border: 0; color: var(--ink); font: inherit; padding: 6px 10px; cursor: pointer; }
+.gnrate { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.gnrate button { background: transparent; border: 0; font-size: 22px; padding: 2px; cursor: pointer; opacity: 0.35; }
+.gnrate button.on { opacity: 1; }
+.gntr { white-space: pre-wrap; font-size: 16px; line-height: 1.55; }
 .bookbtn .bi { font-size: 44px; line-height: 1; }
 .bookbtn .bi { display: inline-block; transform-origin: 50% 80%; }
 .bookbtn.new .bi { animation: wiggle 1.3s ease-in-out infinite; }
@@ -511,8 +535,8 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
     <p class="warp-note" id="warpNote" aria-live="polite"></p>
   </section>
 
-  <section aria-label="Gute Nacht Geschichten">
-    <button class="gnbtn" id="gnBtn" type="button"><span class="gi" aria-hidden="true">🌙</span><span class="gt"><b>Gute Nacht Geschichten</b><span>Zum Einschlafen, mit Masüsels Stimme</span></span><span class="gb">Im Aufbau</span></button>
+  <section aria-label="Gute Nacht Gedanken">
+    <button class="gnbtn" id="gnBtn" type="button"><span class="gi" aria-hidden="true">🌙</span><span class="gt"><b>Gute Nacht Gedanken</b><span>Zum Einschlafen, mit Masüsels Stimme</span></span></button>
   </section>
 
   <section class="card" aria-labelledby="mh">
@@ -612,14 +636,9 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
   </div>
 </div>
 <div class="pop imgpop" id="imgPop" role="dialog" aria-modal="true" aria-label="Bild groß" hidden><img id="imgPopImg" alt="Bild im Tagebuch"><button class="btn" id="imgPopClose" type="button">Schließen</button></div>
-<div class="pop" id="gnPop" role="dialog" aria-modal="true" aria-labelledby="gnH" hidden>
-  <div class="popbox">
-    <span class="kind">Im Aufbau</span>
-    <h3 id="gnH">🌙 Gute Nacht Geschichten</h3>
-    <p>Hier entsteht gerade etwas für die Nächte, in denen wir weit voneinander weg sind.</p>
-    <p class="muted small">Geplant: Geschichten als Sprachnachrichten, jede mit Titel. Ein Logbuch, wann, wie oft und wie lange gehört wurde. Bewertung, Lieblingsstellen als Punkte direkt beim Zuhören und ein Transkript zum Mitlesen.</p>
-    <div class="popbtns"><button class="btn solid" id="gnClose" type="button">Okay, ich warte</button></div>
-  </div>
+<div class="gnapp" id="gnApp" role="dialog" aria-label="Gute Nacht Gedanken" hidden>
+  <header class="gntop"><button class="btn" id="gnBack" type="button" aria-label="Schließen">✕</button><h2>🌙 Gute Nacht Gedanken</h2></header>
+  <div class="gnbody" id="gnBody"></div>
 </div>
 <div class="pop" id="wishPop" role="dialog" aria-modal="true" aria-labelledby="wishH" hidden>
   <div class="popbox">
@@ -1639,9 +1658,9 @@ $('wishPop').addEventListener('touchend', e => { if (wishTx == null) return; con
 document.addEventListener('keydown', e => { if ($('wishPop').hidden || e.target.tagName === 'TEXTAREA') return; if (e.key === 'ArrowRight') { wishPos++; showWish(); } else if (e.key === 'ArrowLeft') { wishPos--; showWish(); } });
 $('wishClose').addEventListener('click', closeWish);
 $('ladderTog').addEventListener('click', () => { const o = $('ladder').hidden; $('ladder').hidden = !o; $('ladderTog').setAttribute('aria-expanded', String(o)); $('ladderTog').textContent = (o ? '▾ Vergleich ausblenden' : '▸ Vergleich mit ICE, Auto und Co. zeigen'); });
-$('gnBtn').addEventListener('click', () => { $('gnPop').hidden = false; });
-$('gnClose').addEventListener('click', () => { $('gnPop').hidden = true; });
-$('gnPop').addEventListener('click', e => { if (e.target === $('gnPop')) $('gnPop').hidden = true; });
+$('gnBtn').addEventListener('click', () => gnOpen());
+$('gnBack').addEventListener('click', () => gnClose());
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && gnS.open && $('imgPop').hidden) gnClose(); });
 $('wishGo').addEventListener('click', async () => { const own = $('wishOwn').value.trim(); const w = own || WISHES[wishIdx].t; closeWish(); showToast('Dein Wunsch steht im Tagebuch.' + (otherName() ? ' ' + otherName() + ' erfährt davon.' : '')); await addEntry({ star: true, wish: w }); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('wishPop').hidden) closeWish(); });
 
@@ -1823,6 +1842,12 @@ function el(tag, cls, txt) { const n = document.createElement(tag); if (cls) n.c
 function avatar(x) { const a = el('div', 'mav' + (x.queen ? ' queen' : x.who === 'Mafifee' ? ' her' : ''), x.queen ? '♛' : (x.who || '?').charAt(0).toUpperCase()); a.setAttribute('aria-hidden', 'true'); return a; }
 function mailOther() { return nameOf(state.uid, state.notes[state.uid]) === 'Masüsel' ? 'Mafifee' : 'Masüsel'; }
 function mailSetHeader(title, sub) { $('mTitle').textContent = title; $('mSub').textContent = sub || ''; $('mFab').hidden = mailS.view !== 'list' && mailS.view !== 'tasks'; }
+function lastOwnMail(list) { return realMails(list).filter(x => x.mine && x.id !== 'local' && x.id === state.uid && x.e.ex == null).sort((a, b) => b.e.t - a.e.t)[0] || null; }
+function linkLastMail(i, x) {
+  bookS.my[x.k] = Object.assign({}, x.e, { ex: i }); mailS.linkAsk = null;
+  showToast('Die Mail ist jetzt die Prüfungsmail. ' + mailOther() + ' kann bewerten.'); renderBook();
+  return writeOwn({ book: Object.assign({}, bookS.my) });
+}
 function startExam(i) { mailS.view = 'compose'; mailS.draftId = null; mailS.toQueen = false; mailS.qcur = null; mailS.exam = i; mailS.reply = 'Prüfung: ' + TASKS[i].d; renderCompose(); }
 function taskCard(i, list) {
   const T = TASKS[i], role = myRole(), rs = allRates();
@@ -1837,7 +1862,18 @@ function taskCard(i, list) {
   if (role === answerer) {
     if (!exMine) {
       c.append(el('div', 'rl', 'Starte die Prüfung, dann öffnet sich die Mail dazu. Nur diese Mail wird bewertet.'));
-      if (canShare()) { const sb = el('button', 'mbtn main', '▶ Prüfung starten'); sb.type = 'button'; sb.addEventListener('click', () => startExam(i)); c.append(sb); }
+      if (canShare()) {
+        const sb = el('button', 'mbtn main', '▶ Prüfung starten'); sb.type = 'button'; sb.addEventListener('click', () => startExam(i)); c.append(sb);
+        const lm = lastOwnMail(list);
+        if (lm) {
+          if (mailS.linkAsk === i) {
+            const q = el('div', 'rl', 'Deine letzte Mail „' + (lm.e.sub || '(ohne Betreff)') + '“ vom ' + mailWhen(lm.e.t) + ' als Prüfungsmail für „' + T.d + '“ verknüpfen?');
+            const y = el('button', 'mbtn main', 'Ja, verknüpfen'), n = el('button', 'mbtn', 'Abbrechen'); y.type = 'button'; n.type = 'button';
+            y.addEventListener('click', () => linkLastMail(i, lm)); n.addEventListener('click', () => { mailS.linkAsk = null; renderBook(); });
+            c.append(q, y, n);
+          } else { const lb = el('button', 'mbtn', '✉ Meine letzte Mail ist die Prüfung'); lb.type = 'button'; lb.addEventListener('click', () => { mailS.linkAsk = i; renderBook(); }); c.append(lb); }
+        }
+      }
     } else c.append(el('div', 'rl', 'Deine Prüfungsmail ist abgeschickt. Die Bewertung vergibt ' + (rater === 'fee' ? 'die Fee' : 'der Esel') + '.'));
     return c;
   }
@@ -2731,6 +2767,212 @@ $('logPop').addEventListener('click', e => { if (e.target === $('logPop')) close
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('logPop').hidden) closeLog(); });
 renderLogBadge();
 
+/* ---- Gute Nacht Gedanken ---- */
+const gnS = { myGn: {}, myLog: {}, myFav: {}, myRate: {}, cache: {}, players: {}, playing: null, open: false, delAsk: null, trEdit: null };
+function gnFmt(sec) { sec = Math.max(0, Math.round(sec || 0)); const m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+function gnLoad(v) {
+  if (v.gn) gnS.myGn = Object.assign({}, gnS.myGn, v.gn);
+  if (v.gnlog) gnS.myLog = Object.assign({}, gnS.myLog, v.gnlog);
+  if (v.gnrate) gnS.myRate = Object.assign({}, gnS.myRate, v.gnrate);
+  if (v.gnfav) for (const k in v.gnfav) gnS.myFav[k] = Object.assign({}, gnS.myFav[k], v.gnfav[k]);
+}
+function gnIds() { const ids = Object.keys(state.notes); if (state.uid && ids.indexOf(state.uid) < 0) ids.push(state.uid); return ids; }
+function gnOf(id, field, mine) { const v = state.notes[id] || {}; return id === state.uid ? Object.assign({}, v[field] || {}, mine) : (v[field] || {}); }
+function gnItems() {
+  const out = [];
+  gnIds().forEach(id => { const g = gnOf(id, 'gn', gnS.myGn); for (const k in g) { const e = g[k]; if (e && typeof e.t === 'number' && !e.del) out.push({ id, k, key: ackKey(id, k), e, mine: id === state.uid, who: nameOf(id, state.notes[id]) }); } });
+  return out.sort((a, b) => b.e.t - a.e.t);
+}
+function gnSessions(key) {
+  const out = [];
+  gnIds().forEach(id => { const l = gnOf(id, 'gnlog', gnS.myLog); for (const lid in l) { const r = l[lid]; if (r && r.a === key && typeof r.s === 'number') out.push({ id, lid, t: r.t || 0, s: r.s, who: id === state.uid ? 'Du' : nameOf(id, state.notes[id]) }); } });
+  return out.sort((a, b) => b.t - a.t);
+}
+function gnFavs(key) {
+  const out = [];
+  gnIds().forEach(id => {
+    const all = id === state.uid ? Object.assign({}, (state.notes[id] || {}).gnfav || {}, gnS.myFav) : ((state.notes[id] || {}).gnfav || {});
+    const f = id === state.uid ? Object.assign({}, ((state.notes[id] || {}).gnfav || {})[key] || {}, gnS.myFav[key] || {}) : (all[key] || {});
+    for (const pk in f) { const r = f[pk]; if (r && !r.x && typeof r.p === 'number') out.push({ id, pk, p: r.p, mine: id === state.uid }); }
+  });
+  return out.sort((a, b) => a.p - b.p);
+}
+function gnRatings(key) {
+  const out = [];
+  gnIds().forEach(id => { const r = gnOf(id, 'gnrate', gnS.myRate)[key]; if (r && typeof r.n === 'number') out.push({ id, n: r.n, mine: id === state.uid, who: id === state.uid ? 'Du' : nameOf(id, state.notes[id]) }); });
+  return out;
+}
+async function gnStore(blob, info) {
+  if (!state.fb) throw new Error('nofb');
+  const data = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
+  const aid = 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), CH = 600000, n = Math.ceil(data.length / CH), fs = state.fb.fs, fsM = state.fb.fsM;
+  for (let i = 0; i < n; i++) { info.textContent = 'Wird hochgeladen ... ' + (i + 1) + ' von ' + n; await fsM.setDoc(fsM.doc(fs, 'images/' + aid + '_' + i), { owner: state.uid, data: data.slice(i * CH, (i + 1) * CH), t: Date.now() }); }
+  return { aid, n };
+}
+async function gnLoadUrl(e) {
+  if (gnS.cache[e.aid]) return gnS.cache[e.aid];
+  if (!state.fb) throw new Error('nofb');
+  const fs = state.fb.fs, fsM = state.fb.fsM; let data = '';
+  for (let i = 0; i < e.n; i++) { const sn = await fsM.getDoc(fsM.doc(fs, 'images/' + e.aid + '_' + i)); if (!sn.exists()) throw new Error('missing'); data += sn.data().data; }
+  const blob = await (await fetch(data)).blob();
+  return (gnS.cache[e.aid] = URL.createObjectURL(blob));
+}
+function gnSaveFav() { return writeOwn({ gnfav: JSON.parse(JSON.stringify(gnS.myFav)) }); }
+function gnMount(it, wrap, url, repaintAll) {
+  const key = it.key, au = document.createElement('audio'); au.controls = true; au.src = url; au.preload = 'metadata'; au.style.width = '100%';
+  const bar = el('div', 'gnbar'), chips = el('div', 'gnchips'), fb = el('button', 'btn heart', '♥ Lieblingsstelle hier setzen'); fb.type = 'button';
+  const dur = () => (isFinite(au.duration) && au.duration > 0 ? au.duration : (it.e.dur || 0));
+  const seek = p => { au.currentTime = p; au.play().catch(() => { }); };
+  function paint() {
+    bar.textContent = ''; chips.textContent = ''; const d = dur();
+    gnFavs(key).forEach(f => {
+      const dot = el('button', 'gndot' + (f.mine ? ' mine' : '')); dot.type = 'button'; dot.style.left = (d ? Math.min(100, f.p / d * 100) : 0) + '%'; dot.setAttribute('aria-label', 'Lieblingsstelle bei ' + gnFmt(f.p)); dot.addEventListener('click', () => seek(f.p)); bar.append(dot);
+      const ch = el('span', 'gnchip' + (f.mine ? ' mine' : '')), go = el('button', '', '♥ ' + gnFmt(f.p)); go.type = 'button'; go.addEventListener('click', () => seek(f.p)); ch.append(go);
+      if (f.mine) { const x = el('button', 'x', '✕'); x.type = 'button'; x.setAttribute('aria-label', 'Lieblingsstelle entfernen'); x.addEventListener('click', () => { gnS.myFav[key] = gnS.myFav[key] || {}; gnS.myFav[key][f.pk] = { p: f.p, x: 1, t: Date.now() }; gnSaveFav(); paint(); }); ch.append(x); }
+      chips.append(ch);
+    });
+  }
+  au.addEventListener('loadedmetadata', paint);
+  fb.addEventListener('click', () => { const p = Math.round(au.currentTime * 10) / 10; gnS.myFav[key] = gnS.myFav[key] || {}; gnS.myFav[key]['p' + Math.round(p * 10)] = { p, t: Date.now() }; gnSaveFav(); paint(); showToast('Lieblingsstelle bei ' + gnFmt(p) + ' gesetzt.'); });
+  let sess = null, last = 0, lastFlush = 0, pausedAt = 0;
+  const flush = () => { if (!sess || sess.s < 1) return; gnS.myLog[sess.lid] = { a: key, t: sess.t, s: Math.round(sess.s) }; lastFlush = Date.now(); return writeOwn({ gnlog: Object.assign({}, gnS.myLog) }); };
+  au.addEventListener('play', () => { if (!sess || (pausedAt && Date.now() - pausedAt > 600000)) sess = { lid: 'l' + Date.now().toString(36), t: Date.now(), s: 0 }; last = au.currentTime; gnS.playing = key; });
+  au.addEventListener('timeupdate', () => { const dl = au.currentTime - last; if (sess && dl > 0 && dl < 1.6) sess.s += dl; last = au.currentTime; if (sess && Date.now() - lastFlush > 15000 && sess.s >= 1) flush(); });
+  const stop = () => { pausedAt = Date.now(); if (gnS.playing === key) gnS.playing = null; flush(); setTimeout(repaintAll, 400); };
+  au.addEventListener('pause', stop);
+  au.addEventListener('ended', () => { stop(); sess = null; });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
+  wrap.append(au, bar, fb, chips); wrap.classList.add('on'); paint(); gnS.players[key] = { wrap, au };
+}
+function gnPlayer(it, repaintAll) {
+  if (gnS.players[it.key]) return gnS.players[it.key].wrap;
+  const wrap = el('div', 'gnpl'), info = el('p', 'muted small'), st = el('button', 'btn solid', '▶ Anhören'); st.type = 'button';
+  st.addEventListener('click', async () => {
+    st.disabled = true; info.textContent = 'Wird geladen ...';
+    try { const url = await gnLoadUrl(it.e); st.remove(); info.remove(); gnMount(it, wrap, url, repaintAll); wrap.querySelector('audio').play().catch(() => { }); }
+    catch (er) { st.disabled = false; info.textContent = 'Das Laden hat nicht geklappt. Versuch es noch einmal.'; }
+  });
+  wrap.append(st, info); return wrap;
+}
+function gnRateRow(it) {
+  const row = el('div', 'gnrate'), mine = gnRatings(it.key).find(r => r.mine);
+  if (!it.mine) row.append(el('span', 'muted small', 'Deine Bewertung:'));
+  for (let k = 1; !it.mine && k <= 5; k++) { const b = el('button', mine && mine.n >= k ? 'on' : '', '⭐'); b.type = 'button'; b.setAttribute('aria-label', k + ' von 5'); b.addEventListener('click', () => { gnS.myRate[it.key] = { n: k, t: Date.now() }; writeOwn({ gnrate: Object.assign({}, gnS.myRate) }); renderGn(true); }); row.append(b); }
+  const oth = gnRatings(it.key).filter(r => !r.mine);
+  if (oth.length) row.append(el('span', 'muted small', (it.mine ? 'Bewertung: ' : '') + oth.map(r => (it.mine ? '' : r.who + ': ') + '⭐'.repeat(r.n) + ' (' + r.n + ' von 5)').join(', ')));
+  return row;
+}
+function gnLogNode(it) {
+  const ss = gnSessions(it.key), box = el('div', 'gnlog'), done = ss.filter(x => x.s >= 5), tot = ss.reduce((a, x) => a + x.s, 0);
+  if (!ss.length) { box.append(el('p', 'muted small', 'Noch nicht gehört.')); return box; }
+  box.append(el('p', 'muted small', 'Gehört: ' + done.length + (done.length === 1 ? ' Mal' : ' Mal') + ', insgesamt ' + gnFmt(tot) + ' Min, zuletzt am ' + entFmt.format(new Date(ss[0].t)) + ' Uhr.'));
+  const d = document.createElement('details'); d.append(el('summary', 'muted small', 'Logbuch'));
+  ss.forEach(x => d.append(el('p', 'muted small', entFmt.format(new Date(x.t)) + ' Uhr, ' + x.who + ', ' + gnFmt(x.s) + ' Min')));
+  box.append(d); return box;
+}
+function gnCard(it, repaintAll) {
+  const e = it.e, c = el('div', 'gncard' + (e.kind === 'i' ? ' img' : ''));
+  const h = el('div', 'gnh'); h.append(el('b', '', (e.kind === 'i' ? '🖼️ ' : '🎙️ ') + (e.title || 'Ohne Titel')), el('span', 'muted small', entFmt.format(new Date(e.t)) + (e.kind === 'a' && e.dur ? ' · ' + gnFmt(e.dur) + ' Min' : '') + ' · ' + (it.mine ? 'von dir' : 'von ' + it.who)));
+  c.append(h);
+  if (e.kind === 'i') { const n = imgNode(e.img); if (n) c.append(n); }
+  else {
+    c.append(gnPlayer(it, repaintAll), gnRateRow(it), gnLogNode(it));
+    if (e.tr || it.mine) {
+      const d = document.createElement('details'); d.append(el('summary', 'muted small', 'Transkript'));
+      if (gnS.trEdit === it.key) {
+        const ta = el('textarea'); ta.maxLength = 20000; ta.rows = 8; ta.value = e.tr || '';
+        const sv = el('button', 'btn solid', 'Speichern'); sv.type = 'button'; sv.addEventListener('click', () => { const nv = Object.assign({}, e, { tr: ta.value.trim() }); gnS.myGn[it.k] = nv; writeOwn({ gn: Object.assign({}, gnS.myGn) }); gnS.trEdit = null; renderGn(true); });
+        const fl = el('label', 'btn', 'Textdatei laden'), fi = document.createElement('input'); fi.type = 'file'; fi.accept = '.txt,text/plain'; fi.hidden = true; fl.append(fi);
+        fi.addEventListener('change', async () => { if (fi.files[0]) ta.value = (await fi.files[0].text()).slice(0, 20000); });
+        d.append(ta, el('div', 'row'), sv, fl); d.open = true;
+      } else {
+        if (e.tr) d.append(el('p', 'gntr', e.tr)); else d.append(el('p', 'muted small', 'Noch kein Transkript.'));
+        if (it.mine) { const eb = el('button', 'btn', e.tr ? 'Transkript ändern' : 'Transkript hinzufügen'); eb.type = 'button'; eb.addEventListener('click', () => { gnS.trEdit = it.key; renderGn(true); }); d.append(eb); }
+      }
+      c.append(d);
+    }
+  }
+  if (it.mine) {
+    if (gnS.delAsk === it.key) {
+      const r = el('div', 'row'), y = el('button', 'btn solid', 'Ja, löschen'), n = el('button', 'btn', 'Abbrechen'); y.type = 'button'; n.type = 'button';
+      y.addEventListener('click', () => { gnS.myGn[it.k] = Object.assign({}, e, { del: 1 }); gnS.delAsk = null; const p = gnS.players[it.key]; if (p) p.au.pause(); delete gnS.players[it.key]; writeOwn({ gn: Object.assign({}, gnS.myGn) }); renderGn(true); });
+      n.addEventListener('click', () => { gnS.delAsk = null; renderGn(true); });
+      r.append(el('span', 'muted small', 'Wirklich löschen?'), y, n); c.append(r);
+    } else { const db = el('button', 'btn', 'Löschen'); db.type = 'button'; db.addEventListener('click', () => { gnS.delAsk = it.key; renderGn(true); }); c.append(db); }
+  }
+  return c;
+}
+function gnFormAudio(info) {
+  const f = el('form', 'gnform'), ti = el('input'), tr = el('textarea'); ti.type = 'text'; ti.maxLength = 80; ti.placeholder = 'Titel dieser Aufnahme'; ti.setAttribute('aria-label', 'Titel'); tr.rows = 3; tr.maxLength = 20000; tr.placeholder = 'Transkript (optional), du kannst auch eine Textdatei laden'; tr.setAttribute('aria-label', 'Transkript');
+  let blob = null, durSec = 0, mr = null, stream = null, chunks = [], timer = null, t0 = 0;
+  const prev = el('div', 'gnprev'), recBtn = el('button', 'btn', '🎙️ Aufnehmen'), fileL = el('label', 'btn', '📁 Datei wählen'), fileI = document.createElement('input'), go = el('button', 'btn solid', 'Hochladen'), trL = el('label', 'btn', 'Textdatei'), trI = document.createElement('input'), msg = el('p', 'muted small');
+  recBtn.type = 'button'; go.type = 'submit'; fileI.type = 'file'; fileI.accept = 'audio/*'; fileI.hidden = true; fileL.append(fileI); trI.type = 'file'; trI.accept = '.txt,text/plain'; trI.hidden = true; trL.append(trI);
+  const show = (b, d) => { prev.textContent = ''; blob = b; durSec = d || 0; if (b) { const a = document.createElement('audio'); a.controls = true; a.src = URL.createObjectURL(b); a.style.width = '100%'; prev.append(a); if (!d) a.addEventListener('loadedmetadata', () => { if (isFinite(a.duration)) durSec = a.duration; }); } };
+  const fixType = file => { if (file.type) return file; const n = (file.name || '').toLowerCase(); return new Blob([file], { type: n.endsWith('.mp3') ? 'audio/mpeg' : n.endsWith('.m4a') ? 'audio/mp4' : n.endsWith('.opus') || n.endsWith('.ogg') ? 'audio/ogg' : 'audio/mpeg' }); };
+  fileI.addEventListener('change', () => { if (fileI.files[0]) { show(fixType(fileI.files[0]), 0); msg.textContent = 'Datei bereit.'; } });
+  trI.addEventListener('change', async () => { if (trI.files[0]) tr.value = (await trI.files[0].text()).slice(0, 20000); });
+  recBtn.addEventListener('click', async () => {
+    if (mr && mr.state === 'recording') { mr.stop(); return; }
+    if (!navigator.mediaDevices || !window.MediaRecorder) { msg.textContent = 'Aufnehmen geht in diesem Browser nicht. Wähl eine Datei.'; return; }
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch (e) { msg.textContent = 'Das Mikrofon ist nicht freigegeben.'; return; }
+    const mime = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].find(m => MediaRecorder.isTypeSupported(m));
+    chunks = []; mr = new MediaRecorder(stream, mime ? { mimeType: mime } : {}); t0 = Date.now();
+    mr.ondataavailable = ev => { if (ev.data && ev.data.size) chunks.push(ev.data); };
+    mr.onstop = () => { clearInterval(timer); stream.getTracks().forEach(t => t.stop()); recBtn.textContent = '🎙️ Neu aufnehmen'; show(new Blob(chunks, { type: mr.mimeType || mime || 'audio/webm' }), (Date.now() - t0) / 1000); msg.textContent = 'Aufnahme bereit, hör sie dir an.'; };
+    mr.start(); recBtn.textContent = '⏹ Stopp 0:00'; msg.textContent = 'Aufnahme läuft.';
+    timer = setInterval(() => { recBtn.textContent = '⏹ Stopp ' + gnFmt((Date.now() - t0) / 1000); }, 500);
+  });
+  f.addEventListener('submit', async ev => {
+    ev.preventDefault();
+    if (!blob) { msg.textContent = 'Nimm erst etwas auf oder wähl eine Datei.'; return; }
+    if (blob.size > 8 * 1024 * 1024) { msg.textContent = 'Die Datei ist zu groß (mehr als 8 MB). Kürze sie oder nimm sie in niedrigerer Qualität auf.'; return; }
+    if (!canShare() || !state.fb) { msg.textContent = 'Hochladen geht nur auf der Live-Seite mit Verbindung.'; return; }
+    go.disabled = true;
+    try {
+      const r = await gnStore(blob, msg), k = 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+      const e = { kind: 'a', t: Date.now(), title: ti.value.trim() || 'Gute Nacht Gedanken', aid: r.aid, n: r.n, dur: Math.round(durSec || 0), mime: blob.type || '', size: blob.size };
+      if (tr.value.trim()) e.tr = tr.value.trim();
+      gnS.myGn[k] = e; await writeOwn({ gn: Object.assign({}, gnS.myGn) });
+      showToast('Hochgeladen. ' + otherName() + ' kann es jetzt anhören.'); gnS.form = false; renderGn(true);
+    } catch (er) { go.disabled = false; msg.textContent = 'Das Hochladen hat nicht geklappt: ' + ((er && (er.code || er.message)) || 'unbekannt'); }
+  });
+  const row = el('div', 'row'); row.append(recBtn, fileL);
+  f.append(ti, row, prev, tr, el('div', 'row'), trL, go, msg); return f;
+}
+function gnFormImage() {
+  const f = el('form', 'gnform'), ti = el('input'), fi = document.createElement('input'), fl = el('label', 'btn', '📷 Bild wählen'), go = el('button', 'btn solid', 'Hochladen'), msg = el('p', 'muted small');
+  ti.type = 'text'; ti.maxLength = 80; ti.placeholder = 'Titel oder ein paar Worte zum Bild'; ti.setAttribute('aria-label', 'Titel'); fi.type = 'file'; fi.accept = 'image/*'; fi.hidden = true; fl.append(fi); go.type = 'submit';
+  fi.addEventListener('change', () => { msg.textContent = fi.files[0] ? 'Bild bereit: ' + fi.files[0].name : ''; });
+  f.addEventListener('submit', async ev => {
+    ev.preventDefault();
+    if (!fi.files[0]) { msg.textContent = 'Wähl erst ein Bild.'; return; }
+    if (!canShare() || !state.assets) { msg.textContent = 'Bilder hochladen geht gerade nicht.'; return; }
+    go.disabled = true; msg.textContent = 'Wird hochgeladen ...';
+    try {
+      const id = (await state.assets.upload(await shrink(fi.files[0]))).id, k = 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+      gnS.myGn[k] = { kind: 'i', t: Date.now(), title: ti.value.trim() || 'Ein Bild für dich', img: id }; await writeOwn({ gn: Object.assign({}, gnS.myGn) });
+      showToast('Das Bild liegt jetzt bei den Gute Nacht Gedanken.'); gnS.form = false; renderGn(true);
+    } catch (er) { go.disabled = false; msg.textContent = 'Das Hochladen hat nicht geklappt.'; }
+  });
+  f.append(ti, fl, go, msg); return f;
+}
+function renderGn(force) {
+  if (!gnS.open) return;
+  if (gnS.playing && !force) return;
+  const body = $('gnBody'); body.textContent = '';
+  const role = myRole(), items = gnItems();
+  if (canShare() && (role === 'esel' || role === 'fee')) {
+    if (gnS.form) { const box = el('div', 'gncard form'); box.append(el('b', '', role === 'esel' ? 'Neue Gute Nacht Gedanken' : 'Neues Bild'), role === 'esel' ? gnFormAudio() : gnFormImage()); const cn = el('button', 'btn', 'Abbrechen'); cn.type = 'button'; cn.addEventListener('click', () => { gnS.form = false; renderGn(true); }); box.append(cn); body.append(box); }
+    else { const nb = el('button', 'btn solid', role === 'esel' ? '＋ Neue Aufnahme' : '＋ Bild hinzufügen'); nb.type = 'button'; nb.addEventListener('click', () => { gnS.form = true; renderGn(true); }); body.append(nb); }
+  }
+  const au = items.filter(x => x.e.kind === 'a'), all = au.reduce((a, x) => a.concat(gnSessions(x.key)), []), done = all.filter(x => x.s >= 5);
+  if (au.length) body.append(el('p', 'muted small', 'Insgesamt ' + done.length + ' Mal gehört, ' + gnFmt(all.reduce((a, x) => a + x.s, 0)) + ' Min.'));
+  if (!items.length) body.append(el('p', 'muted', role === 'esel' ? 'Noch nichts da. Nimm den ersten Gedanken auf.' : 'Noch nichts da. Sobald Masüsel etwas aufnimmt, liegt es hier.'));
+  items.forEach(it => body.append(gnCard(it, () => renderGn(true))));
+}
+function gnOpen() { gnS.open = true; $('gnApp').hidden = false; renderGn(true); }
+function gnClose() { gnS.open = false; $('gnApp').hidden = true; for (const k in gnS.players) { try { gnS.players[k].au.pause(); } catch (e) { /* egal */ } } gnS.playing = null; }
+
 function startNotes(db) {
   const timer = setTimeout(() => { state.dbSlow = true; renderPanel(); }, 10000);
   db.collection('notes').onSnapshot(snap => {
@@ -2739,9 +2981,10 @@ function startNotes(db) {
     const fresh = [];
     for (const id in m) {
       const v = m[id] || {};
-      if (id === state.uid) { if (v.diary) { state.myDiary = Object.assign({}, state.myDiary, v.diary); removedKeys.forEach(k => { delete state.myDiary[k]; }); } if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.rej) state.myRej = Object.assign({}, state.myRej, v.rej); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (v.figs && typeof v.figs === 'object') { for (const fid in v.figs) { const m = v.figs[fid]; if (Array.isArray(m) && m.length >= 4 && (!state.myFigs[fid] || m[3] > state.myFigs[fid][3])) state.myFigs[fid] = m; } } if (Array.isArray(v.moon) && v.moon.length >= 4 && (!state.myMoon || v.moon[3] > state.myMoon[3])) state.myMoon = v.moon; if (typeof v.shower === 'number') state.myShower = Math.max(state.myShower || 0, v.shower); if (typeof v.showerNo === 'number') state.myShowerNo = Math.max(state.myShowerNo || 0, v.showerNo); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; continue; }
+      if (id === state.uid) { if (v.diary) { state.myDiary = Object.assign({}, state.myDiary, v.diary); removedKeys.forEach(k => { delete state.myDiary[k]; }); } if (v.ack) state.myAck = Object.assign({}, state.myAck, v.ack); if (v.rej) state.myRej = Object.assign({}, state.myRej, v.rej); if (v.re) state.myRe = Object.assign({}, state.myRe, v.re); if (v.rz) state.myRz = Object.assign({}, state.myRz, v.rz); if (v.hpos) state.myHpos = Object.assign({}, state.myHpos, v.hpos); if (v.figs && typeof v.figs === 'object') { for (const fid in v.figs) { const m = v.figs[fid]; if (Array.isArray(m) && m.length >= 4 && (!state.myFigs[fid] || m[3] > state.myFigs[fid][3])) state.myFigs[fid] = m; } } if (Array.isArray(v.moon) && v.moon.length >= 4 && (!state.myMoon || v.moon[3] > state.myMoon[3])) state.myMoon = v.moon; if (typeof v.shower === 'number') state.myShower = Math.max(state.myShower || 0, v.shower); if (typeof v.showerNo === 'number') state.myShowerNo = Math.max(state.myShowerNo || 0, v.showerNo); if (v.seal) state.mySeal = Object.assign({}, state.mySeal, v.seal); if (v.odone) state.myOdone = Object.assign({}, state.myOdone, v.odone); if (v.oc) state.myOc = Object.assign({}, state.myOc, v.oc); if (v.mread) state.myRead = Object.assign({}, state.myRead, v.mread); if (v.book) bookS.my = Object.assign({}, bookS.my, v.book); if (v.rate) rateS.my = Object.assign({}, rateS.my, v.rate); if (v.bookTitle && (!bookS.myTitle || v.bookTitle.t > bookS.myTitle.t)) bookS.myTitle = v.bookTitle; gnLoad(v); continue; }
       for (const k in (v.diary || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.diary[k]; if (state.seen && e) fresh.push(nameOf(id, v) + (e.star ? ' hat eine Sternschnuppe gefangen und wünscht sich: ' + e.wish : e.heart ? ' schickt dir ein Herz, weil ' + pron(nameOf(id, v)) + ' an dich denken musste ♥' : ' hat ins Tagebuch geschrieben' + (e.text ? ': ' + (e.text.length > 70 ? e.text.slice(0, 70) + ' ...' : e.text) : ' (mit Bild).'))); } }
       for (const k in (v.book || {})) { const key = id + '|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.book[k]; if (state.seen && e && e.text) fresh.push(nameOf(id, v) + ' hat dir im Buch geschrieben: ' + (e.sub || '(ohne Betreff)')); } }
+      for (const k in (v.gn || {})) { const key = id + '|gn|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const e = v.gn[k]; if (state.seen && e && !e.del && typeof e.t === 'number') fresh.push(nameOf(id, v) + (e.kind === 'i' ? ' hat ein Bild zu den Gute Nacht Gedanken gelegt.' : ' hat neue Gute Nacht Gedanken aufgenommen: ' + (e.title || ''))); } }
       for (const k in (v.rate || {})) { const key = id + '|r|' + k; if (!state.seenE.has(key)) { state.seenE.add(key); const r = v.rate[k], m = /^d(\d+)$/.exec(k); if (state.seen && r && m) fresh.push(nameOf(id, v) + ' hat dich bewertet: ' + rateIcons(Number(m[1]), r.n)); } }
       for (const k in (v.re || {})) {
         const r = v.re[k] || {}, rk = id + '|re|' + k + '|' + (r.e || '');
@@ -2758,7 +3001,7 @@ function startNotes(db) {
       for (const k in (v.ack || {})) { const key = id + '|' + k; if (!state.seenA.has(key)) { state.seenA.add(key); if (state.seen && k.indexOf(ackKey(state.uid, '')) === 0) fresh.push(nameOf(id, v) + ' hat einen Wunsch von dir erfüllt' + ((v.ack[k] && v.ack[k].text) ? ': ' + (v.ack[k].text.length > 70 ? v.ack[k].text.slice(0, 70) + ' ...' : v.ack[k].text) : '.')); } }
     }
     state.notes = m; state.seen = true;
-    renderDoors(); renderPanel(); renderHoro(); renderArriveVisibility(); renderDiary(); renderBook(); renderLogBadge();
+    renderDoors(); renderPanel(); renderHoro(); renderArriveVisibility(); renderDiary(); renderBook(); renderLogBadge(); renderGn();
     if (fresh.length) showToast(fresh[fresh.length - 1]);
   }, e => { clearTimeout(timer); state.db = null; state.connErr = (e && (e.code || e.message)) || 'unbekannt'; renderPanel(); renderDiary(); showToast('Keine Verbindung zum Speicher: ' + state.connErr); });
   renderPanel();
