@@ -58,6 +58,7 @@ p { margin: 0; }
 #fbListBox[hidden] { display: none; }
 .gnnote { border: 1px dashed var(--rose); border-radius: 12px; padding: 10px 12px; font-size: 15px; color: var(--muted); }
 .gnnote b { color: var(--rose); }
+.gnplan { margin: 8px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
 .gnapp { position: fixed; inset: 0; z-index: 36; display: flex; flex-direction: column; background: #0d1030; color: var(--ink); }
 .gnapp[hidden] { display: none; }
 .gntop { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
@@ -3010,7 +3011,10 @@ function renderGn(force) {
   if (gnS.playing && !force) return;
   const body = $('gnBody'); body.textContent = '';
   const role = myRole(), items = gnItems();
-  { const nt = el('div', 'gnnote'); nt.append(el('b', '', 'Im Aufbau. '), document.createTextNode('Du kannst schon aufnehmen, anhören, bewerten und Lieblingsstellen setzen. Es wird aber noch weitergebaut, manches kann sich noch ändern.')); body.append(nt); }
+  { const nt = el('div', 'gnnote'); nt.append(el('b', '', 'Im Aufbau. '), document.createTextNode('Manches geht schon, anderes kommt noch. Es kann sich noch etwas ändern.'));
+    const ul = document.createElement('ul'); ul.className = 'gnplan';
+    ['Schon da: Sprachaufnahmen mit Titel, direkt aufnehmen oder Datei hochladen, Logbuch (wann, wie oft, wie lange), Bewertung, Lieblingsstellen, Transkript, Bilder von Mafifee.', 'Geplant: Gedanken auch als Textnachricht.', 'Geplant: Fotos als Gedanken, für beide.', 'Geplant: Transkript, das beim Zuhören mitläuft.'].forEach(t => ul.append(el('li', '', t)));
+    nt.append(ul); body.append(nt); }
   if (canShare() && (role === 'esel' || role === 'fee')) {
     if (gnS.form) { const box = el('div', 'gncard form'); box.append(el('b', '', role === 'esel' ? 'Neue Gute Nacht Gedanken' : 'Neues Bild'), role === 'esel' ? gnFormAudio() : gnFormImage()); const cn = el('button', 'btn', 'Abbrechen'); cn.type = 'button'; cn.addEventListener('click', () => { gnS.form = false; renderGn(true); }); box.append(cn); body.append(box); }
     else { const nb = el('button', 'btn solid', role === 'esel' ? '＋ Neue Aufnahme' : '＋ Bild hinzufügen'); nb.type = 'button'; nb.addEventListener('click', () => { gnS.form = true; renderGn(true); }); body.append(nb); }
