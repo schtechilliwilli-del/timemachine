@@ -948,6 +948,7 @@ function buildBg(dpr) {
 }
 function drawCalm(t) {
   t = t || 0;
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = '#0b0e20'; ctx.fillRect(0, 0, W, H);
   if (bgCache) ctx.drawImage(bgCache, 0, 0, W, H);
   else {
     ctx.fillStyle = '#0b0e20'; ctx.fillRect(0, 0, W, H);
