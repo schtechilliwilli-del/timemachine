@@ -2912,7 +2912,7 @@ function gnMount(it, wrap, url, repaintAll) {
   au.addEventListener('loadedmetadata', paint);
   fb.addEventListener('click', () => { const p = Math.round(au.currentTime * 10) / 10; gnS.myFav[key] = gnS.myFav[key] || {}; gnS.myFav[key]['p' + Math.round(p * 10)] = { p, t: Date.now() }; gnSaveFav(); paint(); showToast('Lieblingsstelle bei ' + gnFmt(p) + ' gesetzt.'); });
   let sess = null, last = 0, lastFlush = 0, pausedAt = 0;
-  const flush = () => { if (!sess || sess.s < 1) return; gnS.myLog[sess.lid] = { a: key, t: sess.t, s: Math.round(sess.s) }; lastFlush = Date.now(); return writeOwn({ gnlog: Object.assign({}, gnS.myLog) }); };
+  const flush = () => { return; if (!sess || sess.s < 1) return; gnS.myLog[sess.lid] = { a: key, t: sess.t, s: Math.round(sess.s) }; lastFlush = Date.now(); return writeOwn({ gnlog: Object.assign({}, gnS.myLog) }); };
   au.addEventListener('play', () => { if (!sess || (pausedAt && Date.now() - pausedAt > 600000)) sess = { lid: 'l' + Date.now().toString(36), t: Date.now(), s: 0 }; last = au.currentTime; gnS.playing = key; });
   au.addEventListener('timeupdate', () => { const dl = au.currentTime - last; if (sess && dl > 0 && dl < 1.6) sess.s += dl; last = au.currentTime; if (sess && Date.now() - lastFlush > 15000 && sess.s >= 1) flush(); });
   const stop = () => { pausedAt = Date.now(); if (gnS.playing === key) gnS.playing = null; flush(); setTimeout(repaintAll, 400); };
@@ -2953,7 +2953,7 @@ function gnCard(it, repaintAll) {
   c.append(h);
   if (e.kind === 'i') { const n = imgNode(e.img); if (n) c.append(n); }
   else {
-    c.append(gnPlayer(it, repaintAll), gnRateRow(it), gnLogNode(it));
+    c.append(gnPlayer(it, repaintAll), gnRateRow(it));
     if (e.tr || it.mine) {
       const d = document.createElement('details'); d.className = 'gnread'; d.append(el('summary', '', '📖 Zum Lesen'));
       if (gnS.trEdit === it.key) {
@@ -3041,15 +3041,13 @@ function renderGn(force) {
   const role = myRole(), items = gnItems();
   { const nt = el('div', 'gnnote'); nt.append(el('b', '', 'Im Aufbau. '), document.createTextNode('Manches geht schon, anderes kommt noch. Es kann sich noch etwas ändern.'));
     const ul = document.createElement('ul'); ul.className = 'gnplan';
-    ['Schon da: Sprachaufnahmen mit Titel, direkt aufnehmen oder Datei hochladen, Logbuch (wann, wie oft, wie lange), Bewertung, Lieblingsstellen, Transkript, Bilder von Mafifee.', 'Geplant: Gedanken auch als Textnachricht.', 'Geplant: Fotos als Gedanken, für beide.', 'Geplant: Transkript, das beim Zuhören mitläuft.'].forEach(t => ul.append(el('li', '', t)));
+    ['Schon da: Sprachaufnahmen mit Titel, direkt aufnehmen oder Datei hochladen, Bewertung, Lieblingsstellen, Transkript, Bilder von Mafifee.', 'Geplant: Gedanken auch als Textnachricht.', 'Geplant: Fotos als Gedanken, für beide.',].forEach(t => ul.append(el('li', '', t)));
     nt.append(ul); body.append(nt); }
   if (canShare() && (role === 'esel' || role === 'fee')) {
     if (gnS.form) { const box = el('div', 'gncard form'); box.append(el('b', '', role === 'esel' ? 'Neue Gute Nacht Gedanken' : 'Neues Bild'), role === 'esel' ? gnFormAudio() : gnFormImage()); const cn = el('button', 'btn', 'Abbrechen'); cn.type = 'button'; cn.addEventListener('click', () => { gnS.form = false; renderGn(true); }); box.append(cn); body.append(box); }
     else { const nb = el('button', 'btn solid', role === 'esel' ? '＋ Neue Aufnahme' : '＋ Bild hinzufügen'); nb.type = 'button'; nb.addEventListener('click', () => { gnS.form = true; renderGn(true); }); body.append(nb); }
   }
-  const au = items.filter(x => x.e.kind === 'a'), all = au.reduce((a, x) => a.concat(gnSessions(x.key)), []), done = all.filter(x => x.s >= 5);
-  if (au.length) body.append(el('p', 'muted small', 'Insgesamt ' + done.length + ' Mal gehört, ' + gnFmt(all.reduce((a, x) => a + x.s, 0)) + ' Min.'));
-  if (!items.length) body.append(el('p', 'muted', role === 'esel' ? 'Noch nichts da. Nimm den ersten Gedanken auf.' : 'Noch nichts da. Sobald Masüsel etwas aufnimmt, liegt es hier.'));
+    if (!items.length) body.append(el('p', 'muted', role === 'esel' ? 'Noch nichts da. Nimm den ersten Gedanken auf.' : 'Noch nichts da. Sobald Masüsel etwas aufnimmt, liegt es hier.'));
   items.forEach(it => body.append(gnCard(it, () => renderGn(true))));
 }
 function gnShow() { gnS.open = true; $('gnApp').hidden = false; document.body.style.overflow = 'hidden'; renderGn(true); }
