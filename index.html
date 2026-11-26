@@ -514,7 +514,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
 <canvas id="sky" aria-hidden="true"></canvas>
 <main>
   <header>
-    <p class="eyebrow">Wiedersehen am 26.11.2026 um 14:10 Uhr</p>
+    <p class="eyebrow">Wiedersehen am 26.11.2026 um 14:35 Uhr</p>
     <div class="hrow">
       <h1>Feenstaub &amp;<br>Eselsohren</h1>
       <a class="bookbtn" id="bookBtn" href="#postfach" aria-label="Zum Postfach"><span class="bi" aria-hidden="true">✉️</span><span class="bl">Postfach</span><span class="env" id="bookEnv" hidden></span></a>
@@ -706,7 +706,7 @@ body.warping .card { background: rgba(21, 26, 58, 0.4); }
 
 <script>
 /*CORE*/
-const TARGET = Date.UTC(2026, 10, 26, 13, 10, 0);   // 26.11.2026 14:10 Uhr MEZ
+const TARGET = Date.UTC(2026, 10, 26, 13, 35, 0);   // 26.11.2026 14:35 Uhr MEZ
 const TOGETHER_END = Date.UTC(2026, 11, 1, 23, 0, 0);   // bis 2.12.2026 0:00 Uhr MEZ zaehlt der Timer hoch
 const START  = Date.UTC(2026, 10, 5, 23, 0, 0);     // 6.11.2026 00:00 Uhr MEZ, Tag der Buchung
 const TOTAL_KM = 500;
@@ -756,7 +756,7 @@ const ASTRO = {
   '2026-11-23': 'Der Mond ist von heute bis zum 25. November fast oder ganz voll zu sehen.',
   '2026-11-24': 'Vollmond um 15:53 Uhr und ein Supermond: nur 360.768 Kilometer von der Erde entfernt. Astronomisch steht er im Stier bei den Plejaden und bei Aldebaran, astrologisch in den Zwillingen.',
   '2026-11-25': 'Uranus steht heute in Opposition zur Sonne. Der Mond ist noch so gut wie voll.',
-  '2026-11-26': 'In der Nacht wechselt Mars vom Löwen in die Jungfrau. Um 14:10 Uhr ist es soweit.'
+  '2026-11-26': 'In der Nacht wechselt Mars vom Löwen in die Jungfrau. Um 14:35 Uhr ist es soweit.'
 };
 const ASTRO_DEFAULT = 'Die Leoniden sind noch bis zum 30. November aktiv. Vielleicht fällt heute Nacht eine Sternschnuppe für uns.';
 
@@ -773,7 +773,7 @@ const DOORS = [
   { n: 9, kind: 'Frage', title: 'Dein Lied', text: 'Noch drei Nächte. Der Mond ist fast voll und wird ein bisschen ungeduldig.', ask: 'Welches Lied soll am Tag der Ankunft laufen?' },
   { n: 10, kind: 'Himmel', title: 'Supermond', text: 'Heute um 15:53 Uhr ist Vollmond, und er ist ein Supermond, nur 360.768 Kilometer von der Erde entfernt. Er geht am Abend auf. Wir können ihn zur gleichen Zeit anschauen, jeder an seinem Ort.', ask: 'Welchen Satz gibst du dem Mond mit?' },
   { n: 11, kind: 'Frage', title: 'Die letzte Nacht davor', text: 'Uranus steht heute der Sonne gegenüber. In der Astrologie ist er der Planet des Wassermanns, also Mafifees Planet. Mit bloßem Auge ist er kaum zu sehen. Wir brauchen ihn nicht, wir haben bald einander.', ask: 'Wie aufgeregt bist du, von 1 bis 10?' },
-  { n: 12, kind: 'Ankunft', title: 'Heute ist es soweit', text: 'In der Nacht verließ Mars den Löwen, Masüsels Zeichen, und zog in die Jungfrau. Jupiter bleibt im Löwen. Aus Mut wird Sorgfalt, aus Warten wird Ankommen. Um 14:10 Uhr ist es soweit.', ask: 'Was sagst du als Allererstes?' }
+  { n: 12, kind: 'Ankunft', title: 'Heute ist es soweit', text: 'In der Nacht verließ Mars den Löwen, Masüsels Zeichen, und zog in die Jungfrau. Jupiter bleibt im Löwen. Aus Mut wird Sorgfalt, aus Warten wird Ankommen. Um 14:35 Uhr ist es soweit.', ask: 'Was sagst du als Allererstes?' }
 ];
 const ORACLE = [
   'Die Sterne sagen: Plane Zeit für Umarmungen ein. Viel Zeit.',
@@ -912,10 +912,10 @@ function renderAll(force) {
   renderRoute(1 - kmLeft(now) / TOTAL_KM);
   renderLadder(now >= TARGET ? 0.05 : SPEED);
   const doneKm = TOTAL_KM - kmLeft(now);
-  $('doneKm').textContent = together ? (now > TOGETHER_END ? 'So lange waren wir zusammen, vom 26.11. um 14:10 Uhr bis zum Abschied.' : 'So lange sind wir schon zusammen, seit dem 26.11. um 14:10 Uhr.') : 'Seit der Buchung am 6. November schon ' + Math.round(doneKm) + ' Kilometer geschafft.';
+  $('doneKm').textContent = together ? (now > TOGETHER_END ? 'So lange waren wir zusammen, vom 26.11. um 14:35 Uhr bis zum Abschied.' : 'So lange sind wir schon zusammen, seit dem 26.11. um 14:35 Uhr.') : 'Seit der Buchung am 6. November schon ' + Math.round(doneKm) + ' Kilometer geschafft.';
   document.body.classList.toggle('done', now >= TARGET);
   $('jh').textContent = together ? (now > TOGETHER_END ? 'Zusammen gewesen' : 'Zusammen') : 'Noch unterwegs';
-  const ey = document.querySelector('.eyebrow'); if (ey) ey.textContent = together ? 'Zusammen seit dem 26.11.2026 um 14:10 Uhr' : 'Wiedersehen am 26.11.2026 um 14:10 Uhr';
+  const ey = document.querySelector('.eyebrow'); if (ey) ey.textContent = together ? 'Zusammen seit dem 26.11.2026 um 14:35 Uhr' : 'Wiedersehen am 26.11.2026 um 14:35 Uhr';
   // Tuerchen und Himmel nur neu zeichnen, wenn sich der Tag oder die Vorschau aendert, damit Taps nicht verloren gehen
   const key = berlinDay(now) + '|' + state.preview;
   if (force === true || key !== lastKey) {
@@ -1382,7 +1382,7 @@ const DECK = [
   [ // 26.11.
     { s: '☽', t: 'Der Mond tritt in den Krebs', k: 'Geborgenheit', x: 'Es wird häuslich und herzlich. Die Karte sagt: Ihr seid zu Hause, wo ihr zusammen seid.', g: 'Mond tritt in den Krebs' },
     { s: '♂', t: 'Mars zieht in die Jungfrau', k: 'Aufmerksamkeit', x: 'Mars verlässt den Löwen, Jupiter bleibt. Die Karte sagt: Aus Mut wird Zuwendung.', g: 'Mars in die Jungfrau, Jupiter im Löwen' },
-    { s: '✦', t: 'Die Ankunft', k: 'Beginn', x: 'Um 14:10 Uhr treffen sich zwei Gegenpole. Die Karte sagt: Alles, was ihr euch erhofft habt, darf jetzt beginnen.', g: 'Mond im Krebs, Venus in der Waage' }
+    { s: '✦', t: 'Die Ankunft', k: 'Beginn', x: 'Um 14:35 Uhr treffen sich zwei Gegenpole. Die Karte sagt: Alles, was ihr euch erhofft habt, darf jetzt beginnen.', g: 'Mond im Krebs, Venus in der Waage' }
   ]
 ];
 const DECK_PICK = [2, 2, 2, 1, 0, 2, 2, 2, 0, 2, 2, 2, 2];
@@ -1565,7 +1565,7 @@ const HORO = [
   { w: "Mafifee, der Mond im Stier steht im Quadrat zu deiner Sonne, Merkur ebenfalls. Vorfreude kippt heute leicht in Ungeduld. Das ist kein Zweifel an Masüsel, nur Dichte. Atme durch.", gw: "Mond im Stier, Quadrat zu deiner Sonne (1,9 Grad) · Merkur im Quadrat (1,3 Grad)", l: "Masüsel, der Mond im Stier steht im Quadrat zu deiner Sonne: Eigensinn und Spannung. Gönn dir etwas Gutes, der Stier liebt Genuss, und der macht das Warten auf Mafifee leichter.", gl: "Mond im Stier, Quadrat zu deiner Sonne (3,8 Grad)", b: "Noch drei Nächte, und der Mond stellt sich quer zu beiden Sonnen. Nehmt euch heute nichts übel, das ist Vorfreude in Verkleidung. Reibung ist auch eine Form von Nähe.", gb: "Mond im Stier: Quadrat zu beiden Sonnen" },
   { w: "Mafifee, Vollmond in den Zwillingen, einem Luftzeichen wie deins. Merkur steht genau im Quadrat zu deiner Sonne, wähle Worte zweimal. Was du heute zu Masüsel sagst, trägt der volle Mond.", gw: "Vollmond in den Zwillingen · Merkur im Quadrat zu deiner Sonne (0,1 Grad)", l: "Masüsel, der Vollmond ist ein Supermond, nur 360.768 Kilometer entfernt. Ihm gegenüber steht die Sonne im Schützen, in guter Verbindung zu deinem Löwen. Sag Mafifee etwas Liebes laut, der Mond hört voll zu.", gl: "Supermond in den Zwillingen · Sonne im Schützen, Trigon zum Löwen", b: "Heute Abend schauen Mafifee und Masüsel an zwei Orten zum selben Supermond. Sagt euch gleichzeitig Gute Nacht, im Halbflüstern, er hört zu. Das Licht, das euch beide trifft, ist dasselbe.", gb: "Vollmond 15:54 Uhr (Supermond)" },
   { w: "Mafifee, Uranus, der moderne Herrscher deines Zeichens, steht der Sonne gegenüber, und der Mond bildet ein Trigon zu deiner Sonne. Überraschungen liegen in der Luft. Lass sie herein.", gw: "Uranus in Opposition zur Sonne · Mond in den Zwillingen, Trigon zu deiner Sonne (1,8 Grad)", l: "Masüsel, der Mond in den Zwillingen bildet ein Sextil zu deiner Sonne. Uranus gehört zum Gegenzeichen deines Löwen und ist heute im Spiel. Lass dich überraschen, von Mafifee oder von dir selbst.", gl: "Mond in den Zwillingen, Sextil zu deiner Sonne (3,8 Grad) · Uranus in Opposition", b: "Die letzte Nacht davor. Der Mond verbindet sich freundlich mit beiden Sonnen, und Uranus kündigt Überraschungen an. Morgen wird aus Sehnsucht Gegenwart.", gb: "Mond: Trigon zum Wassermann, Sextil zum Löwen · Uranus in Opposition" },
-  { w: "Mafifee, heute ist der Tag deiner Ankunft. Der Mond tritt in den Krebs, es wird häuslich und herzlich. Merkur im Quadrat zu deiner Sonne: Nimm kleine Missverständnisse leicht, du bist angekommen.", gw: "Mond tritt in den Krebs · Merkur im Quadrat zu deiner Sonne (2,5 Grad)", l: "Masüsel, Mafifee kommt heute an. Mars verlässt deinen Löwen und zieht in die Jungfrau, Jupiter bleibt: Aus Mut wird Aufmerksamkeit füreinander. Merkur im Quadrat zu deiner Sonne: lieber nachfragen als raten.", gl: "Mars in die Jungfrau, Jupiter im Löwen · Merkur im Quadrat zu deiner Sonne (3,1 Grad)", b: "Um 14:10 Uhr treffen sich zwei Gegenpole. Der Mond steht im Krebs, dem Zeichen der Geborgenheit. Alles, was die beiden sich erhofft haben, darf jetzt beginnen.", gb: "Mond im Krebs · Venus in der Waage" }
+  { w: "Mafifee, heute ist der Tag deiner Ankunft. Der Mond tritt in den Krebs, es wird häuslich und herzlich. Merkur im Quadrat zu deiner Sonne: Nimm kleine Missverständnisse leicht, du bist angekommen.", gw: "Mond tritt in den Krebs · Merkur im Quadrat zu deiner Sonne (2,5 Grad)", l: "Masüsel, Mafifee kommt heute an. Mars verlässt deinen Löwen und zieht in die Jungfrau, Jupiter bleibt: Aus Mut wird Aufmerksamkeit füreinander. Merkur im Quadrat zu deiner Sonne: lieber nachfragen als raten.", gl: "Mars in die Jungfrau, Jupiter im Löwen · Merkur im Quadrat zu deiner Sonne (3,1 Grad)", b: "Um 14:35 Uhr treffen sich zwei Gegenpole. Der Mond steht im Krebs, dem Zeichen der Geborgenheit. Alles, was die beiden sich erhofft haben, darf jetzt beginnen.", gb: "Mond im Krebs · Venus in der Waage" }
 ];
 function todayIdx(now) {
   const d = berlinDay(now);
@@ -1765,7 +1765,7 @@ const TASKS = [
   { d: 'Das Chaos der Ankunft', lead: 'fee', f: 'Der Esel soll dir das Wiedersehen als Chaos beschreiben: alles, was schiefgehen könnte, und wie er es trotzdem hinbekommt. Prüfe, ob er auch an dich denkt und nicht nur an sich.', e: 'Beschreib der Fee das Wiedersehen als Chaos: alles, was schiefgehen könnte, und wie du es trotzdem hinbekommst.' },
   { d: 'Die Gegenprobe', lead: 'esel', f: 'Heute merkst du, dass du den Esel mehr magst, als du zugeben wolltest. Beantworte seine Frage, ohne dich hinter einer Prüferinnenmiene zu verstecken.', e: 'Stell der Fee die eine Frage, vor der sie sich am meisten fürchtet, und lass sie nicht ausweichen. Danach bewertest du sie mit Sternen.' },
   { d: 'Der Brief für die Haustür', lead: 'fee', f: 'Der Esel soll dir den Brief schreiben, den er dir überreicht, wenn du vor der Tür stehst. Du bewertest, ob er sich traut.', e: 'Schreib den Brief, den du der Fee übergibst, wenn sie vor der Tür steht. Er muss ehrlich sein und darf kurz sein.' },
-  { d: 'Die Ankunft', lead: 'both', f: 'Du kommst heute um 14:10 Uhr an. Schreib dem Esel einen kurzen Gruß, den er liest, wenn du schon da bist.', e: 'Die Fee kommt heute um 14:10 Uhr an. Schreib ihr einen kurzen Gruß, den sie nach der Ankunft findet.' },
+  { d: 'Die Ankunft', lead: 'both', f: 'Du kommst heute um 14:35 Uhr an. Schreib dem Esel einen kurzen Gruß, den er liest, wenn du schon da bist.', e: 'Die Fee kommt heute um 14:35 Uhr an. Schreib ihr einen kurzen Gruß, den sie nach der Ankunft findet.' },
   { d: 'Mails über den Tisch', lead: 'fee', f: 'Du bist angekommen. Stell dem Esel trotzdem eine schriftliche Aufgabe, auch wenn er im selben Raum sitzt: Er soll dir aufschreiben, was er an deinem ersten Abend über dich gelernt hat.', e: 'Die Fee ist da. Schreib ihr trotzdem auf, was du an ihrem ersten Abend über sie gelernt hast, auch wenn sie neben dir sitzt.' },
   { d: 'Die Frage am Tisch', lead: 'esel', f: 'Der Esel stellt dir heute eine Frage, vor der du dich sonst drückst. Antworte ehrlich, auch wenn du direkt neben ihm sitzt.', e: 'Stell der Fee die Frage, die du dich im Alltag nie getraut hast, und lass sie nicht ausweichen. Bewerte sie danach mit Sternen.' },
   { d: 'Die Abschlussprüfung', lead: 'both', f: 'Heute ist die Abschlussprüfung, im echten Leben und nicht auf dem Display. Du entscheidest, wie sie aussieht, und schreibst später auf, was dir aufgefallen ist.', e: 'Heute ist die Abschlussprüfung, im echten Leben. Bestehe sie auf deine eigene Art und schreib später auf, wie es dir ging.' },
